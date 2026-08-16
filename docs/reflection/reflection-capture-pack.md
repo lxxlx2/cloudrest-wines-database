@@ -28,4 +28,6 @@ Use the actual PO Box shipment rule. A useful critical issue is that a MySQL row
 
 ## Peer review placeholder
 
-After another group posts its work, provide two constructive comments totaling under 100 words. Each should identify one specific prompt or validation improvement. Do not complete this section before seeing the real peer submission.
+Do not pre-commit to a peer-review count or word limit in this framework. The supplied course documents conflict: the main assignment, separate RiPPlE instructions and HD rubric describe peer-feedback expectations differently. Follow the tutor/LMS-confirmed requirement recorded in `docs/requirements/tutor-confirmations.md` when RiPPlE opens.
+
+Only after the real peer submission is visible should the required team member(s) provide the required number of specific, constructive comments. Preserve genuine comments and do not fabricate them in advance.
