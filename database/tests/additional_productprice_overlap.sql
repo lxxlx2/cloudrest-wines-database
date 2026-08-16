@@ -1,0 +1,2 @@
+USE cloudrestwines;
+INSERT INTO productprice VALUES ('PROD001',CURRENT_DATE,NULL,375.00);
