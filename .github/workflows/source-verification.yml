@@ -1,0 +1,79 @@
+name: Source Verification
+
+on:
+  push:
+    branches:
+      - audit/final-manual-fixes
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  mysql-source-verification:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      MYSQL_PWD: root
+      MYSQL_BIN: mysql
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          sudo mkdir -p /opt/homebrew/opt/mysql@8.4/bin
+          sudo ln -sf "$(command -v mysql)" /opt/homebrew/opt/mysql@8.4/bin/mysql
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -uroot -proot && exit 0
+            sleep 2
+          done
+          exit 1
+
+      - name: Compile Python helpers
+        run: |
+          python3 -m py_compile \
+            tools/build_submission_sql.py \
+            tools/build_word_reports.py \
+            tools/generate_data_dictionary.py \
+            tools/verify_manual_audit_controls.py \
+            tools/ci_source_verify.py
+
+      - name: Run authoritative source verification
+        run: python3 tools/ci_source_verify.py
+
+      - name: Upload verification result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-verification
+          path: |
+            verification/ci-source-verification.json
+            verification/manual-audit-verification.json
+            verification/manual-audit-verification.md
+            deliverables/final-submission/Cloudrest_Wines_Database.sql
+            deliverables/final-submission/Cloudrest_Wines_Queries.sql
+            docs/report/data-dictionary.csv
+            docs/report/data-dictionary.md
