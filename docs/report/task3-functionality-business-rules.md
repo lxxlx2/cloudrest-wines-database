@@ -50,7 +50,7 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 ### Rule 3 — Current physical shipment address
 
 - **Rule:** Shipment must use the customer's current physical address, never a PO Box or Private Bag.
-- **Case source:** Orders are delivered to the current physical address and not postal addresses (Wine Company Case, p. 5).
+- **Case source:** Customer orders use the current physical address, while postal addresses such as PO Boxes and Private Bags cannot be used for shipment (Wine Company Case, pp. 3–4, “Customers” and “Addresses”).
 - **Mechanism:** shipment insert/update triggers inspect `address` and current `customeraddress` rows.
 - **Violation:** `database/tests/additional_postalshipment.sql` uses current PO Box `ADDR0004`.
 - **Expected result:** MySQL Error 1644 with the physical-address message.
