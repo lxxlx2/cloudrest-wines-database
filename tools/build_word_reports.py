@@ -17,20 +17,40 @@ OUT.mkdir(parents=True,exist_ok=True)
 BLUE='1F4E79'; LIGHT='DCE6F1'; PALE='F2F4F7'; DARK='1F2937'; MUTED='5B6573'
 FINAL_MODE=os.getenv('FINAL_MODE','0')=='1'
 FINAL_INPUTS=ROOT/'project-management/final-inputs.json'
+TASK_KEYS=('requirements','hrScope','erModel','designDecisions','schemaRules','dataDictionary','officialCleaning','tests','queries','reflection','video','finalQA')
+
+
+def is_placeholder(value):
+    text=str(value or '').strip().upper()
+    return not text or text=='1' or 'REPLACE_' in text or 'PENDING' in text or 'STUDENT TO COMPLETE' in text
 
 
 def load_final_inputs():
     if not FINAL_MODE:
-        return {'member4Name':'1','submissionDate':'[STUDENT TO COMPLETE]','actualCompletionDates':{}}
+        return {
+            'member4Name':'1',
+            'studentNumbers':{'Mia':'[STUDENT TO COMPLETE]','Zora':'[STUDENT TO COMPLETE]','Rianna':'[STUDENT TO COMPLETE]','member4':'[STUDENT TO COMPLETE]'},
+            'submissionDate':'[STUDENT TO COMPLETE]',
+            'actualCompletionDates':{}
+        }
     if not FINAL_INPUTS.exists():
         raise RuntimeError('FINAL_MODE requires project-management/final-inputs.json with genuine student-supplied values')
     data=json.loads(FINAL_INPUTS.read_text(encoding='utf-8'))
-    for key in ('member4Name','submissionDate','actualCompletionDates'):
-        if not data.get(key):
+    for key in ('member4Name','studentNumbers','submissionDate','actualCompletionDates'):
+        if key not in data:
             raise RuntimeError(f'FINAL_MODE missing required final input: {key}')
-    if data['member4Name'].strip()=='1':
-        raise RuntimeError('FINAL_MODE requires the real fourth member name')
+    if is_placeholder(data['member4Name']) or is_placeholder(data['submissionDate']):
+        raise RuntimeError('FINAL_MODE requires the real fourth member name and submission date')
+    numbers=data['studentNumbers']
+    for key in ('Mia','Zora','Rianna','member4'):
+        if key not in numbers or is_placeholder(numbers[key]):
+            raise RuntimeError(f'FINAL_MODE requires a real student number for {key}')
+    dates=data['actualCompletionDates']
+    for key in TASK_KEYS:
+        if key not in dates or is_placeholder(dates[key]):
+            raise RuntimeError(f'FINAL_MODE requires a genuine Actual Completion Date for {key}')
     return data
+
 
 FINAL_INPUT=load_final_inputs()
 
@@ -134,8 +154,16 @@ def add_title_page(doc):
     set_font(p.add_run('CLOUDREST WINES'),size=28,bold=True,color=BLUE)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; set_font(p.add_run('MySQL Database System Design and Implementation'),size=17,bold=True,color=DARK)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after=Pt(38); set_font(p.add_run('Human Resources, Workforce Planning and Wellbeing Perspective'),size=13,italic=True,color=MUTED)
-    member4=FINAL_INPUT['member4Name']; submission=FINAL_INPUT['submissionDate']
-    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors',f'Mia | Zora | Rianna | {member4}'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date',submission)]:
+    member4=FINAL_INPUT['member4Name']; submission=FINAL_INPUT['submissionDate']; nums=FINAL_INPUT['studentNumbers']
+    rows=[
+        ('Course','BISM2207 System Development'),
+        ('Team / company','Cloudrest Wines'),
+        ('Contributors',f'Mia | Zora | Rianna | {member4}'),
+        ('Student numbers',f"Mia: {nums['Mia']} | Zora: {nums['Zora']} | Rianna: {nums['Rianna']} | {member4}: {nums['member4']}"),
+        ('Database','MySQL 8.4.x / MySQL Workbench'),
+        ('Submission date',submission)
+    ]
+    for label,value in rows:
         p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER
         set_font(p.add_run(label+': '),size=12,bold=True); set_font(p.add_run(value),size=12)
     if not FINAL_MODE:
@@ -234,17 +262,18 @@ def build_main():
     ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL; UML notation requires final Workbench confirmation.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Framework/test data; official workbook analysis pending.'),('7','Queries','SQL drafting/critique; outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
     add_table(doc,['Task','AI used for','Human validation / limitation'],ai_rows,[600,2200,6560],9)
 
+    m4=FINAL_INPUT['member4Name']
     new_landscape(doc); doc.add_heading('Task 1 — Project Plan with Risk Register',level=1)
     plan_rows=[
       ('Requirements and planning','Mia','Mia','8','Week 4',actual_date('requirements'),'Traceability matrix','Requirement omission','Cross-check case','Extraction/check'),
       ('HR scope and KPIs','Mia / Rianna','Mia','5','Week 4',actual_date('hrScope'),'Defined measures','Metric not calculable','Define numerator/denominator','Alternatives/critique'),
       ('Base and HR ER model','Zora / All','Zora','28','Week 7',actual_date('erModel'),'Workbench model and alternatives','Cardinality error','Peer review against case','Modelling critique'),
       ('Design decisions','Mia / Zora','Mia','10','Week 8',actual_date('designDecisions'),'Four cited decision records','Weak trade-offs','Trace each to ER','Draft/critique'),
-      ('Schema and rules','1 / Zora','1','32','Week 10',actual_date('schemaRules'),'Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
-      ('Data dictionary','Zora / 1','Zora','16','Week 10',actual_date('dataDictionary'),'Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
-      ('Official cleaning','1 / Mia','1','23','After workbook',actual_date('officialCleaning'),'Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
-      ('Test data and integrity','1 / Rianna','1','20','Week 10',actual_date('tests'),'Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
-      ('Six analytical queries','Rianna / 1','Rianna','28','Week 11',actual_date('queries'),'Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
+      ('Schema and rules',f'{m4} / Zora',m4,'32','Week 10',actual_date('schemaRules'),'Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
+      ('Data dictionary',f'Zora / {m4}','Zora','16','Week 10',actual_date('dataDictionary'),'Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
+      ('Official cleaning',f'{m4} / Mia',m4,'23','After workbook',actual_date('officialCleaning'),'Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
+      ('Test data and integrity',f'{m4} / Rianna',m4,'20','Week 10',actual_date('tests'),'Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
+      ('Six analytical queries',f'Rianna / {m4}','Rianna','28','Week 11',actual_date('queries'),'Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
       ('Reflection','All','Rianna','10','Week 12',actual_date('reflection'),'Genuine RiPPlE evidence','Fabrication risk','Save real iterations','Reflection subject'),
       ('Video','All','Rianna','12','Week 12',actual_date('video'),'Five-minute demonstration','Over time','Timed rehearsal','Structure/timing'),
       ('Final integration and QA','Mia / All','Mia','10','Week 12',actual_date('finalQA'),'Submission package/audit','Cross-file mismatch','Automated and human QA','Consistency checking')]
@@ -318,7 +347,7 @@ def build_main():
     doc.add_heading('Task 5 — Data Dictionary and Database Build',level=1)
     prose_from_md(doc,(ROOT/'docs/report/task5-data-dictionary.md').read_text(encoding='utf-8').split('\n',1)[1])
     metrics=json.loads((ROOT/'verification/verification-report.json').read_text())['schemaMetrics']
-    add_para(doc,f"Build verification: {metrics['baseTables']} base tables, {metrics['views']} view, {metrics['columns']} columns, {metrics['foreignKeys']} foreign keys, {metrics['checkConstraints']} CHECK constraints, {metrics['triggers']} triggers and {metrics['routines']} stored procedure under MySQL 8.4.11. Statistics are read from the verified live schema, not hard-coded.")
+    add_para(doc,f"Build verification: {metrics['baseTables']} base tables, {metrics['views']} view, {metrics['columns']} columns, {metrics['foreignKeys']} foreign keys, {metrics['checkConstraints']} CHECK constraints, {metrics['triggers']} triggers and {metrics['routines']} stored routines under MySQL 8.4.11. Statistics are read from the verified live schema, not hard-coded.")
 
     doc.add_heading('Task 6 — Data Quality Strategy and Validation',level=1)
     for title,body in md_sections(ROOT/'docs/report/task6-data-quality.md'):
@@ -362,7 +391,7 @@ def build_main():
         add_image(doc,ROOT/'diagrams'/f,f.replace('ER_','').replace('.png','').replace('_',' '),5.8)
 
     new_landscape(doc); doc.add_heading('Appendix B — Complete Data Dictionary',level=1)
-    add_note(doc,'Prepared and cross-checked','The data dictionary was prepared as Word tables and cross-checked against the implemented MySQL schema for consistency. Automation is used internally to prevent field/type/key drift.')
+    add_note(doc,'Prepared and cross-checked','The data dictionary was prepared as Word tables and cross-checked against the implemented MySQL schema for consistency. Automation is used internally to prevent field/type/key drift. Unique means individually unique; a member of a composite key is not automatically marked unique.')
     rows=list(csv.DictReader((ROOT/'docs/report/data-dictionary.csv').open(encoding='utf-8-sig')))
     by_table={}
     for r in rows: by_table.setdefault(r['tableName'],[]).append(r)
@@ -373,7 +402,18 @@ def build_main():
         add_table(doc,['Attribute','Type/size','Domain/default','Null','Unique','PK','FK reference','Definition / business purpose'],data,widths,7.5)
 
     new_portrait(doc); doc.add_heading('Appendix C — Submission and Handoff Checklist',level=1)
-    checklist=[('Portable database SQL','Completed and clean-build verified'),('Six query script','Completed and executed'),('Five Task 3b violation blocks','Completed and rejected as expected'),('Workbench model / EER views','UML notation and final landscape export require final Workbench confirmation'),('Official workbook cleaning','Pending source workbook'),('Week 11 scenario','Pending tutor allocation'),('Final Workbench screenshots','Student capture required'),('Four-person video','Student recording required'),('RiPPlE prompt logs / peer review','Genuine student activity required'),('Placeholder member name and dates','Student must replace')]
+    checklist=[
+        ('Portable database SQL','Completed and clean-build verified'),
+        ('Six query script','Completed and executed'),
+        ('Five Task 3b violation blocks','Completed and rejected as expected'),
+        ('Workbench model / EER views','UML notation and final landscape export require final Workbench confirmation'),
+        ('Official workbook cleaning','Completed from genuine A2 evidence' if FINAL_MODE else 'Pending source workbook'),
+        ('Week 11 scenario','Completed from tutor allocation' if FINAL_MODE else 'Pending tutor allocation'),
+        ('Final Workbench screenshots','Inserted genuine evidence' if FINAL_MODE else 'Student capture required'),
+        ('Four-person video','Recorded by team' if FINAL_MODE else 'Student recording required'),
+        ('RiPPlE prompt logs / peer review','Completed genuine activity' if FINAL_MODE else 'Genuine student activity required'),
+        ('Member names, student numbers and actual dates','Completed from genuine final inputs' if FINAL_MODE else 'Student must complete')
+    ]
     add_table(doc,['Item','Status'],checklist,[3600,5760],9)
     path=OUT/'Cloudrest_Wines_Report.docx'; doc.save(path); return path
 
