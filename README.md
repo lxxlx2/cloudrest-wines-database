@@ -34,7 +34,7 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Current status
 
-The HR-focused schema, MySQL implementation, synthetic data, five rule-violation demonstrations, six management queries, Workbench model/ER exports, report draft and reproducibility audit are complete. The clean portable build currently passes all 31 automated checks under MySQL 8.4.11.
+The HR-focused schema, MySQL implementation, synthetic data, five assessed rule demonstrations, six management queries, Workbench model/ER exports, development report and reproducibility audit are complete. The clean portable build currently passes all 64 development-mode checks under MySQL 8.4.11.
 
 Official spreadsheet cleaning, the Week 11 business scenario, RiPPlE peer reviews, final contribution records and the four-person video still require course inputs or genuine team activity. These are identified explicitly rather than represented as completed evidence.
 
@@ -45,3 +45,5 @@ Start with `deliverables/README_FIRST.md`. The `deliverables/final-submission/` 
 ## Access
 
 This is a public repository for progress visibility. Public visitors have read-only access by default. Only the owner and explicitly invited collaborators can push changes.
+
+Before real assessment submission, consider making the repository private to reduce copying and plagiarism risk. Repository visibility has not been changed automatically.

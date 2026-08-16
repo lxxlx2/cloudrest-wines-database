@@ -12,7 +12,7 @@ After correction, rows will be inserted in dependency order. Quality control wil
 
 ## 6b. Test-data creation
 
-Synthetic data was designed backwards from the five rules and six management questions. It includes permanent, casual and seasonal employees; several operational areas; completed, failed and absent training; 25/80/150-day qualification horizons; normal and overtime shifts; low, moderate and high incidents; open, overdue and completed corrective actions; wellbeing concerns; base winery production; procurement; and a paid customer shipment. All names, TFNs, ABNs, emails and operational events are fictitious.
+Synthetic data was designed backwards from the five rules and six management questions. Every employee has one current physical address and exactly one current primary phone. It includes role, supervisor, employee address/phone and supplier address/phone changes; permanent and casual employment with ongoing and seasonal patterns; completed, failed and absent training; qualification horizons; normal and overtime shifts; multi-person/zero-lost-hour incident cases; corrective actions; wellbeing concerns; production, procurement and a paid shipment. All values and events are fictitious.
 
 AI assisted with scenario coverage and value generation. Suitability was then verified by successful FK-constrained import, domain checks, manual result reconciliation and non-empty query outputs. Boundary/negative data is executed separately so deliberately invalid rows never remain in the baseline database.
 
@@ -23,7 +23,7 @@ AI assisted with scenario coverage and value generation. Suitability was then ve
 | Valid completed training | Positive | Accepted, then rolled back | Valid HR outcome with completion, renewal and competency is supported |
 | End before role start | Negative | CHECK rejection | Invalid personnel history cannot be stored |
 | Reorder false without comment | Negative | CHECK rejection | Bottle sourcing/quality explanation is mandatory |
-| Insert underage individual | Negative | Trigger rejection | Individual customer legal age is enforced |
-| Ship to PO Box | Negative | Trigger rejection | Only the paid customer's current physical address may be shipped to |
+| Ship unpaid order | Negative | Trigger rejection | Payment confirmation is required before shipment |
+| Overlapping supervisor period | Negative | Trigger rejection | One supervisor is allowed at a point in time |
 
-The SQL and genuine MySQL output are maintained under `database/tests/` and `docs/evidence/test-output/`.
+The SQL is maintained under `database/tests/`. Existing CLI-rendered PNGs are internal verification evidence only. Genuine student Workbench screenshots remain clearly marked placeholders in the final report.

@@ -13,7 +13,7 @@
 2. Choose **File → Open SQL Script** and open `Cloudrest_Wines_Database.sql`.
 3. Execute the complete script using the lightning icon.
 4. Refresh **SCHEMAS** and expand `cloudrestwines`.
-5. Confirm the final summary reports 53 base tables, 1 view, 11 triggers and 1 routine.
+5. Confirm the final summary reports 55 base tables, 1 view, 15 triggers and 1 routine.
 6. Open `Cloudrest_Wines_Queries.sql` and execute each numbered query separately.
 7. Run the procedure with both `30` and `90` parameters during the video.
 

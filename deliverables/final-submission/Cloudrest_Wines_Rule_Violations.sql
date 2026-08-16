@@ -1,31 +1,20 @@
--- Cloudrest Wines — Task 3b business-rule violation demonstrations.
--- Run each numbered block separately in MySQL Workbench so each expected error is visible.
 USE cloudrestwines;
+-- Execute each assessed violation separately after rebuilding the clean database.
 
--- RULE 1: an employee role end date/time cannot precede its start date/time.
-INSERT INTO employee VALUES ('EMP9999','Test','InvalidDate','998877665','2026-01-01',NULL);
+-- Rule 1: role end cannot precede start (expect CHECK 3819).
 INSERT INTO employeerole VALUES
-('EMP9999','ROLE07','AREA04','2026-06-01 09:00:00','2026-05-01 09:00:00','PARTTIME','PERMANENT');
--- Expected: Error 3819, chk_employeerole_dates is violated.
+('EMP0007','ROLE07','AREA04','2026-06-01 09:00:00','2026-05-01 09:00:00','PARTTIME','PERMANENT','ONGOING');
 
--- RULE 2: a bottle that will not be reordered must include a comment.
+-- Rule 2: reorder FALSE requires a nonblank comment (expect CHECK 3819).
 INSERT INTO bottletype VALUES
 ('BOTL099',750,'Test','GLASS','Green',0,1.00,FALSE,NULL);
--- Expected: Error 3819, chk_bottletype_reorder is violated.
 
--- RULE 3: an individual customer must be at least 18 years old.
-INSERT INTO customer VALUES ('CUST099','INDIVIDUAL','underage@example.test',TRUE);
-INSERT INTO individualcustomer VALUES
-('CUST099','Test','Underage',DATE_SUB(CURRENT_DATE,INTERVAL 17 YEAR));
--- Expected: Error 1644 from trg_individualcustomer_legalage_insert.
+-- Rule 3: shipment must use the customer's current physical address (expect Error 1644).
+INSERT INTO shipment VALUES ('SHIP0999','CORD0001','ADDR0004',CURRENT_DATE);
 
--- RULE 4: an order cannot be shipped to a PO Box/private bag.
-INSERT INTO customerorder VALUES ('CORD0099','CUST001',CURRENT_DATE,TRUE,'PENDING');
-INSERT INTO orderline VALUES ('CORD0099','PROD001',1,360.00);
-INSERT INTO shipment VALUES ('SHIP0099','CORD0099','ADDR0004',CURRENT_DATE);
--- Expected: Error 1644 from trg_shipment_validate_insert.
+-- Rule 4: order must be paid before shipment (expect Error 1644).
+INSERT INTO customerorder VALUES ('CORD0998','CUST001',CURRENT_DATE,FALSE,'PENDING');
+INSERT INTO shipment VALUES ('SHIP0998','CORD0998','ADDR0003',CURRENT_DATE);
 
--- RULE 5: grape juice conversion is a percentage in the range above 0 through 100.
-INSERT INTO grapevariety VALUES
-('GRAP099','Invalid Test Variety',120.00,'STAINLESSSTEEL',30);
--- Expected: Error 3819, chk_grapevariety_conversion is violated.
+-- Rule 5: supervised employee has only one supervisor at a point in time (expect Error 1644).
+INSERT INTO supervision VALUES ('EMP0008','EMP0001','2026-02-01 09:00:00',NULL);

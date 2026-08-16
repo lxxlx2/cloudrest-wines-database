@@ -1,37 +1,31 @@
 # Project Plan
 
-This is the working plan. Actual dates and genuine contributions must be updated as work progresses.
+Planning assignments are agreed directions only. Genuine actual completion dates and contribution evidence remain pending student confirmation.
 
-| Deliverable | Final owner | Review/support | Estimated hours | Target | Actual | Key risk | Mitigation | AI use |
-|---|---|---|---:|---|---|---|---|---|
-| Requirements traceability and stakeholder analysis | Mia | All | 8 | Week 4 | Pending | Base-case requirement omitted | Map every case statement to a table, attribute, constraint, query, assumption or exclusion | Extraction and completeness checking |
-| HR perspective and sustainability initiative | Mia | Rianna | 5 | Week 4 | Pending | Measures cannot be calculated | Define numerator, denominator, period and required source data before schema freeze | Alternatives and critique |
-| Base ER model | Zora | All | 18 | Week 7 | Pending | Cardinality or historical modelling errors | Formal peer review against traceability matrix | Challenge modelling alternatives |
-| HR ER extension | Zora | Rianna | 10 | Week 7 | Pending | HR extension is disconnected from operations | Link training, shifts, incidents and wellbeing to employee role and operational area | Review completeness and query support |
-| Design decision record | Mia | Zora | 10 | Week 8 | Pending | Decisions are descriptive rather than justified | Document alternatives, trade-offs and traceability to ER model | Critique only; final judgement retained by team |
-| Functionality, privacy and security | Mia | 1 | 7 | Week 8 | Pending | Sensitive HR data is overexposed | Define least-privilege roles and de-identified reporting views | Draft review |
-| MySQL schema and database build | 1 | Zora | 20 | Week 8 | Pending | Build order or FK errors | Maintain one clean, rerunnable build sequence | SQL review followed by execution tests |
-| Five database business rules | 1 | Zora | 12 | Week 10 | Pending | Rule is not enforceable with selected mechanism | Prototype CHECK, FK or trigger before report inclusion | Generate alternatives; validate in MySQL |
-| Complete data dictionary | Zora | 1 | 16 | Week 10 | Pending | Dictionary diverges from SQL | Run schema-to-dictionary consistency review | Mechanical consistency assistance |
-| Supplied-data audit and cleaning | 1 | Mia | 23 | After A2 spreadsheet | Blocked on source file | Official spreadsheet unavailable | Build staging and validation framework now; preserve raw copy when received | Profiling assistance; all corrections reviewed |
-| Synthetic test data | 1 | Rianna | 12 | Week 10 | Pending | Data produces trivial query results | Design scenarios backwards from rules and six management questions | Initial fictitious records with manual verification |
-| Five integrity tests | 1 | Zora | 8 | Week 10 | Pending | Only negative tests are shown | Include positive and negative cases, with two linked to Task 3b | Test-case review |
-| Six decision-support queries | Rianna | 1 | 18 | Week 11 | Pending | Queries become routine lookups | Start each query with a management decision and expected action | SQL alternatives; results independently validated |
-| View, parameterised procedure and EXPLAIN | Rianna | 1 | 10 | Week 11 | Pending | Video execution differs from report | Use scripts from final export and rehearse two parameter values | Execution-plan interpretation support |
-| GenAI reflection | All | Rianna coordinates | 10 | Week 12 | Pending | Prompt history is reconstructed after the fact | Preserve genuine prompts, outputs, revisions and validation evidence now | Subject of the reflection |
-| Video | All | Rianna coordinates | 12 | Week 12 | Pending | Exceeds five minutes or queries fail | Timed rehearsal using a clean database and fixed Workbench tabs | Script timing assistance only |
-| Final report integration and QA | Mia | All | 10 | Week 12 | Pending | ER, dictionary, SQL and screenshots conflict | Four-way consistency audit against rubric | Formatting and cross-checking assistance |
+| Task Description | Responsible Team Member(s) | Final Deliverable Owner | Estimated Hours | Target Completion Date | Actual Completion Date | Expected Output / Evidence | Risk or Challenge | Mitigation Strategy | AI Used / How Used |
+|---|---|---|---:|---|---|---|---|---|---|
+| Requirements, traceability and planning | Mia / All | Mia | 8 | Week 4 | Pending | Traceability matrix and checkpoints | Case omission | Cross-check every case section | Extraction and completeness checking |
+| HR perspective and sustainability measures | Mia / Rianna | Mia | 5 | Week 4 | Pending | Defined HR scope and measures | Measures not calculable | Define sources, numerator and denominator | Alternatives and critique |
+| Base and HR ER model | Zora / All | Zora | 28 | Week 7 | Pending | Complete Workbench model and domain views | Cardinality/history errors | Peer review against case | Modelling alternatives |
+| Four design decisions | Mia / Zora | Mia | 10 | Week 8 | Pending | Cited decisions, alternatives and trade-offs | Descriptive rationale | Trace each choice to ER | Draft and critique |
+| Schema and five assessed rules | 1 / Zora | 1 | 32 | Week 10 | Pending | Clean SQL, constraints and violations | Build or rule failure | Rebuild from empty database | SQL review and tests |
+| Data dictionary | Zora / 1 | Zora | 16 | Week 10 | Pending | Complete Word tables | Schema drift | Automated consistency cross-check | Mechanical QA |
+| Official A2 cleaning | 1 / Mia | 1 | 23 | After workbook | Pending | Audit, corrections, reconciliation and evidence | Official source missing | Preserve blocked framework | Profiling assistance only |
+| Synthetic data and integrity tests | 1 / Rianna | 1 | 20 | Week 10 | Pending | Histories and five assessed tests | Trivial/invalid baseline | Scenario coverage and isolated negatives | Coverage critique |
+| Six analytical queries | Rianna / 1 | Rianna | 28 | Week 11 | Pending | Queries, view, procedure and EXPLAIN | Join inflation/incorrect metric | Manual reconciliation | SQL alternatives and review |
+| RiPPlE reflection | All | Rianna | 10 | Week 12 | Pending | Genuine prompt progression and peer review | Fabrication | Preserve real prompt evidence | Subject of reflection |
+| Video | All | Rianna | 12 | Week 12 | Pending | Five-minute four-person demonstration | Timing/understanding | Timed rehearsal | Structure and timing support |
+| Final integration and QA | Mia / All | Mia | 10 | Week 12 | Pending | Report, SQL and independent audit | Cross-file mismatch | Automated and human review | Consistency checking |
 
 ## Checkpoints
 
 | Milestone | Due | Required evidence | Status |
 |---|---|---|---|
 | Team formation | Week 3 | Four members and shared contact process | Team names recorded; contact process to confirm |
-| Checkpoint 1 | Week 4 | Case understanding, perspective and functionality plan | In progress |
-| Checkpoint 2 | Week 7 | Draft ER diagram and early design decisions | Pending |
-| Iteration submission | Week 8 Friday | Draft Tasks 1–7 | Pending |
-| Checkpoint 3 | Week 10 | Normalisation, cleaning plan and business rules | Pending |
-| Checkpoint 4 | Week 11 | Draft queries and assigned business scenario | Awaiting course input |
-| Final submission | Week 12 | Report, SQL export, query evidence and video | Pending |
-| Buddycheck | Week 13 + one week | Genuine peer contribution review | Awaiting team activity |
-
+| Checkpoint 1 | Week 4 | Case understanding, perspective and functionality plan | Technical draft prepared; student confirmation pending |
+| Checkpoint 2 | Week 7 | Draft ER diagram and design decisions | Technical draft prepared; tutor feedback pending |
+| Iteration submission | Week 8 Friday | Draft Tasks 1–7 | Student submission pending |
+| Checkpoint 3 | Week 10 | Normalisation, cleaning plan and rules | Technical draft prepared; official workbook pending |
+| Checkpoint 4 | Week 11 | Draft queries and assigned scenario | Scenario allocation pending |
+| Final submission | Week 12 | Report, SQL, evidence and video | Genuine student inputs pending |
+| Buddycheck | Week 13 + one week | Genuine contribution review | Student activity pending |

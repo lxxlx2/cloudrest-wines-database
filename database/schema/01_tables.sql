@@ -32,7 +32,8 @@ CREATE TABLE employeerole (
   startDateTime DATETIME NOT NULL,
   endDateTime DATETIME NULL,
   workTimeType ENUM('FULLTIME','PARTTIME') NOT NULL,
-  employmentType ENUM('PERMANENT','CASUAL','SEASONAL') NOT NULL,
+  employmentType ENUM('PERMANENT','CASUAL') NOT NULL,
+  employmentPattern ENUM('ONGOING','SEASONAL') NOT NULL,
   PRIMARY KEY (employeeId, roleId, startDateTime),
   CONSTRAINT fk_employeerole_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_employeerole_role FOREIGN KEY (roleId) REFERENCES role(roleId) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -146,7 +147,7 @@ CREATE TABLE vineyard (
   addressId CHAR(8) NOT NULL UNIQUE,
   CONSTRAINT fk_vineyard_manager FOREIGN KEY (managerId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_vineyard_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_vineyard_area CHECK (areaHectares BETWEEN 2.00 AND 42.00),
+  CONSTRAINT chk_vineyard_area CHECK (areaHectares > 0),
   CONSTRAINT chk_vineyard_latitude CHECK (latitude BETWEEN -90 AND 90),
   CONSTRAINT chk_vineyard_longitude CHECK (longitude BETWEEN -180 AND 180)
 );
@@ -261,13 +262,33 @@ CREATE TABLE productprice (
 CREATE TABLE supplier (
   supplierId CHAR(7) PRIMARY KEY,
   supplierName VARCHAR(120) NOT NULL UNIQUE,
-  addressId CHAR(8) NOT NULL,
-  phoneNumber VARCHAR(25) NOT NULL,
   contactFirstName VARCHAR(50) NOT NULL,
   contactLastName VARCHAR(50) NOT NULL,
   contactEmail VARCHAR(254) NOT NULL,
-  CONSTRAINT fk_supplier_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_supplier_email CHECK (contactEmail LIKE '%_@_%._%')
+);
+
+CREATE TABLE supplieraddress (
+  supplierId CHAR(7) NOT NULL,
+  addressId CHAR(8) NOT NULL,
+  startDateTime DATETIME NOT NULL,
+  endDateTime DATETIME NULL,
+  PRIMARY KEY (supplierId, addressId, startDateTime),
+  CONSTRAINT fk_supplieraddress_supplier FOREIGN KEY (supplierId) REFERENCES supplier(supplierId) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_supplieraddress_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT chk_supplieraddress_dates CHECK (endDateTime IS NULL OR endDateTime >= startDateTime)
+);
+
+CREATE TABLE supplierphone (
+  supplierId CHAR(7) NOT NULL,
+  phoneId CHAR(8) NOT NULL,
+  startDateTime DATETIME NOT NULL,
+  endDateTime DATETIME NULL,
+  isPrimary BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (supplierId, phoneId, startDateTime),
+  CONSTRAINT fk_supplierphone_supplier FOREIGN KEY (supplierId) REFERENCES supplier(supplierId) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_supplierphone_phone FOREIGN KEY (phoneId) REFERENCES phone(phoneId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT chk_supplierphone_dates CHECK (endDateTime IS NULL OR endDateTime >= startDateTime)
 );
 
 CREATE TABLE supplierbottle (
@@ -509,8 +530,7 @@ CREATE TABLE incident (
   totalLostHours DECIMAL(7,2) NOT NULL DEFAULT 0,
   reportableFlag BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT fk_incident_area FOREIGN KEY (operationalAreaId) REFERENCES operationalarea(operationalAreaId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_incident_losthours CHECK (totalLostHours >= 0),
-  CONSTRAINT chk_incident_severity CHECK (severity NOT IN ('HIGH','CRITICAL') OR totalLostHours > 0)
+  CONSTRAINT chk_incident_losthours CHECK (totalLostHours >= 0)
 );
 
 CREATE TABLE incidentemployee (

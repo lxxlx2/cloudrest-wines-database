@@ -1,6 +1,7 @@
 USE cloudrestwines;
 
-CREATE OR REPLACE VIEW openincidentaction AS
+DROP VIEW IF EXISTS openincidentaction;
+CREATE VIEW openincidentaction AS
 SELECT
   ca.correctiveActionId,
   i.incidentId,
@@ -18,6 +19,7 @@ JOIN operationalarea oa ON oa.operationalAreaId = i.operationalAreaId
 JOIN employee e ON e.employeeId = ca.responsibleEmployeeId
 WHERE ca.actionStatus IN ('OPEN','INPROGRESS');
 
+DROP PROCEDURE IF EXISTS getExpiringQualifications;
 DELIMITER $$
 CREATE PROCEDURE getExpiringQualifications(IN daysAhead INT)
 BEGIN
@@ -39,4 +41,3 @@ BEGIN
   ORDER BY eq.expiryDate, employeeName;
 END$$
 DELIMITER ;
-

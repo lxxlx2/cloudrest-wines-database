@@ -40,7 +40,8 @@ CREATE TABLE employeerole (
   startDateTime DATETIME NOT NULL,
   endDateTime DATETIME NULL,
   workTimeType ENUM('FULLTIME','PARTTIME') NOT NULL,
-  employmentType ENUM('PERMANENT','CASUAL','SEASONAL') NOT NULL,
+  employmentType ENUM('PERMANENT','CASUAL') NOT NULL,
+  employmentPattern ENUM('ONGOING','SEASONAL') NOT NULL,
   PRIMARY KEY (employeeId, roleId, startDateTime),
   CONSTRAINT fk_employeerole_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_employeerole_role FOREIGN KEY (roleId) REFERENCES role(roleId) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -154,7 +155,7 @@ CREATE TABLE vineyard (
   addressId CHAR(8) NOT NULL UNIQUE,
   CONSTRAINT fk_vineyard_manager FOREIGN KEY (managerId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_vineyard_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_vineyard_area CHECK (areaHectares BETWEEN 2.00 AND 42.00),
+  CONSTRAINT chk_vineyard_area CHECK (areaHectares > 0),
   CONSTRAINT chk_vineyard_latitude CHECK (latitude BETWEEN -90 AND 90),
   CONSTRAINT chk_vineyard_longitude CHECK (longitude BETWEEN -180 AND 180)
 );
@@ -269,13 +270,33 @@ CREATE TABLE productprice (
 CREATE TABLE supplier (
   supplierId CHAR(7) PRIMARY KEY,
   supplierName VARCHAR(120) NOT NULL UNIQUE,
-  addressId CHAR(8) NOT NULL,
-  phoneNumber VARCHAR(25) NOT NULL,
   contactFirstName VARCHAR(50) NOT NULL,
   contactLastName VARCHAR(50) NOT NULL,
   contactEmail VARCHAR(254) NOT NULL,
-  CONSTRAINT fk_supplier_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_supplier_email CHECK (contactEmail LIKE '%_@_%._%')
+);
+
+CREATE TABLE supplieraddress (
+  supplierId CHAR(7) NOT NULL,
+  addressId CHAR(8) NOT NULL,
+  startDateTime DATETIME NOT NULL,
+  endDateTime DATETIME NULL,
+  PRIMARY KEY (supplierId, addressId, startDateTime),
+  CONSTRAINT fk_supplieraddress_supplier FOREIGN KEY (supplierId) REFERENCES supplier(supplierId) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_supplieraddress_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT chk_supplieraddress_dates CHECK (endDateTime IS NULL OR endDateTime >= startDateTime)
+);
+
+CREATE TABLE supplierphone (
+  supplierId CHAR(7) NOT NULL,
+  phoneId CHAR(8) NOT NULL,
+  startDateTime DATETIME NOT NULL,
+  endDateTime DATETIME NULL,
+  isPrimary BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (supplierId, phoneId, startDateTime),
+  CONSTRAINT fk_supplierphone_supplier FOREIGN KEY (supplierId) REFERENCES supplier(supplierId) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_supplierphone_phone FOREIGN KEY (phoneId) REFERENCES phone(phoneId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT chk_supplierphone_dates CHECK (endDateTime IS NULL OR endDateTime >= startDateTime)
 );
 
 CREATE TABLE supplierbottle (
@@ -517,8 +538,7 @@ CREATE TABLE incident (
   totalLostHours DECIMAL(7,2) NOT NULL DEFAULT 0,
   reportableFlag BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT fk_incident_area FOREIGN KEY (operationalAreaId) REFERENCES operationalarea(operationalAreaId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_incident_losthours CHECK (totalLostHours >= 0),
-  CONSTRAINT chk_incident_severity CHECK (severity NOT IN ('HIGH','CRITICAL') OR totalLostHours > 0)
+  CONSTRAINT chk_incident_losthours CHECK (totalLostHours >= 0)
 );
 
 CREATE TABLE incidentemployee (
@@ -764,13 +784,75 @@ BEGIN
   END IF;
 END$$
 
+CREATE TRIGGER trg_supplieraddress_nooverlap_insert
+BEFORE INSERT ON supplieraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplieraddress sa
+    WHERE sa.supplierId = NEW.supplierId
+      AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplieraddress_nooverlap_update
+BEFORE UPDATE ON supplieraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplieraddress sa
+    WHERE sa.supplierId = NEW.supplierId
+      AND NOT (sa.supplierId=OLD.supplierId AND sa.addressId=OLD.addressId AND sa.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplierphone_nooverlap_insert
+BEFORE INSERT ON supplierphone
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier phone period overlaps an existing period';
+  END IF;
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplierphone_nooverlap_update
+BEFORE UPDATE ON supplierphone
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier phone period overlaps an existing period';
+  END IF;
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
+      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+  END IF;
+END$$
+
 DELIMITER ;
 -- ===== END database/schema/02_triggers.sql =====
 
 -- ===== BEGIN database/schema/03_reporting.sql =====
 USE cloudrestwines;
 
-CREATE OR REPLACE VIEW openincidentaction AS
+DROP VIEW IF EXISTS openincidentaction;
+CREATE VIEW openincidentaction AS
 SELECT
   ca.correctiveActionId,
   i.incidentId,
@@ -788,6 +870,7 @@ JOIN operationalarea oa ON oa.operationalAreaId = i.operationalAreaId
 JOIN employee e ON e.employeeId = ca.responsibleEmployeeId
 WHERE ca.actionStatus IN ('OPEN','INPROGRESS');
 
+DROP PROCEDURE IF EXISTS getExpiringQualifications;
 DELIMITER $$
 CREATE PROCEDURE getExpiringQualifications(IN daysAhead INT)
 BEGIN
@@ -840,34 +923,54 @@ INSERT INTO employee VALUES
 ('EMP0013','Finn','Walker','445566778','2026-01-05',NULL);
 
 INSERT INTO employeerole VALUES
-('EMP0001','ROLE01','AREA04','2020-01-01 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0002','ROLE02','AREA01','2021-02-01 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0003','ROLE03','AREA01','2022-03-01 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0004','ROLE05','AREA02','2023-01-15 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0005','ROLE06','AREA02','2024-02-01 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0006','ROLE07','AREA04','2024-05-01 09:00:00',NULL,'FULLTIME','PERMANENT'),
-('EMP0007','ROLE08','AREA04','2025-01-05 09:00:00',NULL,'PARTTIME','PERMANENT'),
-('EMP0008','ROLE04','AREA01','2025-01-05 09:00:00',NULL,'FULLTIME','SEASONAL'),
-('EMP0009','ROLE04','AREA01','2025-06-01 09:00:00',NULL,'FULLTIME','SEASONAL'),
-('EMP0010','ROLE04','AREA01','2025-06-01 09:00:00',NULL,'PARTTIME','SEASONAL'),
-('EMP0011','ROLE06','AREA02','2025-06-01 09:00:00',NULL,'FULLTIME','CASUAL'),
-('EMP0012','ROLE06','AREA02','2025-06-01 09:00:00',NULL,'PARTTIME','CASUAL'),
-('EMP0013','ROLE04','AREA01','2026-01-05 09:00:00',NULL,'FULLTIME','SEASONAL');
+('EMP0001','ROLE01','AREA04','2020-01-01 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0002','ROLE02','AREA01','2021-02-01 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0003','ROLE03','AREA01','2022-03-01 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0004','ROLE05','AREA02','2023-01-15 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0005','ROLE06','AREA02','2024-02-01 09:00:00','2024-12-31 17:00:00','FULLTIME','PERMANENT','ONGOING'),
+('EMP0005','ROLE05','AREA02','2025-01-01 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0006','ROLE07','AREA04','2024-05-01 09:00:00',NULL,'FULLTIME','PERMANENT','ONGOING'),
+('EMP0007','ROLE08','AREA04','2025-01-05 09:00:00',NULL,'PARTTIME','PERMANENT','ONGOING'),
+('EMP0008','ROLE04','AREA01','2025-01-05 09:00:00',NULL,'FULLTIME','CASUAL','SEASONAL'),
+('EMP0009','ROLE04','AREA01','2025-06-01 09:00:00',NULL,'FULLTIME','CASUAL','SEASONAL'),
+('EMP0010','ROLE04','AREA01','2025-06-01 09:00:00',NULL,'PARTTIME','CASUAL','SEASONAL'),
+('EMP0011','ROLE06','AREA02','2025-06-01 09:00:00',NULL,'FULLTIME','CASUAL','ONGOING'),
+('EMP0012','ROLE06','AREA02','2025-06-01 09:00:00',NULL,'PARTTIME','CASUAL','ONGOING'),
+('EMP0013','ROLE04','AREA01','2026-01-05 09:00:00',NULL,'FULLTIME','CASUAL','SEASONAL');
 
 INSERT INTO supervision VALUES
 ('EMP0002','EMP0001','2021-02-01 09:00:00',NULL),('EMP0003','EMP0002','2022-03-01 09:00:00',NULL),
 ('EMP0004','EMP0001','2023-01-15 09:00:00',NULL),('EMP0005','EMP0004','2024-02-01 09:00:00',NULL),
-('EMP0006','EMP0001','2024-05-01 09:00:00',NULL),('EMP0007','EMP0001','2025-01-05 09:00:00',NULL),
+('EMP0006','EMP0001','2024-05-01 09:00:00',NULL),('EMP0007','EMP0001','2025-01-05 09:00:00','2025-12-31 17:00:00'),
+('EMP0007','EMP0006','2026-01-01 09:00:00',NULL),
 ('EMP0008','EMP0002','2025-01-05 09:00:00',NULL),('EMP0009','EMP0002','2025-06-01 09:00:00',NULL),
 ('EMP0010','EMP0002','2025-06-01 09:00:00',NULL),('EMP0011','EMP0004','2025-06-01 09:00:00',NULL),
 ('EMP0012','EMP0004','2025-06-01 09:00:00',NULL),('EMP0013','EMP0002','2026-01-05 09:00:00',NULL);
 
 INSERT INTO phone VALUES
 ('PHON0001','+61','0400000001','MOBILE'),('PHON0002','+61','0400000002','MOBILE'),
-('PHON0003','+61','0390000000','WORK'),('PHON0004','+61','0400000013','MOBILE');
+('PHON0003','+61','0390000000','WORK'),('PHON0004','+61','0400000013','MOBILE'),
+('PHON0005','+61','0400000102','MOBILE'),('PHON0006','+61','0400000101','MOBILE'),
+('PHON0007','+61','0400000104','MOBILE'),('PHON0008','+61','0400000105','MOBILE'),
+('PHON0009','+61','0400000106','MOBILE'),('PHON0010','+61','0400000107','MOBILE'),
+('PHON0011','+61','0400000108','MOBILE'),('PHON0012','+61','0400000109','MOBILE'),
+('PHON0013','+61','0400000110','MOBILE'),('PHON0014','+61','0400000111','MOBILE'),
+('PHON0015','+61','0400000112','MOBILE'),('PHON0016','+61','0399990000','WORK'),
+('PHON0017','+61','0399990001','WORK');
 INSERT INTO employeephone VALUES
-('EMP0002','PHON0001','2021-02-01 09:00:00',NULL,TRUE),
+('EMP0001','PHON0006','2020-01-01 09:00:00',NULL,TRUE),
+('EMP0002','PHON0001','2021-02-01 09:00:00','2024-12-31 17:00:00',TRUE),
+('EMP0002','PHON0005','2025-01-01 09:00:00',NULL,TRUE),
 ('EMP0003','PHON0002','2022-03-01 09:00:00',NULL,TRUE),
+('EMP0004','PHON0007','2023-01-15 09:00:00',NULL,TRUE),
+('EMP0005','PHON0008','2024-02-01 09:00:00',NULL,TRUE),
+('EMP0006','PHON0009','2024-05-01 09:00:00',NULL,TRUE),
+('EMP0007','PHON0010','2025-01-05 09:00:00',NULL,TRUE),
+('EMP0008','PHON0011','2025-01-05 09:00:00',NULL,TRUE),
+('EMP0009','PHON0012','2025-06-01 09:00:00',NULL,TRUE),
+('EMP0010','PHON0013','2025-06-01 09:00:00',NULL,TRUE),
+('EMP0011','PHON0014','2025-06-01 09:00:00',NULL,TRUE),
+('EMP0012','PHON0015','2025-06-01 09:00:00',NULL,TRUE),
 ('EMP0013','PHON0004','2026-01-05 09:00:00',NULL,TRUE);
 
 INSERT INTO address VALUES
@@ -877,11 +980,36 @@ INSERT INTO address VALUES
 ('ADDR0004','POSTAL','POBOX',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Richmond','VIC','3121'),
 ('ADDR0005','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'42','Supply Avenue','Dandenong','VIC','3175'),
 ('ADDR0006','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'17','Orchard Lane','Healesville','VIC','3777'),
-('ADDR0007','PHYSICAL',NULL,'UNIT','2',NULL,NULL,NULL,NULL,'9','Station Street','Lilydale','VIC','3140');
+('ADDR0007','PHYSICAL',NULL,'UNIT','2',NULL,NULL,NULL,NULL,'9','Station Street','Lilydale','VIC','3140'),
+('ADDR0008','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'21','River Road','Healesville','VIC','3777'),
+('ADDR0009','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'31','Oak Street','Healesville','VIC','3777'),
+('ADDR0010','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'32','Oak Street','Healesville','VIC','3777'),
+('ADDR0011','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'33','Oak Street','Healesville','VIC','3777'),
+('ADDR0012','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'34','Oak Street','Healesville','VIC','3777'),
+('ADDR0013','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'35','Oak Street','Healesville','VIC','3777'),
+('ADDR0014','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'36','Oak Street','Healesville','VIC','3777'),
+('ADDR0015','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'37','Oak Street','Healesville','VIC','3777'),
+('ADDR0016','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'38','Oak Street','Healesville','VIC','3777'),
+('ADDR0017','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'39','Oak Street','Healesville','VIC','3777'),
+('ADDR0018','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'40','Oak Street','Healesville','VIC','3777'),
+('ADDR0019','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'41','Oak Street','Healesville','VIC','3777'),
+('ADDR0020','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'6','Old Supply Road','Dandenong','VIC','3175'),
+('ADDR0021','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'88','New Supply Road','Dandenong','VIC','3175');
 
 INSERT INTO employeeaddress VALUES
-('EMP0002','ADDR0006','2021-02-01 09:00:00',NULL),
+('EMP0001','ADDR0009','2020-01-01 09:00:00',NULL),
+('EMP0002','ADDR0006','2021-02-01 09:00:00','2024-12-31 17:00:00'),
+('EMP0002','ADDR0008','2025-01-01 09:00:00',NULL),
 ('EMP0003','ADDR0007','2022-03-01 09:00:00',NULL),
+('EMP0004','ADDR0010','2023-01-15 09:00:00',NULL),
+('EMP0005','ADDR0011','2024-02-01 09:00:00',NULL),
+('EMP0006','ADDR0012','2024-05-01 09:00:00',NULL),
+('EMP0007','ADDR0013','2025-01-05 09:00:00',NULL),
+('EMP0008','ADDR0014','2025-01-05 09:00:00',NULL),
+('EMP0009','ADDR0015','2025-06-01 09:00:00',NULL),
+('EMP0010','ADDR0016','2025-06-01 09:00:00',NULL),
+('EMP0011','ADDR0017','2025-06-01 09:00:00',NULL),
+('EMP0012','ADDR0018','2025-06-01 09:00:00',NULL),
 ('EMP0013','ADDR0006','2026-01-05 09:00:00',NULL);
 
 INSERT INTO pickerpack VALUES ('PACK001','Cloud Chasers','EMP0002',YEAR(CURRENT_DATE));
@@ -910,7 +1038,13 @@ INSERT INTO bottletype VALUES
 ('BOTL002',750,'Bordeaux','GLASS','Clear',200,1.10,FALSE,'Supplier quality inconsistency documented');
 INSERT INTO wineproduct VALUES ('PROD001','WINE001','BOTL001',12,TRUE);
 INSERT INTO productprice VALUES ('PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 180 DAY),NULL,360.00);
-INSERT INTO supplier VALUES ('SUPP001','Valley Glass Supply','ADDR0005','0399990000','Sam','Lee','sam@valleyglass.example');
+INSERT INTO supplier VALUES ('SUPP001','Valley Glass Supply','Sam','Lee','sam@valleyglass.example');
+INSERT INTO supplieraddress VALUES
+('SUPP001','ADDR0020','2020-01-01 09:00:00','2024-12-31 17:00:00'),
+('SUPP001','ADDR0021','2025-01-01 09:00:00',NULL);
+INSERT INTO supplierphone VALUES
+('SUPP001','PHON0016','2020-01-01 09:00:00','2024-12-31 17:00:00',TRUE),
+('SUPP001','PHON0017','2025-01-01 09:00:00',NULL,TRUE);
 INSERT INTO supplierbottle VALUES ('SUPP001','BOTL001','VG-750-BURG',TRUE);
 INSERT INTO purchaseorder VALUES ('PURC0001','SUPP001',DATE_SUB(CURRENT_DATE,INTERVAL 90 DAY),'RECEIVED');
 INSERT INTO purchaseorderline VALUES ('PURC0001','BOTL001',2000,1.15);
@@ -998,6 +1132,124 @@ INSERT INTO wellbeingaction VALUES
 ('WACT0001','WBCK0001','Review next fortnight roster and overtime allocation',DATE_ADD(CURRENT_DATE,INTERVAL 3 DAY),NULL,'INPROGRESS'),
 ('WACT0002','WBCK0002','Schedule supported return-to-work discussion',DATE_ADD(CURRENT_DATE,INTERVAL 5 DAY),NULL,'OPEN');
 -- ===== END database/data/01_testdata.sql =====
+
+-- ===== SIX DECISION-SUPPORT QUERIES =====
+USE cloudrestwines;
+-- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
+WITH activeworkforce AS (
+  SELECT er.employeeId, er.operationalAreaId
+  FROM employeerole er
+  WHERE er.startDateTime <= NOW() AND (er.endDateTime IS NULL OR er.endDateTime > NOW())
+), completion AS (
+  SELECT ta.employeeId
+  FROM trainingattendance ta
+  JOIN trainingsession ts ON ts.trainingSessionId = ta.trainingSessionId
+  JOIN trainingcourse tc ON tc.trainingCourseId = ts.trainingCourseId
+  JOIN activeworkforce aw ON aw.employeeId = ta.employeeId
+  WHERE ta.attendanceStatus = 'COMPLETED'
+    AND tc.trainingCategory IN ('SAFETY','SUSTAINABILITY')
+    AND ts.sessionDate >= MAKEDATE(YEAR(CURRENT_DATE), 1)
+    AND (ts.operationalAreaId IS NULL OR ts.operationalAreaId = aw.operationalAreaId)
+  GROUP BY ta.employeeId
+  HAVING COUNT(DISTINCT tc.trainingCategory) = 2
+)
+SELECT oa.areaName,
+       COUNT(DISTINCT aw.employeeId) AS activeEmployees,
+       COUNT(DISTINCT c.employeeId) AS employeesTrained,
+       ROUND(100.0 * COUNT(DISTINCT c.employeeId) / NULLIF(COUNT(DISTINCT aw.employeeId),0), 1) AS coveragePercent
+FROM activeworkforce aw
+JOIN operationalarea oa ON oa.operationalAreaId = aw.operationalAreaId
+LEFT JOIN completion c ON c.employeeId = aw.employeeId
+GROUP BY oa.operationalAreaId, oa.areaName
+ORDER BY coveragePercent, oa.areaName;
+USE cloudrestwines;
+-- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
+WITH hoursbyarea AS (
+  SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
+  FROM shift s JOIN shiftassignment sa ON sa.shiftId = s.shiftId
+  WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+  GROUP BY s.operationalAreaId
+), incidentsbyarea AS (
+  SELECT operationalAreaId, COUNT(*) AS incidentCount, SUM(totalLostHours) AS lostHours
+  FROM incident
+  WHERE incidentDateTime >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+  GROUP BY operationalAreaId
+)
+SELECT oa.areaName, h.labourHours, COALESCE(i.incidentCount,0) AS incidentCount,
+       COALESCE(i.lostHours,0) AS lostHours,
+       ROUND(COALESCE(i.incidentCount,0) * 1000.0 / NULLIF(h.labourHours,0), 2) AS incidentsPer1000Hours
+FROM hoursbyarea h
+JOIN operationalarea oa ON oa.operationalAreaId = h.operationalAreaId
+LEFT JOIN incidentsbyarea i ON i.operationalAreaId = h.operationalAreaId
+ORDER BY incidentsPer1000Hours DESC;
+USE cloudrestwines;
+-- Compare employee incidents in the 180 days before and after completed annual safety training.
+WITH completion AS (
+  SELECT ta.employeeId, MIN(ta.completionDate) AS completionDate
+  FROM trainingattendance ta
+  JOIN trainingsession ts ON ts.trainingSessionId = ta.trainingSessionId
+  JOIN trainingcourse tc ON tc.trainingCourseId = ts.trainingCourseId
+  WHERE ta.attendanceStatus = 'COMPLETED' AND tc.trainingCategory = 'SAFETY'
+  GROUP BY ta.employeeId
+)
+SELECT c.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName, c.completionDate,
+       SUM(CASE WHEN i.incidentDateTime >= DATE_SUB(c.completionDate, INTERVAL 180 DAY)
+                 AND i.incidentDateTime < c.completionDate THEN 1 ELSE 0 END) AS incidentsBefore,
+       SUM(CASE WHEN i.incidentDateTime >= c.completionDate
+                 AND i.incidentDateTime < DATE_ADD(c.completionDate, INTERVAL 180 DAY) THEN 1 ELSE 0 END) AS incidentsAfter
+FROM completion c
+JOIN employee e ON e.employeeId = c.employeeId
+LEFT JOIN incidentemployee ie ON ie.employeeId = c.employeeId AND ie.involvementRole = 'AFFECTED'
+LEFT JOIN incident i ON i.incidentId = ie.incidentId
+GROUP BY c.employeeId, e.firstName, e.lastName, c.completionDate
+ORDER BY incidentsBefore DESC, incidentsAfter DESC;
+USE cloudrestwines;
+-- Identify people for supervisor review without exposing confidential wellbeing notes.
+WITH workload AS (
+  SELECT sa.employeeId, SUM(sa.regularHours) AS regularHours, SUM(sa.overtimeHours) AS overtimeHours
+  FROM shiftassignment sa JOIN shift s ON s.shiftId = sa.shiftId
+  WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+  GROUP BY sa.employeeId
+), recentincident AS (
+  SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
+  FROM incidentemployee ie JOIN incident i ON i.incidentId = ie.incidentId
+  WHERE i.incidentDateTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+  GROUP BY ie.employeeId
+), recentconcern AS (
+  SELECT employeeId, COUNT(*) AS concernCount
+  FROM wellbeingcheckin
+  WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY) AND concernRaisedFlag = TRUE
+  GROUP BY employeeId
+)
+SELECT w.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName,
+       w.regularHours, w.overtimeHours, COALESCE(ri.incidentCount,0) AS recentIncidents,
+       COALESCE(rc.concernCount,0) AS wellbeingConcernCount,
+       CASE WHEN w.overtimeHours >= 4 OR ri.incidentCount > 0 OR rc.concernCount > 0 THEN 'SUPERVISOR REVIEW' ELSE 'MONITOR' END AS recommendedAction
+FROM workload w
+JOIN employee e ON e.employeeId = w.employeeId
+LEFT JOIN recentincident ri ON ri.employeeId = w.employeeId
+LEFT JOIN recentconcern rc ON rc.employeeId = w.employeeId
+ORDER BY (w.overtimeHours + COALESCE(ri.incidentCount,0) * 5 + COALESCE(rc.concernCount,0) * 5) DESC;
+USE cloudrestwines;
+-- Video demonstration must call both parameter values.
+CALL getExpiringQualifications(30);
+CALL getExpiringQualifications(90);
+USE cloudrestwines;
+-- View-based management query: prioritise overdue and high-severity corrective actions.
+SELECT correctiveActionId, incidentId, incidentDateTime, severity, areaName,
+       actionDescription, responsibleEmployee, targetDate, daysOverdue, actionStatus
+FROM openincidentaction
+ORDER BY (daysOverdue > 0) DESC,
+         FIELD(severity,'CRITICAL','HIGH','MODERATE','LOW'),
+         daysOverdue DESC, targetDate;
+
+EXPLAIN
+SELECT correctiveActionId, incidentId, incidentDateTime, severity, areaName,
+       actionDescription, responsibleEmployee, targetDate, daysOverdue, actionStatus
+FROM openincidentaction
+ORDER BY (daysOverdue > 0) DESC,
+         FIELD(severity,'CRITICAL','HIGH','MODERATE','LOW'),
+         daysOverdue DESC, targetDate;
 
 -- Import verification summary
 SELECT COUNT(*) AS baseTableCount

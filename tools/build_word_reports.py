@@ -168,19 +168,25 @@ def build_main():
     doc.add_heading('Document status and required student completion',level=1)
     add_note(doc,'Important','This report contains all work currently possible from the supplied PDFs and validated local database. The official A2 workbook, Week 11 scenario, final Workbench screenshots, genuine group contribution dates, video and RiPPlE peer reviews are not available and are explicitly marked rather than fabricated.')
     doc.add_heading('AI use declaration',level=2)
-    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical extraction from information_schema; wording reviewed.'),('6','Data quality','Framework/test data; official workbook analysis pending.'),('7','Queries','SQL drafting/critique; all outputs independently executed.')]
+    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Framework/test data; official workbook analysis pending.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
     add_table(doc,['Task','AI used for','Human validation / limitation'],ai_rows,[600,2200,6560],9)
 
     # Task 1 landscape
     new_landscape(doc); doc.add_heading('Task 1 — Project Plan with Risk Register',level=1)
     plan_rows=[
-      ('Case requirements','Mia','8','W4','Pending','Omission','Traceability matrix','Extraction/check'),('HR scope/KPIs','Mia / Rianna','5','W4','Pending','Not calculable','Define measures','Critique'),
-      ('Base + HR ER model','Zora','28','W7','Completed draft','Cardinality errors','Workbench + review','Alternatives'),('Design decisions','Mia / Zora','10','W8','Draft complete','Weak trade-offs','Trace to model','Draft/critique'),
-      ('Schema / rules','1','32','W10','Validated','Build failure','Clean rebuild/tests','SQL review'),('Data dictionary','Zora / 1','16','W10','Generated','Schema drift','Generate from schema','Mechanical'),
-      ('Official cleaning','1','23','After workbook','Blocked','Source missing','Staging framework','Pending source'),('Test data / integrity','1 / Rianna','20','W10','Validated','Trivial coverage','Scenario tests','Fictitious data'),
-      ('Six queries','Rianna','28','W11','Validated','Routine lookup','Management questions','SQL review'),('Reflection','All','10','W12','Capture pack ready','Fabrication','Save genuine logs','Subject'),
-      ('Video','All','12','W12','Run sheet ready','Over time','Rehearse','Timing only'),('Final QA','Mia / All','10','W12','In progress','Mismatch','Automated audit','Cross-check')]
-    add_table(doc,['Task','Owner','h','Target','Status','Risk','Mitigation','AI use'],plan_rows,[1150,850,350,550,900,950,2800,1810],7.0)
+      ('Requirements and planning','Mia','Mia','8','Week 4','Pending','Traceability matrix','Requirement omission','Cross-check case','Extraction/check'),
+      ('HR scope and KPIs','Mia / Rianna','Mia','5','Week 4','Pending','Defined measures','Metric not calculable','Define numerator/denominator','Alternatives/critique'),
+      ('Base and HR ER model','Zora / All','Zora','28','Week 7','Pending','Workbench model and alternatives','Cardinality error','Peer review against case','Modelling critique'),
+      ('Design decisions','Mia / Zora','Mia','10','Week 8','Pending','Four cited decision records','Weak trade-offs','Trace each to ER','Draft/critique'),
+      ('Schema and rules','1 / Zora','1','32','Week 10','Pending','Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
+      ('Data dictionary','Zora / 1','Zora','16','Week 10','Pending','Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
+      ('Official cleaning','1 / Mia','1','23','After workbook','Pending','Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
+      ('Test data and integrity','1 / Rianna','1','20','Week 10','Pending','Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
+      ('Six analytical queries','Rianna / 1','Rianna','28','Week 11','Pending','Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
+      ('Reflection','All','Rianna','10','Week 12','Pending','Genuine RiPPlE evidence','Fabrication risk','Save real iterations','Reflection subject'),
+      ('Video','All','Rianna','12','Week 12','Pending','Five-minute demonstration','Over time','Timed rehearsal','Structure/timing'),
+      ('Final integration and QA','Mia / All','Mia','10','Week 12','Pending','Submission package/audit','Cross-file mismatch','Automated and human QA','Consistency checking')]
+    add_table(doc,['Task Description','Responsible Team Member(s)','Final Deliverable Owner','Estimated Hours','Target Completion Date','Actual Completion Date','Expected Output / Evidence','Risk or Challenge','Mitigation Strategy','AI Used / How Used'],plan_rows,[1100,850,750,500,650,650,1400,1050,1300,1110],6.2)
     doc.add_heading('Checkpoint sequence',level=2)
     cp=[('Week 3','Team confirmed; contacts shared'),('Week 4','Case understanding, HR perspective, functionality plan'),('Week 7','Draft ER model and decisions'),('Week 8 Fri','Iteration Tasks 1–7'),('Week 10','Normalisation, cleaning plan, business rules'),('Week 11','Draft queries and assigned scenario'),('Week 12','Report, SQL and video'),('Week 13+1','Buddycheck')]
     add_table(doc,['Milestone','Evidence'],cp,[1500,7860],9)
@@ -191,7 +197,9 @@ def build_main():
     for title,body in md_sections(ROOT/'docs/report/task2-design-decisions.md'):
         doc.add_heading(title,level=2); prose_from_md(doc,body)
     doc.add_heading('Task 3 — Database Functionality and Business Rules',level=1)
-    mapping={1:'t02_invalidroledate',2:'t03_missingreordercomment',3:'t04_underagecustomer',4:'t05_postalshipment',5:'t06_invalidconversionpercentage'}
+    stakeholder_rows=[('Owners / management','Reliable compliance data','Integrated history and decision queries','Normalised schema and six queries','Reporting convenience vs integrity'),('HR manager','Accurate private HR records','Temporal roles/classifications','Dated HR tables; restricted notes','Privacy first'),('Supervisors','Current teams and workload','One supervisor at a time','Overlap trigger','Integrity first'),('Permanent employees','Correct history','Current and historical contacts','Dated associations','High'),('Casual / seasonal employees','Correct seasonal status','CASUAL + SEASONAL dimensions','Separate type/pattern','Avoid conflation'),('Safety / compliance','Multi-person/near-miss evidence','Roles and zero lost hours','Incident association','Evidence accuracy'),('Customers','Postal contact, physical delivery','Multiple addresses','Shipment trigger','Delivery integrity'),('Suppliers','Retained contact changes','Temporal address/phone','Supplier associations','Extra joins accepted'),('Reporting users','Reproducible private metrics','Aggregates and safeguards','Defined query logic','Accuracy/privacy'),('Community','Safe responsible operations','Auditable training/actions','Traceable records','Public value/privacy')]
+    add_table(doc,['Stakeholder','Need / Risk','Database Requirement','Design Response','Priority / Trade-off'],stakeholder_rows,[1300,1700,1900,2200,2260],7.2)
+    mapping={1:'t02_invalidroledate',2:'t03_missingreordercomment',3:'additional_postalshipment',4:'t04_unpaidshipment',5:'t05_overlappingsupervision'}
     current=[]; active_rule=None
     def flush_task3():
         nonlocal current
@@ -203,7 +211,7 @@ def build_main():
     def add_rule_evidence(rule_no):
         name=mapping[rule_no]
         add_code(doc,(ROOT/'database/tests'/f'{name}.sql').read_text(encoding='utf-8'),'Readable SQL submitted for Turnitin')
-        add_image(doc,ROOT/'docs/evidence/test-output'/f'{name}.png',f'Figure — MySQL 8.4 response for Rule {rule_no}',6.2)
+        add_note(doc,'Genuine evidence required',f'[PENDING STUDENT WORKBENCH SCREENSHOT — RULE {rule_no}] Capture readable SQL and the expected MySQL result under the submitting student account.')
     for line in (ROOT/'docs/report/task3-functionality-business-rules.md').read_text(encoding='utf-8').splitlines()[1:]:
         if line.startswith('## '):
             flush_task3()
@@ -215,33 +223,47 @@ def build_main():
             title=line[4:].strip(); doc.add_heading(title,level=3)
             active_rule=int(re.search(r'Rule (\d+)',title).group(1)) if title.startswith('Rule ') else None
         elif not line.strip(): flush_task3()
-        else: current.append(line)
+        elif not line.startswith('|') and not line.startswith('-|') and not line.startswith('|---'): current.append(line)
     flush_task3()
     if active_rule: add_rule_evidence(active_rule)
 
-    # Task 4
+    # Task 4 — dedicated landscape full model, then assumptions and alternatives
+    new_landscape(doc)
     doc.add_heading('Task 4 — ER Diagram with Annotated Alternatives',level=1)
     add_para(doc,'The editable MySQL Workbench model contains one complete diagram and six domain views. The full view demonstrates scope; the domain figures preserve readable attributes, keys and UML cardinalities. Assumptions are stated explicitly and do not contradict the case.')
-    add_image(doc,ROOT/'diagrams/Cloudrest_Wines_ER_Diagram.png','Figure — Complete Cloudrest Wines EER model generated in MySQL Workbench',4.2)
-    alternatives=[('Customer types','One wide customer table','Supertype/subtypes reduce inapplicable NULLs while retaining a common order key.'),('Address history','Copied columns or polymorphic owner','Shared address with typed dated associations gives enforceable FKs and retained history.'),('Training structure','One repeated employee-training table','Course/session/attendance separates definition, delivery and outcome for 3NF and coverage queries.')]
-    add_table(doc,['Design element','Alternative','Reason selected'],alternatives,[1900,2700,4760],9)
+    add_image(doc,ROOT/'diagrams/Cloudrest_Wines_ER_Diagram.png','Figure — Complete Cloudrest Wines EER model generated in MySQL Workbench',7.2)
     doc.add_heading('Assumptions',level=2)
     assumptions=[]
     for line in (ROOT/'docs/requirements/assumptions.md').read_text(encoding='utf-8').splitlines():
         if line.startswith('| ') and not line.startswith('| Design') and not line.startswith('|---'):
             v=[x.strip() for x in line.strip('|').split('|')]; assumptions.append(v)
-    add_table(doc,['Area','Assumption','Reason'],assumptions,[1500,4300,3560],8.5)
+    add_table(doc,['Area','Assumption','Reason'],assumptions,[1500,4300,3560],7.5)
+    doc.add_heading('Annotated design alternatives',level=2)
+    alternatives=[('Customer types','One wide customer table','Supertype/subtypes reduce inapplicable NULLs while retaining a common order key.'),('Address history','Copied columns or polymorphic owner','Shared address with typed dated associations gives enforceable FKs and retained history.'),('Training structure','One repeated employee-training table','Course/session/attendance separates definition, delivery and outcome for 3NF and coverage queries.')]
+    add_table(doc,['Design element','Alternative','Reason selected'],alternatives,[1900,2700,4760],8)
+    new_portrait(doc)
 
     # Task 5 intro, dictionary moved appendix
     doc.add_heading('Task 5 — Data Dictionary and Database Build',level=1)
     prose_from_md(doc,(ROOT/'docs/report/task5-data-dictionary.md').read_text(encoding='utf-8').split('\n',1)[1])
-    add_para(doc,'Build verification: 53 base tables, 1 view, 274 columns, 69 foreign keys, 47 CHECK constraints, 11 triggers and 1 stored procedure under MySQL 8.4.11. The portable script rebuilds from an empty database without error.')
+    metrics=json.loads((ROOT/'verification/verification-report.json').read_text())['schemaMetrics']
+    add_para(doc,f"Build verification: {metrics['baseTables']} base tables, {metrics['views']} view, {metrics['columns']} columns, {metrics['foreignKeys']} foreign keys, {metrics['checkConstraints']} CHECK constraints, {metrics['triggers']} triggers and {metrics['routines']} stored procedure under MySQL 8.4.11. Statistics are read from the verified live schema, not hard-coded.")
 
     # Task 6
     doc.add_heading('Task 6 — Data Quality Strategy and Validation',level=1)
     for title,body in md_sections(ROOT/'docs/report/task6-data-quality.md'):
         doc.add_heading(title,level=2); prose_from_md(doc,body)
-    add_image(doc,ROOT/'docs/evidence/test-output/t01_validtraining.png','Figure — Positive integrity test accepted and rolled back',6.2)
+    integrity=[
+      ('T01','Valid completed training accepted','t01_validtraining','Accepted, then rolled back','Confirms complete HR training outcomes are supported.'),
+      ('T02','Role end before start rejected','t02_invalidroledate','CHECK Error 3819','Prevents impossible role history.'),
+      ('T03','Reorder FALSE without comment rejected','t03_missingreordercomment','CHECK Error 3819','Preserves the bottle sourcing/quality explanation.'),
+      ('T04','Unpaid order shipment rejected','t04_unpaidshipment','Trigger Error 1644','Prevents dispatch before accounting confirmation.'),
+      ('T05','Overlapping supervision rejected','t05_overlappingsupervision','Trigger Error 1644','Enforces one supervisor at a point in time.')]
+    add_table(doc,['Test','Plain-English scenario','Expected result','One-sentence explanation'],[(a,b,d,e) for a,b,c,d,e in integrity],[700,3300,1800,3560],8)
+    for test,scenario,name,expected,explanation in integrity:
+        doc.add_heading(f'{test} — {scenario}',level=3)
+        add_code(doc,(ROOT/'database/tests'/f'{name}.sql').read_text(encoding='utf-8'),f'{test} readable SQL')
+        add_note(doc,'Genuine evidence required',f'[PENDING STUDENT WORKBENCH SCREENSHOT — {test}] Expected: {expected}. {explanation}')
 
     # Task 7 each query source+image
     doc.add_heading('Task 7 — Decision-Support SQL Queries',level=1)
@@ -251,8 +273,7 @@ def build_main():
         if title.startswith('Query '):
             qnum=int(title.split()[1]); qpath=next((ROOT/'database/queries').glob(f'{qnum:02d}_*.sql'))
             add_code(doc,qpath.read_text(encoding='utf-8'),f'Query {qnum} SQL')
-            img=next((ROOT/'docs/evidence/query-output').glob(f'{qnum:02d}_*.png'))
-            add_image(doc,img,f'Figure — Query {qnum} genuine MySQL 8.4 output',6.2)
+            add_note(doc,'Genuine query evidence',f'[PENDING STUDENT WORKBENCH SCREENSHOT — QUERY {qnum}] Capture the required output(s) listed in docs/evidence/student-screenshot-checklist.md.')
 
     doc.add_heading('Conclusion',level=1)
     add_para(doc,'Cloudrest Wines now has a reproducible 3NF MySQL OLTP design covering the complete base case and a connected HR/workforce sustainability extension. Database constraints preserve critical history and transactional integrity, while six tested queries convert operational records into training, exposure, workload, renewal and corrective-action decisions. Remaining work depends on course inputs or genuine student participation and is listed transparently rather than simulated.')
@@ -274,7 +295,7 @@ def build_main():
 
     # Appendix B data dictionary landscape
     new_landscape(doc); doc.add_heading('Appendix B — Complete Data Dictionary',level=1)
-    add_note(doc,'Generated evidence','This appendix is generated from information_schema after a clean build, preventing field/type/key drift. SQL CHECK and trigger definitions remain authoritative for complex domains.')
+    add_note(doc,'Prepared and cross-checked','The data dictionary was prepared as Word tables and cross-checked against the implemented MySQL schema for consistency. Automation is used internally to prevent field/type/key drift.')
     rows=list(csv.DictReader((ROOT/'docs/report/data-dictionary.csv').open(encoding='utf-8-sig')))
     by_table={}
     for r in rows: by_table.setdefault(r['tableName'],[]).append(r)

@@ -1,6 +1,6 @@
 HEADING STYLE COUNTS
 - Heading 1: 13
-- Heading 2: 73
+- Heading 2: 77
 - Heading 3: 5
 
 REMINDER

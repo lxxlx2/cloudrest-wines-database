@@ -1,33 +1,27 @@
-# Cloudrest Wines Completion and Handoff Audit
+# Cloudrest Wines HD Revision Completion Audit
 
-## Result
+## Verified development state
 
-All locally completable technical work has been produced and independently rerun. The portable database build passes 31/31 automated checks on MySQL 8.4.11. The final Word report renders to 45 pages and the verification report to 3 pages without observed clipping, overlap, blank pages or section reordering. Both final DOCX files pass the packaged accessibility audit with zero high-, medium- or low-severity findings.
+- MySQL 8.4.11 empty-database rebuild: PASS.
+- Development-mode verification: 64/64 checks passed.
+- Final-mode gate: deliberately FAILS while genuine names, dates, screenshots and course inputs are missing.
+- Schema: 55 base tables, 1 view, 282 columns, 72 foreign keys, 48 CHECK constraints, 15 triggers and 1 stored procedure.
+- Six query scripts, 30/90-day procedure calls and EXPLAIN execute successfully.
+- Five assessed integrity tests behave as expected; additional controls remain separate.
+- Native Workbench model, complete ER and six domain views were regenerated from the revised schema.
+- Word report render: 50 pages; no observed clipping, overlap, broken ordering or blank pages in the reviewed page images.
 
-## Cross-artifact consistency
+## Major HD revisions
 
-- Database: 53 base tables, 1 view, 274 columns, 69 foreign keys, 47 CHECK constraints, 11 triggers and 1 stored procedure.
-- Business-rule evidence: one valid control and five expected failures; Rule 3 is the case-specific minimum-age rule.
-- Analytics: six decision-support query scripts execute and return results; the package includes a view, parameterised procedure and EXPLAIN evidence.
-- Model: native MySQL Workbench `.mwb`, full ER export and six readable domain views are generated from the schema.
-- Dictionary: generated from `information_schema`, covering all 274 fields and the reporting view.
-- Report: Tasks 1–7, evidence, references, complete dictionary and handoff checklist are integrated.
-- Reproducibility: `tools/verify_project.py` rebuilds the database before checking structure, naming, invariants, queries and isolated rule tests.
+Supplier address/phone history now uses dated associations and shared contact entities. Employment status separates work time, permanent/casual type and ongoing/seasonal pattern. Unsupported vineyard-size and severity/lost-hour over-constraints were removed. Every employee has one current physical address and exactly one current primary phone, with meaningful contact/role/supervisor histories. Task 1 has all ten required columns; Task 2 has four cited alternatives; Task 3 includes stakeholder analysis and the five case-supported assessed rules; Task 6 has exactly five assessed tests; query submissions are self-contained; and the dictionary has explicit domains and semantic definitions.
 
-## Deliberately incomplete external items
+## Genuine external dependencies
 
-These cannot be truthfully fabricated and remain clearly marked:
+1. Official A2 workbook findings and screenshots.
+2. Week 11 assigned business scenario.
+3. Genuine student MySQL Workbench screenshots listed in `docs/evidence/student-screenshot-checklist.md`.
+4. Four-person video and genuine contribution statements.
+5. RiPPlE prompt progression and peer feedback.
+6. Replacement of member `1`, student details, actual completion dates and submission date.
 
-1. Official A2 spreadsheet: not supplied, so real error rows, corrections and before/after screenshots are pending; a runnable staging/profiling/cleaning framework is included.
-2. Week 11 assigned scenario: not supplied.
-3. Four-person video: script and run order are supplied, but the students must record and submit it.
-4. RiPPlE reflection and peer review: a capture pack is supplied; genuine prompts, individual reflection and peer feedback must be completed by the students.
-5. Administrative fields: submission date, placeholder member `1`, actual hours/contribution percentages and any required student numbers must be completed by the group.
-
-## Independent reproduction
-
-1. Read `deliverables/README_FIRST.md`.
-2. Run `deliverables/final-submission/Cloudrest_Wines_Database.sql` in MySQL 8.4+.
-3. Run `python3 tools/verify_project.py`; expected result is `PASS`, 31/31.
-4. Compare final package files against `verification/final-package-sha256.txt` using `shasum -a 256`.
-5. Inspect `verification/verification-report.json` for machine-readable evidence and `verification/verification-report.md` for the human-readable audit.
+The project is therefore a verified development submission package, not yet a truthful final submission.

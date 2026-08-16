@@ -2,7 +2,7 @@
 
 ## Complete model
 
-The Cloudrest Wines model contains 53 base tables organised into six connected domains: personnel/history; HR training and qualifications; shifts, safety and wellbeing; vineyard and wine production; products and procurement; and customers, orders and addresses. The final report will embed a full-model image plus enlarged domain views so attributes, keys and UML cardinalities remain legible. The editable Workbench model is delivered separately as `Cloudrest_Wines_Model.mwb` once reverse engineering and layout are complete.
+The Cloudrest Wines model contains 55 base tables organised into six connected domains: personnel/history; HR training and qualifications; shifts, safety and wellbeing; vineyard and wine production; products and procurement; and customers, orders and addresses. The report embeds a dedicated landscape full-model image followed immediately by assumptions, then enlarged domain views so attributes, keys and UML cardinalities remain legible. The regenerated editable Workbench model is delivered as `Cloudrest_Wines_Model.mwb`.
 
 The complete list of assumptions is maintained in `docs/requirements/assumptions.md`. Those assumptions resolve ambiguity without removing a stated case requirement.
 

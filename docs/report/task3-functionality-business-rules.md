@@ -1,59 +1,77 @@
-# Task 3 — Database Functionality and Business Rules (Working Draft)
+# Task 3 — Functionality, Stakeholders and Business Rules
 
 ## 3a. Functionality description
 
-Cloudrest Wines requires an operational database because its spreadsheet and document records no longer support business growth, government reporting or retained history. The proposed MySQL 8.x system integrates personnel, vineyards, grape varieties, harvests, wines, products, bottle procurement, customers and orders. The selected Human Resources, Workforce Planning and Wellbeing extension adds qualifications, training, shifts, labour allocation, incidents, corrective action and manager check-ins. These records support two defined sustainability measures: annual safety/sustainability training coverage and incidents per 1,000 labour hours.
+Cloudrest Wines needs a transactional database because spreadsheet and document records no longer scale to business growth, biosecurity reporting and sustainability evidence (Wine Company Case, p. 1). The MySQL system integrates personnel, vineyard plantings, harvests, wines, bottles, suppliers, customers and orders. The selected HR perspective adds qualifications, training, shifts, labour hours, incidents, corrective actions and confidential wellbeing check-ins (BISM2207 Assessment Specification, p. 2). It supports annual safety/sustainability training coverage and incident rates per 1,000 labour hours.
 
-The logical design targets third normal form. Repeating groups such as phones, wine components, order lines and training participants are represented by separate tables. Many-to-many relationships use associative tables, including `winecomposition`, `trainingattendance` and `incidentemployee`. Time-dependent facts are not overwritten: employee role, supervisor, phone and address associations retain start and end timestamps, while product prices retain effective dates. These structures reduce insertion, update and deletion anomalies while preserving an audit trail.
+The design targets 3NF and OLTP use. Repeating phones and addresses are separate entities; temporal association tables preserve employee, customer and supplier contact history. Course definitions, delivered sessions and individual attendance are separated. Many-to-many facts use associative tables, including wine composition, incident involvement and training attendance. Role, supervisor, address, phone and price histories retain effective dates rather than overwriting facts.
 
-The database follows OLTP principles by storing one fact in one authoritative location, using short stable identifiers, enforcing referential integrity and separating transactions from derived reports. For example, a training course definition is stored once, each delivery is a `trainingsession`, and each employee outcome is a `trainingattendance` record. Purchase orders are separated from receipts because one order may arrive in multiple shipments. Customer orders retain the actual shipment-address key so a later customer move does not alter the historical transaction. Reporting logic is implemented through read-only queries and a view rather than storing duplicated totals.
+Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, current, physical shipment addresses. Negative test records remain outside the clean baseline. Privacy is prioritised for TFNs, dates of birth, contact data, incident participation and wellbeing notes: operational reporting uses IDs or aggregates and excludes confidential notes.
 
-Input controls combine appropriate types, domains and database constraints. Enumerated domains restrict employment, address, incident, training and order statuses. `NOT NULL`, `UNIQUE` and range `CHECK` constraints prevent incomplete or implausible records. Composite keys prevent duplicate relationship instances. Foreign keys specify deliberate update/delete actions. Triggers enforce cross-row or cross-table rules that row-level checks cannot express, including preventing overlapping role/supervisor histories and blocking shipment to a postal address. Test data includes valid cases, boundary conditions and expected failures.
+Payroll, payment instruments, delivery costing and unrelated inventory remain outside scope, consistent with the case. The system provides reliable operational evidence without adding enterprise functions the four-person team could not explain or validate.
 
-Security is based on least privilege and data minimisation. TFNs, dates of birth, contact details, incident records and wellbeing notes are sensitive. Production access should be divided into administrator, HR manager, safety officer, supervisor and de-identified report-viewer roles. Ordinary reporting should identify employees by internal ID and expose aggregated concern counts rather than confidential notes. TFNs should be encrypted or masked outside authorised HR workflows, exports should omit unnecessary personal data, and all development/test records must remain fictitious. Backups and SQL exports require the same access controls as the live database.
+## Stakeholder and community requirements
 
-The design deliberately excludes payroll, detailed payment instruments, delivery-cost accounting and inventory for corks, labels, barrels and packing boxes. Those functions remain in external accounting or purchasing processes, as specified by the case. This boundary keeps the database transaction-focused while providing management with reliable workforce and sustainability information.
+| Stakeholder | Need / risk | Database requirement | Design response | Priority / trade-off |
+|---|---|---|---|---|
+| Owners / management | Reliable growth, compliance and sustainability reporting | Integrated operational history and decision queries | Normalised OLTP schema, view and six queries | High; reporting convenience must not duplicate facts |
+| HR manager | Accurate employment and confidential wellbeing records | Role/classification history, qualifications and restricted notes | Temporal HR tables; confidential note excluded from routine queries | Privacy overrides managerial curiosity |
+| Supervisors | Current teams, hours, training and actions | One supervisor at a point in time; current-role area | Supervision history trigger and area-linked queries | Integrity over flexible duplicate assignments |
+| Permanent employees | Correct role/contact history | Current plus historical role, supervisor, address and phone | Dated association tables | High |
+| Casual / seasonal employees | Seasonal pattern and fair re-employment evidence | CASUAL + SEASONAL classification and seasonal ratings | Separate employment type and pattern | Avoids conflating legal status with work pattern |
+| Safety / compliance staff | Multi-person incidents and serious near misses | Many-to-many involvement, severity, nonnegative lost hours | `incidentemployee`; zero lost hours allowed | Safety evidence without unsupported assumptions |
+| Customers | Physical delivery plus optional postal correspondence | Multiple dated addresses; shipment validation | Postal retained but blocked for shipment | Delivery integrity takes priority |
+| Suppliers | Contact changes without lost procurement history | Address and phone history | `supplieraddress` and `supplierphone` | Extra joins accepted for auditability |
+| Regulatory / sustainability users | Reproducible measures without personal leakage | Aggregated training and incident-rate queries | Defined numerators/denominators; `NULLIF` safeguards | Accuracy and privacy |
+| Community / public value | Safe work and responsible operations | Traceable training, incident and corrective-action evidence | Auditable records using fictitious assessment data | Transparency without exposing private notes |
 
-## 3b. Five database-enforced business rules
+Exception coverage includes multi-person incidents; employee role, supervisor, address and phone changes; supplier address and phone changes; simultaneous customer physical/postal addresses; high overtime without an incident; confidential wellbeing notes; and a serious near miss with zero lost hours.
+
+## 3b. Five assessed database-enforced business rules
 
 ### Rule 1 — Historical role dates
 
-**Plain-English rule.** An employee role appointment may be current with no end date, but if an end date/time is recorded it cannot precede the start date/time. This implements the case requirement to retain personnel history using start and end dates.
-
-**Mechanism.** `CHECK (endDateTime IS NULL OR endDateTime >= startDateTime)` on `employeerole`.
-
-**Violation evidence.** Insert a new employee role with an end in May 2026 and a start in June 2026. MySQL returns Error 3819 for `chk_employeerole_dates`.
+- **Rule:** An employee role end date/time cannot precede its start date/time.
+- **Case source:** Personnel requires role history with start and end dates (Wine Company Case, pp. 1–2).
+- **Mechanism:** `chk_employeerole_dates` CHECK.
+- **Violation:** `database/tests/t02_invalidroledate.sql` inserts an end in May before a June start.
+- **Expected result:** MySQL Error 3819 naming `chk_employeerole_dates`.
+- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 1]`
 
 ### Rule 2 — Bottle reorder explanation
 
-**Plain-English rule.** When a bottle type is flagged not to be reordered, a non-blank explanation must be stored, particularly where quality or sourcing problems exist.
+- **Rule:** `reorderFlag = FALSE` requires a nonblank explanation.
+- **Case source:** Bottle quality problems and reasons for not reordering must be recorded (Wine Company Case, p. 3).
+- **Mechanism:** `chk_bottletype_reorder` CHECK.
+- **Violation:** `database/tests/t03_missingreordercomment.sql` supplies NULL.
+- **Expected result:** MySQL Error 3819 naming `chk_bottletype_reorder`.
+- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 2]`
 
-**Mechanism.** A `CHECK` requires either `reorderFlag = TRUE` or a non-empty `reorderComment`.
+### Rule 3 — Current physical shipment address
 
-**Violation evidence.** Insert a bottle with `reorderFlag = FALSE` and a NULL comment. MySQL returns Error 3819 for `chk_bottletype_reorder`.
+- **Rule:** Shipment must use the customer's current physical address, never a PO Box or Private Bag.
+- **Case source:** Orders are delivered to the current physical address and not postal addresses (Wine Company Case, p. 5).
+- **Mechanism:** shipment insert/update triggers inspect `address` and current `customeraddress` rows.
+- **Violation:** `database/tests/additional_postalshipment.sql` uses current PO Box `ADDR0004`.
+- **Expected result:** MySQL Error 1644 with the physical-address message.
+- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 3]`
 
-### Rule 3 — Individual customer legal age
+### Rule 4 — Paid before shipment
 
-**Plain-English rule.** The case requires an individual customer's date of birth to demonstrate legal age. Cloudrest Wines therefore rejects an individual younger than 18 at the time the row is inserted or updated.
+- **Rule:** An order must have `paidFlag = TRUE` before shipment.
+- **Case source:** The order is shipped only after accounting confirms payment (Wine Company Case, p. 5).
+- **Mechanism:** shipment insert/update triggers read `customerorder.paidFlag`.
+- **Violation:** `database/tests/t04_unpaidshipment.sql` attempts shipment for an unpaid order.
+- **Expected result:** MySQL Error 1644: `Order must be paid before shipment`.
+- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 4]`
 
-**Mechanism.** `trg_individualcustomer_legalage_insert` and its update equivalent compare `dateOfBirth` with the date 18 years before `CURRENT_DATE` and raise `SQLSTATE '45000'` when invalid.
+### Rule 5 — One supervisor at a point in time
 
-**Violation evidence.** Insert an individual customer whose birth date is only 17 years earlier. MySQL returns Error 1644 with the purpose-written legal-age message.
+- **Rule:** A supervised employee may have only one supervisor at any point in time.
+- **Case source:** Each supervised employee reports to only one supervisor and supervisor history is retained (Wine Company Case, p. 1).
+- **Mechanism:** supervision insert/update overlap triggers.
+- **Violation:** `database/tests/t05_overlappingsupervision.sql` inserts a second current supervisor for `EMP0008`.
+- **Expected result:** MySQL Error 1644 with the overlapping-supervision message.
+- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 5]`
 
-### Rule 4 — Physical shipment address
-
-**Plain-English rule.** A customer order must be shipped to the customer's current physical address and never to a PO Box or private bag. It must also be paid before shipment.
-
-**Mechanism.** `trg_shipment_validate_insert` reads the order, address and current customer-address association before allowing a shipment.
-
-**Violation evidence.** Create a paid order and attempt shipment to `ADDR0004`, a current PO Box address. The trigger raises Error 1644 with a purpose-written message.
-
-### Rule 5 — Grape juice conversion percentage
-
-**Plain-English rule.** The case defines a grape variety's juice conversion ratio as a percentage. It must therefore be greater than zero and cannot exceed 100 percent.
-
-**Mechanism.** `CHECK (juiceConversionPercent > 0 AND juiceConversionPercent <= 100)` on `grapevariety`.
-
-**Violation evidence.** Insert a test grape variety with a conversion ratio of 120 percent. MySQL returns Error 3819 for `chk_grapevariety_conversion`.
-
-The readable demonstration SQL is maintained in `database/tests/task3b_ruleviolations.sql`. Final MySQL Workbench screenshots should be inserted immediately after each rule in the Word report.
+Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age and grape-conversion validation remain additional controls rather than assessed Task 3b rules.

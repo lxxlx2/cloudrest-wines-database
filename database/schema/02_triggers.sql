@@ -168,4 +168,65 @@ BEGIN
   END IF;
 END$$
 
+CREATE TRIGGER trg_supplieraddress_nooverlap_insert
+BEFORE INSERT ON supplieraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplieraddress sa
+    WHERE sa.supplierId = NEW.supplierId
+      AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplieraddress_nooverlap_update
+BEFORE UPDATE ON supplieraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplieraddress sa
+    WHERE sa.supplierId = NEW.supplierId
+      AND NOT (sa.supplierId=OLD.supplierId AND sa.addressId=OLD.addressId AND sa.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplierphone_nooverlap_insert
+BEFORE INSERT ON supplierphone
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier phone period overlaps an existing period';
+  END IF;
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_supplierphone_nooverlap_update
+BEFORE UPDATE ON supplierphone
+FOR EACH ROW
+BEGIN
+  IF EXISTS (SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier phone period overlaps an existing period';
+  END IF;
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
+      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+  END IF;
+END$$
+
 DELIMITER ;

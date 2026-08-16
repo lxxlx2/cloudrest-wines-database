@@ -2,6 +2,7 @@
 from __future__ import annotations
 import csv
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -64,8 +65,15 @@ special = {
     "reorderComment": "Required explanation when a bottle type will not be reordered.",
     "regularHours": "Regular labour hours worked on the assigned shift.",
     "overtimeHours": "Overtime hours used in workload and safety analysis.",
-    "totalLostHours": "Total labour hours lost because of an incident.",
+    "totalLostHours": "Non-negative total labour hours lost because of an incident; may be zero for a serious near miss.",
+    "employmentType": "Legal engagement category: permanent or casual.",
+    "employmentPattern": "Indicates ongoing or seasonal work pattern independently of employment type.",
+    "workTimeType": "Indicates whether the appointment is full-time or part-time.",
+    "severity": "Classifies incident seriousness for safety follow-up and reporting.",
 }
+
+def humanise(name: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", " ", name).lower()
 
 def purpose(row: dict) -> str:
     name = row["attributeName"]
@@ -78,12 +86,14 @@ def purpose(row: dict) -> str:
         if row["foreignReference"]:
             return f"Identifies the related {row['foreignReference'].split('.')[0]} record."
         return f"Stable identifier for a {table} record."
-    if name.endswith("DateTime"):
-        return f"Date and time associated with the {table} event or validity period."
+    if name == "startDateTime":
+        return f"Inclusive start date/time of the {table} history period."
+    if name == "endDateTime":
+        return f"Optional end date/time of the {table} history period; NULL identifies the current row."
     if name.endswith("Date"):
         return f"Date associated with the {table} record or validity period."
     if name.startswith("is") or name.endswith("Flag"):
-        return f"Boolean control/indicator for {table}.{name}."
+        return f"TRUE/FALSE indicator for {humanise(name)} on the {humanise(table)} record."
     if name.endswith("Name"):
         return f"Human-readable name used for the {table} record."
     if name.endswith("Description"):
@@ -92,10 +102,35 @@ def purpose(row: dict) -> str:
         return f"Quantity recorded for the {table} transaction or inventory fact."
     if "Price" in name or "Cost" in name or "Amount" in name:
         return f"Monetary value recorded for the {table} fact in Australian dollars."
-    return f"Business attribute `{name}` for the `{table}` record."
+    return f"Records the {humanise(name)} of the {humanise(table)}."
+
+def domain(row: dict) -> str:
+    dtype = row["dataType"].lower()
+    name = row["attributeName"]
+    default = row["defaultValue"]
+    if dtype.startswith("enum("):
+        return "Permitted values: " + ", ".join(re.findall(r"'([^']+)'", dtype)) + "."
+    if dtype == "tinyint(1)":
+        return "TRUE/FALSE" + (f"; default {default}" if default else "") + "."
+    if name == "taxFileNumber": return "Exactly 9 numeric digits."
+    if name == "australianBusinessNumber": return "Exactly 11 numeric digits."
+    if name == "postcode": return "Exactly 4 numeric digits."
+    if "Percent" in name or name == "alcoholPercent": return "Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented."
+    if name in {"regularHours","overtimeHours","totalLostHours","usualUnitCost","quotedUnitPrice","actualUnitPrice","refundAmount"}: return "Non-negative numeric value."
+    if name in {"weightKg","casePrice"} or "Quantity" in name: return "Positive numeric value."
+    if name == "areaHectares": return "Positive decimal hectares."
+    if name == "latitude": return "Decimal latitude from -90 to 90."
+    if name == "longitude": return "Decimal longitude from -180 to 180."
+    if name == "ratingValue": return "Integer from 1 to 5."
+    if name == "endDateTime": return "NULL for current, otherwise not earlier than startDateTime."
+    if name == "endDate": return "NULL for current, otherwise not earlier than the corresponding start/effective date."
+    if dtype.startswith(("char(","varchar(")): return f"Text up to the implemented {dtype} size" + (f"; default {default}" if default else "") + "."
+    if dtype in {"date","datetime","time","year"}: return f"Valid MySQL {dtype} value" + (f"; default {default}" if default else "") + "."
+    if "int" in dtype or "decimal" in dtype: return "Numeric value within the implemented MySQL type" + (f"; default {default}" if default else "") + "."
+    return dtype + (f"; default {default}" if default else "") + "."
 
 for row in rows:
-    row["domain"] = row["dataType"] if row["dataType"].startswith("enum(") else (row["defaultValue"] or "See schema constraints")
+    row["domain"] = domain(row)
     row["purpose"] = purpose(row)
 
 out_dir = ROOT / "docs/report"
@@ -111,7 +146,7 @@ grouped: dict[str, list[dict]] = {}
 for row in rows:
     grouped.setdefault(row["tableName"], []).append(row)
 
-lines = ["# Cloudrest Wines Data Dictionary", "", "Generated from the validated MySQL 8.4 schema. Domain details and cross-row rules remain authoritative in the SQL build.", ""]
+lines = ["# Cloudrest Wines Data Dictionary", "", "The data dictionary was prepared as Word-ready tables and cross-checked against the implemented MySQL schema for consistency. Automation is used internally to prevent schema drift.", ""]
 for table, table_rows in grouped.items():
     lines += [f"## `{table}`", "", "| Attribute | Type/size | Domain/default | Null | Unique | PK | FK reference | Definition/business purpose |", "|---|---|---|:---:|:---:|:---:|---|---|"]
     for r in table_rows:

@@ -1,8 +1,18 @@
 {
-  "generatedAt": "2026-08-16T22:20:53",
+  "generatedAt": "2026-08-16T23:18:32",
+  "mode": "DEVELOPMENT",
   "mysqlVersion": "8.4.11",
-  "totalChecks": 31,
-  "passed": 31,
+  "schemaMetrics": {
+    "baseTables": 55,
+    "views": 1,
+    "columns": 282,
+    "foreignKeys": 72,
+    "checkConstraints": 48,
+    "triggers": 15,
+    "routines": 1
+  },
+  "totalChecks": 64,
+  "passed": 64,
   "failed": 0,
   "status": "PASS",
   "checks": [
@@ -13,189 +23,389 @@
       "evidence": "exitCode=0"
     },
     {
-      "check": "Expected base tables",
+      "check": "Schema statistics collected dynamically",
       "passed": true,
       "severity": "required",
-      "evidence": "expected=53, actual=53"
+      "evidence": "{'baseTables': 55, 'views': 1, 'columns': 282, 'foreignKeys': 72, 'checkConstraints': 48, 'triggers': 15, 'routines': 1}"
     },
     {
-      "check": "Expected views",
+      "check": "supplieraddress exists",
       "passed": true,
       "severity": "required",
-      "evidence": "expected=1, actual=1"
+      "evidence": "['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund', 'role', 'seasonalrating', 'shift', 'shiftassignment', 'shipment', 'supervision', 'supplier', 'supplieraddress', 'supplierbottle', 'supplierphone', 'taskcategory', 'trainingattendance', 'trainingcourse', 'trainingsession', 'vineyard', 'vineyardplanting', 'wellbeingaction', 'wellbeingcheckin', 'wellbeingtopic', 'wine', 'winecategory', 'winecomposition', 'wineproduct']"
     },
     {
-      "check": "Expected triggers",
+      "check": "supplierphone exists",
       "passed": true,
       "severity": "required",
-      "evidence": "expected=11, actual=11"
+      "evidence": "['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund', 'role', 'seasonalrating', 'shift', 'shiftassignment', 'shipment', 'supervision', 'supplier', 'supplieraddress', 'supplierbottle', 'supplierphone', 'taskcategory', 'trainingattendance', 'trainingcourse', 'trainingsession', 'vineyard', 'vineyardplanting', 'wellbeingaction', 'wellbeingcheckin', 'wellbeingtopic', 'wine', 'winecategory', 'winecomposition', 'wineproduct']"
     },
     {
-      "check": "Expected routines",
+      "check": "Supplier direct redundant contact columns removed",
       "passed": true,
       "severity": "required",
-      "evidence": "expected=1, actual=1"
+      "evidence": "supplier.addressId/phoneNumber absent"
     },
     {
-      "check": "Expected columns",
+      "check": "Employment classification separates type and pattern",
       "passed": true,
       "severity": "required",
-      "evidence": "expected=274, actual=274"
+      "evidence": "enum('PERMANENT','CASUAL'); enum('ONGOING','SEASONAL')"
     },
     {
-      "check": "Expected foreign keys",
-      "passed": true,
-      "severity": "required",
-      "evidence": "expected=69, actual=69"
-    },
-    {
-      "check": "Expected check constraints",
-      "passed": true,
-      "severity": "required",
-      "evidence": "expected=47, actual=47"
-    },
-    {
-      "check": "Table names are lowercase without spaces/underscores",
-      "passed": true,
-      "severity": "required",
-      "evidence": "53 compliant names"
-    },
-    {
-      "check": "Attributes use lowerCamelCase-compatible names",
-      "passed": true,
-      "severity": "required",
-      "evidence": "274 compliant names"
-    },
-    {
-      "check": "Every base table has a primary key",
-      "passed": true,
-      "severity": "required",
-      "evidence": "all 53 tables"
-    },
-    {
-      "check": "No picking pack has fewer than four active members",
+      "check": "Seasonal pickers are CASUAL + SEASONAL",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "All wine compositions total 100 percent",
+      "check": "Vineyard constraint is positive-only",
+      "passed": true,
+      "severity": "required",
+      "evidence": "positive-only"
+    },
+    {
+      "check": "Severity does not require positive lost hours",
+      "passed": true,
+      "severity": "required",
+      "evidence": "unsupported constraint absent"
+    },
+    {
+      "check": "Every employee has one current physical address",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "No employee has multiple active role rows",
+      "check": "Every employee has exactly one current primary phone",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "No employee has multiple active supervisors",
+      "check": "Supplier address history exists",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "Completed training has completion and competency",
+      "check": "Supplier phone history exists",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "No non-reorder bottle lacks a comment",
+      "check": "Employee role history example exists",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "No shipment uses a postal address",
+      "check": "Supervisor history example exists",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "No shipped order is unpaid",
+      "check": "Employee address history example exists",
       "passed": true,
       "severity": "required",
       "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 01_trainingcoverage.sql",
+      "check": "Employee phone history example exists",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=114; "
+      "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 02_incidentrate.sql",
+      "check": "No multiple current roles",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=122; "
+      "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 03_trainingimpact.sql",
+      "check": "No multiple current supervisors",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=239; "
+      "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 04_overtimerisk.sql",
+      "check": "No invalid shipment address",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=422; "
+      "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 05_expiringqualification.sql",
+      "check": "No shipped unpaid order",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=347; "
+      "evidence": "violations=0"
     },
     {
-      "check": "Query script executes: 06_openactions.sql",
+      "check": "Query executes: 01_trainingcoverage.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, outputChars=971; "
+      "evidence": "exit=0, chars=114, "
     },
     {
-      "check": "Integrity test behaves as expected: t01_validtraining.sql",
+      "check": "Query executes: 02_incidentrate.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=0, expectedNeedle=PASS, output=testResult\nPASS: valid completed training was accepted"
+      "evidence": "exit=0, chars=122, "
     },
     {
-      "check": "Integrity test behaves as expected: t02_invalidroledate.sql",
+      "check": "Query executes: 03_trainingimpact.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=1, expectedNeedle=chk_employeerole_dates, output=ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated."
+      "evidence": "exit=0, chars=239, "
     },
     {
-      "check": "Integrity test behaves as expected: t03_missingreordercomment.sql",
+      "check": "Query executes: 04_overtimerisk.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=1, expectedNeedle=chk_bottletype_reorder, output=ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated."
+      "evidence": "exit=0, chars=422, "
     },
     {
-      "check": "Integrity test behaves as expected: t04_underagecustomer.sql",
+      "check": "Query executes: 05_expiringqualification.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=1, expectedNeedle=Individual customer must be at least 18 years old, output=ERROR 1644 (45000) at line 3: Individual customer must be at least 18 years old"
+      "evidence": "exit=0, chars=347, "
     },
     {
-      "check": "Integrity test behaves as expected: t05_postalshipment.sql",
+      "check": "Query executes: 06_openactions.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=1, expectedNeedle=Shipment address must be a physical address, output=ERROR 1644 (45000) at line 4: Shipment address must be a physical address, not PO Box or Private Bag"
+      "evidence": "exit=0, chars=971, "
     },
     {
-      "check": "Integrity test behaves as expected: t06_invalidconversionpercentage.sql",
+      "check": "Assessed integrity test: t01_validtraining.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exitCode=1, expectedNeedle=chk_grapevariety_conversion, output=ERROR 3819 (HY000) at line 3: Check constraint 'chk_grapevariety_conversion' is violated."
+      "evidence": "exit=0; expected=PASS; testResult\nPASS: valid completed training was accepted"
+    },
+    {
+      "check": "Assessed integrity test: t02_invalidroledate.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=chk_employeerole_dates; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated."
+    },
+    {
+      "check": "Assessed integrity test: t03_missingreordercomment.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=chk_bottletype_reorder; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated."
+    },
+    {
+      "check": "Assessed integrity test: t04_unpaidshipment.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 4: Order must be paid before shipment"
+    },
+    {
+      "check": "Assessed integrity test: t05_overlappingsupervision.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=already has a supervisor; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period"
+    },
+    {
+      "check": "Assessed business rule: Rule 1 role dates",
+      "passed": true,
+      "severity": "required",
+      "evidence": "t02_invalidroledate.sql; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated."
+    },
+    {
+      "check": "Assessed business rule: Rule 2 reorder comment",
+      "passed": true,
+      "severity": "required",
+      "evidence": "t03_missingreordercomment.sql; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated."
+    },
+    {
+      "check": "Assessed business rule: Rule 3 current physical address",
+      "passed": true,
+      "severity": "required",
+      "evidence": "additional_postalshipment.sql; ERROR 1644 (45000) at line 3: Shipment address must be a physical address, not PO Box or Private Bag"
+    },
+    {
+      "check": "Assessed business rule: Rule 4 paid before shipment",
+      "passed": true,
+      "severity": "required",
+      "evidence": "t04_unpaidshipment.sql; ERROR 1644 (45000) at line 4: Order must be paid before shipment"
+    },
+    {
+      "check": "Assessed business rule: Rule 5 one supervisor",
+      "passed": true,
+      "severity": "required",
+      "evidence": "t05_overlappingsupervision.sql; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period"
+    },
+    {
+      "check": "Project Plan requires Actual Completion Date",
+      "passed": true,
+      "severity": "required",
+      "evidence": "plan columns"
+    },
+    {
+      "check": "Task 2 has four decisions and page citations",
+      "passed": true,
+      "severity": "required",
+      "evidence": "four decisions/citations"
+    },
+    {
+      "check": "Task 2 within 1,200 words",
+      "passed": true,
+      "severity": "required",
+      "evidence": "words=696"
+    },
+    {
+      "check": "Task 3 stakeholder table exists",
+      "passed": true,
+      "severity": "required",
+      "evidence": "required stakeholder columns/rows"
+    },
+    {
+      "check": "Five assessed Task 3b rules exist",
+      "passed": true,
+      "severity": "required",
+      "evidence": "rules=5"
+    },
+    {
+      "check": "Each assessed rule has violation SQL",
+      "passed": true,
+      "severity": "required",
+      "evidence": "test files present"
+    },
+    {
+      "check": "Query submission contains CREATE VIEW",
+      "passed": true,
+      "severity": "required",
+      "evidence": "CREATE VIEW openincidentaction"
+    },
+    {
+      "check": "Query submission contains CREATE PROCEDURE",
+      "passed": true,
+      "severity": "required",
+      "evidence": "CREATE PROCEDURE getExpiringQualifications"
+    },
+    {
+      "check": "Query submission contains 30-day call",
+      "passed": true,
+      "severity": "required",
+      "evidence": "CALL getExpiringQualifications(30)"
+    },
+    {
+      "check": "Query submission contains 90-day call",
+      "passed": true,
+      "severity": "required",
+      "evidence": "CALL getExpiringQualifications(90)"
+    },
+    {
+      "check": "Query submission contains EXPLAIN",
+      "passed": true,
+      "severity": "required",
+      "evidence": "EXPLAIN"
+    },
+    {
+      "check": "Query submission contains six queries",
+      "passed": true,
+      "severity": "required",
+      "evidence": "six query markers"
+    },
+    {
+      "check": "Database export contains six queries",
+      "passed": true,
+      "severity": "required",
+      "evidence": "embedded query section"
+    },
+    {
+      "check": "Query 3 filters AFFECTED involvement",
+      "passed": true,
+      "severity": "required",
+      "evidence": "filter present"
+    },
+    {
+      "check": "Data Dictionary has explicit domains",
+      "passed": true,
+      "severity": "required",
+      "evidence": "generic domain absent"
+    },
+    {
+      "check": "Data Dictionary has semantic descriptions",
+      "passed": true,
+      "severity": "required",
+      "evidence": "generic description absent"
+    },
+    {
+      "check": "Full ER image meets resolution requirement",
+      "passed": true,
+      "severity": "required",
+      "evidence": "resolution=(1586, 2551)"
+    },
+    {
+      "check": "Final report contains Task 1",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 1"
+    },
+    {
+      "check": "Final report contains Task 2",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 2"
+    },
+    {
+      "check": "Final report contains Task 3",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 3"
+    },
+    {
+      "check": "Final report contains Task 4",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 4"
+    },
+    {
+      "check": "Final report contains Task 5",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 5"
+    },
+    {
+      "check": "Final report contains Task 6",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 6"
+    },
+    {
+      "check": "Final report contains Task 7",
+      "passed": true,
+      "severity": "required",
+      "evidence": "Task 7"
+    },
+    {
+      "check": "Final report contains AI use declaration",
+      "passed": true,
+      "severity": "required",
+      "evidence": "AI use declaration"
+    },
+    {
+      "check": "Development report retains honest dependencies",
+      "passed": true,
+      "severity": "required",
+      "evidence": "dependency notices"
+    },
+    {
+      "check": "Development mode honestly retains placeholders",
+      "passed": true,
+      "severity": "required",
+      "evidence": "FINAL_MODE=0"
     }
   ],
   "externalDependencies": [
-    "Official A2 spreadsheet is not supplied; actual cleaning evidence remains pending.",
-    "Week 11 business scenario is not supplied.",
-    "Final Workbench screenshots, four-person video, genuine prompt logs and peer reviews require student action."
+    "Official A2 workbook and actual cleaning evidence.",
+    "Week 11 assigned business scenario.",
+    "Genuine student Workbench screenshots.",
+    "Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.",
+    "Replacement of member 1 and submission date."
   ]
 }

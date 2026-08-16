@@ -15,8 +15,7 @@ SELECT c.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName, c.compl
                  AND i.incidentDateTime < DATE_ADD(c.completionDate, INTERVAL 180 DAY) THEN 1 ELSE 0 END) AS incidentsAfter
 FROM completion c
 JOIN employee e ON e.employeeId = c.employeeId
-LEFT JOIN incidentemployee ie ON ie.employeeId = c.employeeId
+LEFT JOIN incidentemployee ie ON ie.employeeId = c.employeeId AND ie.involvementRole = 'AFFECTED'
 LEFT JOIN incident i ON i.incidentId = ie.incidentId
 GROUP BY c.employeeId, e.firstName, e.lastName, c.completionDate
 ORDER BY incidentsBefore DESC, incidentsAfter DESC;
-

@@ -1,12 +1,12 @@
-[style_lint] direct run-formatting runs: 116
-[style_lint] direct paragraph-formatting paragraphs: 104
-[style_lint] top fonts by char count: Times New Roman(3896)
+[style_lint] direct run-formatting runs: 217
+[style_lint] direct paragraph-formatting paragraphs: 203
+[style_lint] top fonts by char count: Times New Roman(6877)
 [style_lint] heading-like paragraphs not using Heading styles (first 10):
   - #1: style='Normal' text='Cloudrest Wines'
   - #2: style='Normal' text='Independent Verification Report'
-  - #3: style='Normal' text='PASS — 31/31 checks passed'
-  - #15: style='Normal' text='Field'
-  - #16: style='Normal' text='Value'
-  - #25: style='Normal' text='Result'
-  - #26: style='Normal' text='Check'
-  - #27: style='Normal' text='Evidence'
+  - #3: style='Normal' text='PASS — 64/64 checks passed'
+  - #17: style='Normal' text='Field'
+  - #18: style='Normal' text='Value'
+  - #27: style='Normal' text='Result'
+  - #28: style='Normal' text='Check'
+  - #29: style='Normal' text='Evidence'

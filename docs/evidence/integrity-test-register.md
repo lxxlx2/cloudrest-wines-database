@@ -1,13 +1,11 @@
-# Integrity Test Register
+# Five Assessed Integrity Tests
 
-| Test | Scenario | Expected | Rule link |
-|---|---|---|---|
-| T01 | Insert a completed training outcome with completion, renewal and competency | Accepted, then rolled back | Positive test of HR training structure |
-| T02 | Insert an employee role whose end precedes its start | Rejected by `chk_employeerole_dates` | Task 3b historical-date rule |
-| T03 | Disable bottle reorder without recording a comment | Rejected by `chk_bottletype_reorder` | Task 3b bottle-sourcing rule |
-| T04 | Insert a 17-year-old individual customer | Rejected by legal-age trigger | Task 3b individual-customer rule |
-| T05 | Ship a paid order to a current PO Box address | Rejected by `trg_shipment_validate_insert` | Task 3b physical-address rule |
+| Test | Scenario | SQL file | Expected result | Explanation / genuine evidence |
+|---|---|---|---|---|
+| T01 | Insert a valid completed training outcome | `t01_validtraining.sql` | Accepted and rolled back | Confirms complete HR outcome fields are supported. `[PENDING STUDENT WORKBENCH SCREENSHOT]` |
+| T02 | Role end precedes start | `t02_invalidroledate.sql` | CHECK rejection | Prevents impossible role history. `[PENDING STUDENT WORKBENCH SCREENSHOT]` |
+| T03 | Reorder disabled without comment | `t03_missingreordercomment.sql` | CHECK rejection | Preserves the sourcing/quality reason. `[PENDING STUDENT WORKBENCH SCREENSHOT]` |
+| T04 | Ship an unpaid order | `t04_unpaidshipment.sql` | Trigger rejection | Prevents dispatch before accounting confirmation. `[PENDING STUDENT WORKBENCH SCREENSHOT]` |
+| T05 | Add overlapping supervisor period | `t05_overlappingsupervision.sql` | Trigger rejection | Enforces one supervisor at a point in time. `[PENDING STUDENT WORKBENCH SCREENSHOT]` |
 
-Each final report entry will include the executed SQL, captured MySQL output and a one-sentence interpretation. T05 inserts a dedicated order before attempting shipment so the expected error is specifically the postal-address rule rather than the one-shipment-per-order key.
-
-Task 3b additionally demonstrates a fifth distinct violation: a grape juice conversion percentage above 100, rejected by `chk_grapevariety_conversion`. This is separate from the five-case Task 6c suite, which intentionally contains both positive and negative tests.
+Every invalid test is executed against a freshly rebuilt baseline. Additional legal-age, postal-shipment and percentage tests are retained outside the assessed five.

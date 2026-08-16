@@ -3,8 +3,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = [(ROOT / "tmp/query-output", ROOT / "docs/evidence/query-output"),
-           (ROOT / "tmp/test-output", ROOT / "docs/evidence/test-output")]
+SOURCES = [(ROOT / "tmp/query-output", ROOT / "verification/internal-evidence/query-output"),
+           (ROOT / "tmp/test-output", ROOT / "verification/internal-evidence/test-output")]
 FONT_PATH = "/System/Library/Fonts/Menlo.ttc"
 FONT = ImageFont.truetype(FONT_PATH, 18)
 TITLE_FONT = ImageFont.truetype(FONT_PATH, 21)
@@ -31,4 +31,3 @@ for source_dir, output_dir in SOURCES:
             draw.text((24, y), line, font=FONT, fill=colour)
             y += line_height
         image.save(output_dir / f"{source.stem}.png", optimize=True)
-

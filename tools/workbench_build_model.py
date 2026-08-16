@@ -37,7 +37,7 @@ try:
         'HR_Training_Qualifications': ['employee','employeerole','operationalarea','qualification','employeequalification','trainingcourse','trainingsession','trainingattendance'],
         'HR_Shifts_Safety_Wellbeing': ['employee','operationalarea','taskcategory','shift','shiftassignment','incident','incidentemployee','correctiveaction','wellbeingcheckin','wellbeingtopic','checkintopic','wellbeingaction'],
         'Vineyard_Wine_Production': ['employee','address','vineyard','grapevariety','vineyardplanting','harvest','winecategory','wine','winecomposition','medal'],
-        'Products_Procurement': ['wine','bottletype','wineproduct','productprice','supplier','supplierbottle','purchaseorder','purchaseorderline','receipt','receiptline','address'],
+        'Products_Procurement': ['wine','bottletype','wineproduct','productprice','supplier','supplieraddress','supplierphone','phone','supplierbottle','purchaseorder','purchaseorderline','receipt','receiptline','address'],
         'Customers_Orders': ['customer','individualcustomer','businesscustomer','phone','customerphone','address','customeraddress','customerorder','orderline','shipment','refund','wineproduct'],
     }
     domain_diagrams=[]
