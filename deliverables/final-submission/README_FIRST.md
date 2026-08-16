@@ -13,7 +13,7 @@ The authoritative source files have received an additional manual-audit correcti
 
 ## Required regeneration sequence
 
-1. Rebuild `Cloudrest_Wines_Database.sql` and `Cloudrest_Wines_Queries.sql` with `python3 tools/build_submission_sql.py`. The portable database must include `04_final_controls.sql` and `02_manual_audit_patch.sql`.
+1. Rebuild `Cloudrest_Wines_Database.sql` and `Cloudrest_Wines_Queries.sql` with `python3 tools/build_submission_sql.py`. The portable database must include `04_final_controls.sql`, `05_validation_routines.sql` and `02_manual_audit_patch.sql`.
 2. Import the rebuilt database SQL into an empty MySQL 8.4 environment.
 3. Regenerate the Word-ready data dictionary from the live schema with `python3 tools/generate_data_dictionary.py`.
 4. Run `python3 tools/verify_project.py` in development mode.
@@ -26,7 +26,7 @@ The authoritative source files have received an additional manual-audit correcti
 11. Capture genuine MySQL Workbench screenshots following `docs/evidence/student-screenshot-checklist.md` and insert the evidence into the final report workflow.
 12. After the fourth member name, all four student numbers, submission date, actual completion dates and genuine evidence are available, create the ignored `project-management/final-inputs.json` from the example and run the final-mode process. Final mode must fail while required genuine data or evidence remains incomplete.
 
-The table/column/FK/CHECK structure was not changed by the latest cross-row-control pass. The authoritative trigger sources now contain 43 trigger definitions in total and the schema contains four stored routines when `getExpiringQualifications`, `validateCustomerSubtype`, `validateWineComposition` and `validatePickingPackRules` are included. These are expected source counts only. The live MySQL metadata produced after regeneration is the source of truth.
+The table/column/FK/CHECK structure was not changed by the latest cross-row-control pass. The authoritative trigger sources now contain 43 trigger definitions in total and the schema contains five stored routines when `getExpiringQualifications`, `validateCustomerSubtype`, `validateWineComposition`, `validatePickingPackRules` and `validateRequiredCurrentState` are installed. These are expected source counts only. The live MySQL metadata produced after regeneration is the source of truth.
 
 ## Import into the student's MySQL Workbench
 
