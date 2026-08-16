@@ -47,7 +47,7 @@ DELIMITER ;
 
 -- ===== QUERY 01: trainingcoverage =====
 USE cloudrestwines;
--- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
+-- Management question: Which operational areas have gaps in annual safety and sustainability training?
 WITH activeworkforce AS (
   SELECT er.employeeId, er.operationalAreaId
   FROM employeerole er
@@ -132,6 +132,7 @@ WITH workload AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
   FROM incidentemployee ie JOIN incident i ON i.incidentId = ie.incidentId
   WHERE i.incidentDateTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    AND ie.involvementRole = 'AFFECTED'
   GROUP BY ie.employeeId
 ), recentconcern AS (
   SELECT employeeId, COUNT(*) AS concernCount
