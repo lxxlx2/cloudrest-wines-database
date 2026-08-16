@@ -6,6 +6,18 @@
 - Working branch: `audit/final-manual-fixes`
 - Draft PR: #1
 
+## Audit standard for external reviewers
+
+Start with:
+
+- `source-materials/assessment/SOURCE_INDEX.md`
+- `source-materials/assessment/AUDIT_STANDARD.md`
+- `docs/requirements/tutor-confirmations.md`
+
+`AUDIT_STANDARD.md` is a structured audit map derived from the four student-supplied source documents: the main assessment specification, BISM2207 rubric, Wine Company Case and separate RiPPlE reflection instructions. It preserves known conflicts instead of silently resolving them.
+
+The original PDFs are not copied into this public repository by automation. If redistribution is permitted, or if the repository is made private, the students can add the four original PDFs next to the audit map for direct source-to-project comparison.
+
 ## Source changes completed
 
 The final manual audit has corrected the authoritative sources for:
@@ -76,3 +88,12 @@ Do not audit the following files as final outputs until the regeneration sequenc
 ## External reviewer guidance
 
 Review source changes on PR #1 first. Do not judge the branch by the previous `64/64` verification report because that report predates this manual-audit pass. A new expanded verification result is required after regeneration.
+
+For grading-oriented audit, evaluate every finding against `source-materials/assessment/AUDIT_STANDARD.md` and classify it as:
+
+- blocking requirement
+- likely mark loss
+- High Distinction improvement
+- optional robustness improvement
+
+Do not treat automated test success as proof that the submission satisfies rubric interpretation, visual legibility, genuine student evidence or unresolved tutor-dependent requirements.
