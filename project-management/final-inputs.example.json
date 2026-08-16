@@ -1,5 +1,11 @@
 {
   "member4Name": "REPLACE_WITH_ENROLLED_NAME",
+  "studentNumbers": {
+    "Mia": "REPLACE_WITH_REAL_STUDENT_NUMBER",
+    "Zora": "REPLACE_WITH_REAL_STUDENT_NUMBER",
+    "Rianna": "REPLACE_WITH_REAL_STUDENT_NUMBER",
+    "member4": "REPLACE_WITH_REAL_STUDENT_NUMBER"
+  },
   "submissionDate": "REPLACE_WITH_REAL_SUBMISSION_DATE",
   "actualCompletionDates": {
     "requirements": "REPLACE_WITH_REAL_DATE",
