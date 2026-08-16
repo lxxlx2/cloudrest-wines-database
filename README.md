@@ -15,9 +15,20 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 - Sustainability initiative: Sustainable Workforce Safety, Training and Wellbeing Monitoring
 - Database platform: MySQL 8.x and MySQL Workbench
 
+## Assessment audit sources
+
+Independent reviewers should start with:
+
+- `source-materials/assessment/SOURCE_INDEX.md` — identifies the four authoritative student-supplied course documents
+- `source-materials/assessment/AUDIT_STANDARD.md` — comprehensive requirement and High Distinction audit map derived from those documents
+- `docs/requirements/tutor-confirmations.md` — unresolved source conflicts that should not be silently guessed
+
+The original course PDFs are intentionally not copied into this public repository by automation. If redistribution is permitted, or after the repository is made private, the students may place the four original PDFs beside the audit map so a reviewer can compare the project directly with the source documents.
+
 ## Repository structure
 
 - `project-management/` — plan, risk register, responsibilities, checkpoints and progress
+- `source-materials/assessment/` — authoritative-source index and independent audit standard
 - `docs/requirements/` — requirement traceability, scope, assumptions, citation audit and tutor-confirmation questions
 - `docs/report/` — report outline and written task content
 - `docs/reflection/` — genuine GenAI prompt/validation logs and peer-review placeholders
@@ -30,7 +41,7 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 - `database/queries/` — six decision-support queries and EXPLAIN evidence
 - `deliverables/final-submission/` — generated submission artifacts; rebuild these after authoritative source changes
 - `diagrams/` — Workbench model and ER exports
-- `source-materials/` — source inventory only; assessment PDFs and supplied datasets are not published unless redistribution is permitted
+- `source-materials/` — source inventory and assessment audit map; original restricted course files should only be added when redistribution is permitted
 
 ## Current status
 
@@ -44,6 +55,7 @@ Official spreadsheet cleaning, the Week 11 business scenario, genuine Workbench 
 
 ## Review starting points
 
+- `source-materials/assessment/AUDIT_STANDARD.md` — assessment and HD grading standard for an external reviewer
 - `deliverables/final-submission/README_FIRST.md` — regeneration and student handoff sequence
 - `docs/evidence/workbench-model-finalization.md` — required UML and ER-layout confirmation
 - `docs/evidence/student-screenshot-checklist.md` — genuine evidence checklist
@@ -53,6 +65,6 @@ Official spreadsheet cleaning, the Week 11 business scenario, genuine Workbench 
 
 ## Access
 
-This is a public repository for progress visibility. Public visitors have read-only access by default. Only the owner and explicitly invited collaborators can push changes.
+This is currently a public repository for progress visibility. Public visitors have read-only access by default. Only the owner and explicitly invited collaborators can push changes.
 
 Before real assessment submission, consider making the repository private to reduce copying and plagiarism risk. Repository visibility has not been changed automatically.
