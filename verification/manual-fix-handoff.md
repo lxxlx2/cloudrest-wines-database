@@ -25,6 +25,7 @@ Two independent manual-audit passes have now been applied to authoritative sourc
 - supplier physical/postal address coexistence with same-type overlap protection
 - supplier phone history semantics
 - employee/customer primary-phone period uniqueness
+- required-current-state validation for active employee/customer/supplier contacts
 - employee/customer same-address-kind temporal overlap
 - customer subtype consistency and exact subtype before transaction
 - future-dated shipment-address rejection
@@ -43,7 +44,7 @@ Two independent manual-audit passes have now been applied to authoritative sourc
 - Task 3 report ordering
 - real Word landscape/portrait section creation
 - FINAL_MODE fourth-member replacement, student-number inputs and conditional final checklist state
-- Data Dictionary individual-uniqueness semantics and stronger domains/purposes
+- Data Dictionary individual-uniqueness semantics and stronger context-specific domains/purposes
 - tutor-dependent RiPPlE peer-review wording retained as unresolved
 - expanded traceability, assumptions, verification and negative tests
 
@@ -51,7 +52,7 @@ The five assessed Task 3b business rules and the five assessed Task 6 integrity 
 
 ## Expected schema effect after regeneration
 
-The table/column/FK/CHECK structure remains unchanged by the second pass. The existing trigger files plus `database/schema/04_final_controls.sql` contain an expected total of 43 trigger definitions. The database should contain four stored routines when the reporting routine and three validation procedures are installed.
+The table/column/FK/CHECK structure remains unchanged by the second pass. The existing trigger files plus `database/schema/04_final_controls.sql` contain an expected total of 43 trigger definitions. The database should contain five stored routines when `getExpiringQualifications`, `validateCustomerSubtype`, `validateWineComposition`, `validatePickingPackRules` and `validateRequiredCurrentState` are installed.
 
 These are source counts only. Actual live counts must be obtained from MySQL 8.4 after `Cloudrest_Wines_Database.sql` is rebuilt and imported.
 
