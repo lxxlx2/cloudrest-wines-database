@@ -22,6 +22,7 @@ parts = [
     ROOT / "database/schema/02_triggers.sql",
     ROOT / "database/schema/03_reporting.sql",
     ROOT / "database/schema/04_final_controls.sql",
+    ROOT / "database/schema/05_validation_routines.sql",
     ROOT / "database/data/01_testdata.sql",
     ROOT / "database/data/02_manual_audit_patch.sql",
 ]
