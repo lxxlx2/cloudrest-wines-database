@@ -20,80 +20,94 @@ The original PDFs are not copied into this public repository by automation. If r
 
 ## Source changes completed
 
-The final manual audit has corrected the authoritative sources for:
+Two independent manual-audit passes have now been applied to authoritative sources. The branch includes controls or corrections for:
 
 - supplier physical/postal address coexistence with same-type overlap protection
 - supplier phone history semantics
 - employee/customer primary-phone period uniqueness
-- customer subtype consistency
+- employee/customer same-address-kind temporal overlap
+- customer subtype consistency and exact subtype before transaction
 - future-dated shipment-address rejection
 - receipt-line validation against purchase-order lines
+- receipt/order and shipment/order chronology
+- at least one order line before shipment and SHIPPED-state protection
 - product-price validity-period overlap
-- Query 4 `AFFECTED` incident semantics
-- Query 1 metric wording
-- customer/shipment Case page citations
+- wine composition total validation before saleable product creation
+- picking-pack minimum/member/role/supervisor rules through an executable validation procedure
+- synthetic picking-pack supervisor alignment to the active Grape Farmer
+- vineyard active Grape Farmer manager and physical-address validation
+- Query 2 KPI semantics, zero-hour-area visibility and corrected manual reconciliation
+- Query 3 latest-completed-safety-training semantics
+- Query 4 `AFFECTED` incident semantics and removal of arbitrary risk-score weights
+- corrected Case page citations
 - Task 3 report ordering
 - real Word landscape/portrait section creation
-- development/final-mode metadata handling
-- explicit Workbench UML and landscape finalisation
-- expanded verification and additional integrity tests
+- FINAL_MODE fourth-member replacement, student-number inputs and conditional final checklist state
+- Data Dictionary individual-uniqueness semantics and stronger domains/purposes
+- tutor-dependent RiPPlE peer-review wording retained as unresolved
+- expanded traceability, assumptions, verification and negative tests
 
-The five assessed Task 3b business rules and the five assessed Task 6 integrity tests remain unchanged.
+The five assessed Task 3b business rules and the five assessed Task 6 integrity tests remain unchanged. New controls are additional integrity evidence and should not silently replace assessed items.
 
 ## Expected schema effect after regeneration
 
-The table/column/FK/CHECK structure is unchanged by this final pass. The authoritative trigger source now contains 28 triggers, because 13 additional controls were added to the previously verified 15-trigger design.
+The table/column/FK/CHECK structure remains unchanged by the second pass. The existing trigger files plus `database/schema/04_final_controls.sql` contain an expected total of 43 trigger definitions. The database should contain four stored routines when the reporting routine and three validation procedures are installed.
 
-The actual live count must be confirmed by the expanded verifier after `Cloudrest_Wines_Database.sql` is rebuilt.
+These are source counts only. Actual live counts must be obtained from MySQL 8.4 after `Cloudrest_Wines_Database.sql` is rebuilt and imported.
 
 ## Generated artifacts currently stale until rebuilt
 
-Do not audit the following files as final outputs until the regeneration sequence has been run:
+Do not audit the following files as current final outputs until the regeneration sequence has been run:
 
 - `deliverables/final-submission/Cloudrest_Wines_Database.sql`
+- `deliverables/final-submission/Cloudrest_Wines_Queries.sql`
 - `deliverables/final-submission/Cloudrest_Wines_Report.docx`
 - `deliverables/final-submission/Cloudrest_Wines_Verification_Report.docx`
 - `deliverables/final-submission/Cloudrest_Wines_Model.mwb`
 - `deliverables/final-submission/Cloudrest_Wines_ER_Diagram.png`
+- `docs/report/data-dictionary.csv`
+- `docs/report/data-dictionary.md`
 - `verification/verification-report.json`
 - `verification/verification-report.md`
 - final SHA-256 manifest
 
-`Cloudrest_Wines_Queries.sql` has been manually refreshed for the corrected Query 1/4 source logic, but it should still be rebuilt by the normal builder for reproducibility.
-
 ## Required local regeneration
 
-1. `python3 tools/build_submission_sql.py`
-2. clean-import the rebuilt SQL into MySQL 8.4
-3. run `python3 tools/verify_project.py`
-4. rebuild `.mwb` and diagrams inside MySQL Workbench
-5. manually select UML relationship notation, arrange the complete model landscape, save, and re-export
-6. run verification again
-7. run `python3 tools/build_word_reports.py`
-8. render/visually inspect the Word report
-9. capture and insert genuine student Workbench screenshots
-10. rerun final-mode checks only after genuine student/course data is present
+Follow `deliverables/final-submission/README_FIRST.md`. In summary:
 
-## Manual items that remain intentionally unresolved
+1. `python3 tools/build_submission_sql.py`
+2. clean-import rebuilt SQL into MySQL 8.4
+3. `python3 tools/generate_data_dictionary.py`
+4. `python3 tools/verify_project.py`
+5. `python3 tools/verify_manual_audit_controls.py`
+6. rebuild `.mwb` and diagrams inside MySQL Workbench
+7. manually select UML relationship notation, arrange the complete model landscape, save and re-export
+8. rerun both verification layers
+9. rebuild Word reports
+10. render and visually inspect the Word report
+11. capture and insert genuine student Workbench screenshots
+12. run final mode only after genuine student/course inputs exist
+
+## Manual items intentionally unresolved
 
 - official A2 workbook and real cleaning evidence
 - Week 11 assigned scenario
 - genuine student screenshots
 - final Workbench UML confirmation and final ER export
 - four-person video
-- genuine RiPPlE prompt iterations and peer reviews
-- fourth member name, student numbers, submission date, actual completion dates/hours/contributions
+- genuine RiPPlE prompt iterations and tutor-confirmed peer reviews
+- fourth member name, four student numbers, submission date, actual completion dates/hours/contributions
 - tutor-confirmation questions in `docs/requirements/tutor-confirmations.md`
 
 ## External reviewer guidance
 
-Review source changes on PR #1 first. Do not judge the branch by the previous `64/64` verification report because that report predates this manual-audit pass. A new expanded verification result is required after regeneration.
+Review PR #1 source changes first. Do not use the historical `64/64` report or old generated Word/SQL/ER artifacts as evidence for this branch. A new expanded verification result is required after local regeneration.
 
-For grading-oriented audit, evaluate every finding against `source-materials/assessment/AUDIT_STANDARD.md` and classify it as:
+For grading-oriented audit, classify findings as:
 
-- blocking requirement
-- likely mark loss
-- High Distinction improvement
-- optional robustness improvement
+- BLOCKING
+- LIKELY MARK LOSS
+- HD IMPROVEMENT
+- OPTIONAL ROBUSTNESS
 
-Do not treat automated test success as proof that the submission satisfies rubric interpretation, visual legibility, genuine student evidence or unresolved tutor-dependent requirements.
+Do not treat automated test success as proof of rubric interpretation, visual legibility, genuine student evidence or tutor-dependent requirements.
