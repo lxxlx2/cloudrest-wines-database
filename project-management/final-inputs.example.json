@@ -1,0 +1,18 @@
+{
+  "member4Name": "REPLACE_WITH_ENROLLED_NAME",
+  "submissionDate": "REPLACE_WITH_REAL_SUBMISSION_DATE",
+  "actualCompletionDates": {
+    "requirements": "REPLACE_WITH_REAL_DATE",
+    "hrScope": "REPLACE_WITH_REAL_DATE",
+    "erModel": "REPLACE_WITH_REAL_DATE",
+    "designDecisions": "REPLACE_WITH_REAL_DATE",
+    "schemaRules": "REPLACE_WITH_REAL_DATE",
+    "dataDictionary": "REPLACE_WITH_REAL_DATE",
+    "officialCleaning": "REPLACE_AFTER_A2_WORKBOOK",
+    "tests": "REPLACE_WITH_REAL_DATE",
+    "queries": "REPLACE_WITH_REAL_DATE",
+    "reflection": "REPLACE_AFTER_GENUINE_RIPPLE_WORK",
+    "video": "REPLACE_AFTER_RECORDING",
+    "finalQA": "REPLACE_AFTER_FINAL_QA"
+  }
+}
