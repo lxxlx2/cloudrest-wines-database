@@ -21,7 +21,9 @@ parts = [
     ROOT / "database/schema/01_tables.sql",
     ROOT / "database/schema/02_triggers.sql",
     ROOT / "database/schema/03_reporting.sql",
+    ROOT / "database/schema/04_final_controls.sql",
     ROOT / "database/data/01_testdata.sql",
+    ROOT / "database/data/02_manual_audit_patch.sql",
 ]
 query_parts = [ROOT / f"database/queries/0{i}_{name}.sql" for i, name in [
     (1,"trainingcoverage"),(2,"incidentrate"),(3,"trainingimpact"),
