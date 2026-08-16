@@ -6,7 +6,7 @@ Cloudrest Wines extends the complete winery base model through the Human Resourc
 
 ## Decision 1 — Model customer types with a supertype and subtypes
 
-**Challenge and source.** All customers share identifiers, email, phone, address and order behaviour. Individuals require names/date of birth while businesses require company name, ABN, type and contact names (Wine Company Case, pp. 4–5, “Customers”).
+**Challenge and source.** All customers share identifiers, email, phone, address and order behaviour. Individuals require names/date of birth while businesses require company name, ABN, type and contact names (Wine Company Case, pp. 3–4, “Customers”).
 
 **Alternatives.** A single customer table could contain every attribute, with type-dependent nullable columns. Alternatively, separate individual and business tables could duplicate all shared contact and order relationships. The selected model uses `customer` as the supertype and `individualcustomer`/`businesscustomer` as subtype tables.
 
