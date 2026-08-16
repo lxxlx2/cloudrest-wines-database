@@ -86,11 +86,23 @@ special = {
     "severity": "Incident seriousness classification used for safety follow-up and corrective-action priority.",
     "capacityMl": "Nominal bottle capacity in millilitres.",
     "inventoryQuantity": "Current number of bottles of this type held in inventory.",
-    "caseQuantity": "Number of bottles contained in one saleable case of the product.",
     "agingDays": "Usual ageing duration in days for wine made from the grape variety.",
     "orderedQuantity": "Number of bottle units ordered on the purchase-order line.",
     "receivedQuantity": "Number of bottle units actually received on the receipt line.",
     "reportableFlag": "Indicates whether the safety incident is classified as reportable; retained separately from the all-incident management KPI.",
+}
+
+context_purpose = {
+    ("wineproduct","caseQuantity"): "Number of bottles packaged in one saleable case of this wine product.",
+    ("orderline","caseQuantity"): "Number of cases of the product requested on the customer order line.",
+    ("bottletype","usualUnitCost"): "Usual expected procurement cost for one bottle of this type.",
+    ("purchaseorderline","quotedUnitPrice"): "Supplier quoted unit price for the bottle type on the purchase order.",
+    ("receiptline","actualUnitPrice"): "Actual unit price paid/recorded for the bottle type on this receipt.",
+    ("productprice","casePrice"): "Sale price for one case of the product during the effective date period.",
+    ("orderline","agreedCasePrice"): "Case price agreed for the product when the customer order was placed.",
+    ("pickerpack","supervisorId"): "Grape-farmer employee responsible for supervising the picking pack during the season.",
+    ("vineyard","managerId"): "Current grape-farmer employee responsible for managing the vineyard.",
+    ("shipment","addressId"): "Physical customer address actually used for the shipment after current-address validation.",
 }
 
 
@@ -103,6 +115,8 @@ def purpose(row: dict) -> str:
     table = row["tableName"]
     if row["columnComment"]:
         return row["columnComment"]
+    if (table,name) in context_purpose:
+        return context_purpose[(table,name)]
     if name in special:
         return special[name]
     if name.endswith("Id"):
@@ -136,6 +150,7 @@ def purpose(row: dict) -> str:
 def domain(row: dict) -> str:
     dtype = row["dataType"].lower()
     name = row["attributeName"]
+    table = row["tableName"]
     default = row["defaultValue"]
     suffix = f"; default {default}" if default else ""
 
@@ -148,7 +163,8 @@ def domain(row: dict) -> str:
     if name == "postcode": return "Exactly 4 numeric digits."
     if name == "capacityMl": return "Positive whole-number millilitres (> 0)."
     if name == "inventoryQuantity": return "Non-negative whole-number bottle quantity (>= 0)."
-    if name == "caseQuantity": return "Positive whole-number bottles per case (> 0)."
+    if name == "caseQuantity":
+        return "Positive whole-number bottles per case (> 0)." if table=="wineproduct" else "Positive whole-number case quantity (> 0)."
     if name == "agingDays": return "Unsigned whole-number days (>= 0)."
     if name in {"orderedQuantity","receivedQuantity"}: return "Positive whole-number quantity (> 0)."
     if name == "ratingValue": return "Integer from 1 to 5 inclusive."
@@ -158,8 +174,8 @@ def domain(row: dict) -> str:
     if name == "alcoholPercent": return "Percentage greater than 0 and no more than 25."
     if name == "ripenessSugarPercent": return "Percentage from 0 to 100 inclusive."
     if name in {"juiceConversionPercent","proportionPercent"}: return "Percentage greater than 0 and no more than 100."
-    if name in {"regularHours"}: return "Hours greater than 0 and no more than 16; combined regular plus overtime hours no more than 18."
-    if name in {"overtimeHours"}: return "Non-negative hours; combined regular plus overtime hours no more than 18."
+    if name == "regularHours": return "Hours greater than 0 and no more than 16; combined regular plus overtime hours no more than 18."
+    if name == "overtimeHours": return "Non-negative hours; combined regular plus overtime hours no more than 18."
     if name in {"totalLostHours","usualUnitCost","quotedUnitPrice","actualUnitPrice","refundAmount"}: return "Non-negative numeric value."
     if name in {"weightKg","casePrice","agreedCasePrice"}: return "Positive numeric value."
     if name == "endDateTime": return "NULL/open-ended or a value not earlier than the corresponding startDateTime."
