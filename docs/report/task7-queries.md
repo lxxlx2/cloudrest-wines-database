@@ -4,9 +4,9 @@ The specification inconsistently states five and six queries. Cloudrest Wines su
 
 ## Query 1 — Annual safety and sustainability training coverage
 
-**Decision.** Direct training resources to operational areas below target. The query counts active workers and employees who completed both categories during the current year. Current test results show Vineyard at 50%, while Cellar and Administration are 0%; management should schedule the missing sustainability/safety sessions rather than treating attendance at either category as full coverage.
+**Decision.** Direct training resources to operational areas below target. The query counts active workers and employees who completed both safety and sustainability training categories during the current year. Current test results show Vineyard at 50%, while Cellar and Administration are 0%; management should schedule the missing category rather than treating attendance at either category as full coverage.
 
-**Features.** Six tables/CTEs, left join, annual date logic, distinct-category validation, safe percentage calculation.
+**Features.** Six tables/CTEs, left join, annual date logic, distinct-category validation, company-wide session support and safe percentage calculation.
 
 ## Query 2 — Incidents per 1,000 labour hours
 
@@ -16,15 +16,15 @@ The specification inconsistently states five and six queries. Cloudrest Wines su
 
 ## Query 3 — Incidents before and after training
 
-**Decision.** Assess whether annual safety training is associated with fewer employee incidents. The query uses each employee's first completed safety course and counts incidents in symmetric 180-day windows. Test employee EMP0008 changes from one incident before to zero after; the report must not claim causality from this small synthetic sample.
+**Decision.** Assess whether annual safety training is associated with fewer employee incidents. The query uses each employee's first completed safety course and counts only incidents where the employee was recorded as `AFFECTED`, in symmetric 180-day windows. Test employee EMP0008 changes from one incident before to zero after; the report must not claim causality from this small synthetic sample.
 
-**Features.** Pre/post date arithmetic, conditional aggregation, employee/course/session/incident joins.
+**Features.** Pre/post date arithmetic, conditional aggregation, employee/course/session/incident joins and involvement-role filtering.
 
 ## Query 4 — Recent overtime and review indicators
 
-**Decision.** Identify employees for supervisor workload/safety review without exposing confidential wellbeing notes. The test output flags EMP0009 and EMP0011 because each has seven overtime hours plus a recent incident and concern. Results are triage indicators, not medical or disciplinary conclusions.
+**Decision.** Identify employees for supervisor workload/safety review without exposing confidential wellbeing notes. The query counts recent incidents only where the employee was `AFFECTED`; witness/reporter participation is excluded from the employee incident count. In the current synthetic data, EMP0009 is still flagged because of high overtime and a wellbeing concern, while EMP0011 is flagged because of high overtime, an affected incident and a wellbeing concern. These are triage indicators, not medical or disciplinary conclusions.
 
-**Features.** Last-30-days logic, three CTEs, left joins, privacy-aware output and rule-based action label.
+**Features.** Last-30-days logic, three CTEs, affected-incident filtering, left joins, privacy-aware output and rule-based action label.
 
 ## Query 5 — Expiring qualifications procedure
 
