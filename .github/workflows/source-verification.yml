@@ -37,10 +37,20 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install MySQL client
+      - name: Install and configure MySQL client
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client
+          mkdir -p "$HOME"
+          cat > "$HOME/.my.cnf" <<'EOF'
+          [client]
+          host=127.0.0.1
+          port=3306
+          protocol=tcp
+          user=root
+          password=root
+          EOF
+          chmod 600 "$HOME/.my.cnf"
           sudo mkdir -p /opt/homebrew/opt/mysql@8.4/bin
           sudo ln -sf "$(command -v mysql)" /opt/homebrew/opt/mysql@8.4/bin/mysql
 
