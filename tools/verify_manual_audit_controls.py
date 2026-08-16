@@ -115,7 +115,10 @@ record('Q4 has no arbitrary weighted risk score','* 5' not in q4 and 'overtimeHo
 dict_csv=ROOT/'docs/report/data-dictionary.csv'
 rows=list(csv.DictReader(dict_csv.open(encoding='utf-8-sig')))
 by={(r['tableName'],r['attributeName']):r for r in rows}
-composite_samples=[('customeraddress','customerId'),('customeraddress','addressId'),('customeraddress','startDateTime'),('employeeaddress','employeeId'),('checkintopic','checkinId')]
+composite_samples=[
+ ('customeraddress','customerId'),('customeraddress','addressId'),('customeraddress','startDateTime'),
+ ('employeeaddress','employeeId'),('checkintopic','wellbeingCheckinId'),('checkintopic','wellbeingTopicId')
+]
 record('Composite-key members are not falsely marked individually unique',all(by.get(k,{}).get('isUnique')=='N' for k in composite_samples),[(k,by.get(k,{}).get('isUnique')) for k in composite_samples])
 record('Bottle capacity domain states positive range','Positive' in by.get(('bottletype','capacityMl'),{}).get('domain',''),by.get(('bottletype','capacityMl'),{}).get('domain',''))
 
