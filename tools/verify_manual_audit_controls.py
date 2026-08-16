@@ -40,13 +40,11 @@ def scalar(sql):
     return result.stdout.strip()
 
 
-# Generated package must have been rebuilt after the source pass.
 dbtext=FINAL_SQL.read_text(encoding='utf-8') if FINAL_SQL.exists() else ''
 record('Portable SQL contains final control source','BEGIN database/schema/04_final_controls.sql' in dbtext,'04_final_controls embedded')
 record('Portable SQL contains current-state routine source','BEGIN database/schema/05_validation_routines.sql' in dbtext,'05_validation_routines embedded')
 record('Portable SQL contains picking-pack/contact data alignment','BEGIN database/data/02_manual_audit_patch.sql' in dbtext,'02_manual_audit_patch embedded')
 
-# Live schema must reflect the regenerated sources.
 trigger_count=int(scalar("SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema='cloudrestwines'"))
 routine_count=int(scalar("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema='cloudrestwines'"))
 record('Expanded trigger set installed',trigger_count>=43,f'triggers={trigger_count}')
@@ -65,7 +63,6 @@ live_routines=set(scalar("SELECT routine_name FROM information_schema.routines W
 expected_routines={'getExpiringQualifications','validateCustomerSubtype','validateWineComposition','validatePickingPackRules','validateRequiredCurrentState'}
 record('Named validation/reporting routines installed',expected_routines.issubset(live_routines),sorted(live_routines))
 
-# Baseline data should pass deferred validation after the data patch.
 baseline=run_sql('USE cloudrestwines; CALL validatePickingPackRules(); CALL validateRequiredCurrentState();')
 record('Baseline deferred validations pass',baseline.returncode==0,baseline.stderr or 'PASS')
 pack_supervisor=scalar("SELECT supervisorId FROM cloudrestwines.pickerpack WHERE pickerPackId='PACK001'")
@@ -73,8 +70,6 @@ record('Synthetic pack uses grape-farmer supervisor',pack_supervisor=='EMP0003',
 customer_primary=scalar("SELECT COUNT(*) FROM cloudrestwines.customerphone WHERE customerId='CUST002' AND isPrimary=TRUE AND startDateTime<=NOW() AND (endDateTime IS NULL OR endDateTime>NOW())")
 record('Synthetic business customer has a current primary phone',customer_primary=='1',customer_primary)
 
-# Additional negative/positive controls. Every failing script is isolated in its own
-# connection so an uncommitted transaction is rolled back on disconnect.
 fail_tests={
  'Employee same-kind address overlap':'additional_employee_address_overlap.sql',
  'Customer same-kind address overlap':'additional_customer_address_overlap.sql',
@@ -86,6 +81,7 @@ fail_tests={
  'Unordered bottle receipt':'additional_receipt_unordered_bottle.sql',
  'Employee duplicate primary phone':'additional_employee_duplicate_primary.sql',
  'Customer duplicate primary phone':'additional_customer_duplicate_primary.sql',
+ 'Missing required current primary phone':'additional_required_primary_phone.sql',
  'Future customer address cannot ship':'additional_future_shipment_address.sql',
  'Product-price period overlap':'additional_productprice_overlap.sql',
  'Supplier same-type address overlap':'additional_supplier_physical_overlap.sql',
@@ -97,7 +93,6 @@ for name,filename in fail_tests.items():
 positive=run_file(ROOT/'database/tests/additional_supplier_postal_coexist.sql')
 record('Supplier physical and postal addresses may coexist',positive.returncode==0,(positive.stdout+positive.stderr).strip()[:500] or 'PASS')
 
-# Query semantics and hand reconciliation.
 rate=scalar("""
 WITH h AS (
  SELECT SUM(sa.regularHours+sa.overtimeHours) labourHours
@@ -117,8 +112,6 @@ record('Q3 uses latest safety completion','MAX(ta.completionDate)' in q3 and 'MI
 q4=(ROOT/'database/queries/04_overtimerisk.sql').read_text(encoding='utf-8')
 record('Q4 has no arbitrary weighted risk score','* 5' not in q4 and 'overtimeHours >= 4' not in q4,'transparent rule-based ordering')
 
-# Dictionary semantics. This assumes generate_data_dictionary.py was rerun against
-# the current live schema.
 dict_csv=ROOT/'docs/report/data-dictionary.csv'
 rows=list(csv.DictReader(dict_csv.open(encoding='utf-8-sig')))
 by={(r['tableName'],r['attributeName']):r for r in rows}
@@ -126,7 +119,6 @@ composite_samples=[('customeraddress','customerId'),('customeraddress','addressI
 record('Composite-key members are not falsely marked individually unique',all(by.get(k,{}).get('isUnique')=='N' for k in composite_samples),[(k,by.get(k,{}).get('isUnique')) for k in composite_samples])
 record('Bottle capacity domain states positive range','Positive' in by.get(('bottletype','capacityMl'),{}).get('domain',''),by.get(('bottletype','capacityMl'),{}).get('domain',''))
 
-# Report/final-input source checks.
 builder=(ROOT/'tools/build_word_reports.py').read_text(encoding='utf-8')
 record('Task 1 no longer hard-codes placeholder member roles',all(x not in builder for x in ["'1 / Zora'","'Zora / 1'","'1 / Mia'","'1 / Rianna'","'Rianna / 1'"]),'member4 variable used')
 record('Final cover supports student numbers','studentNumbers' in builder and "('Student numbers'" in builder,'student number source/output')
