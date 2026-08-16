@@ -43,13 +43,14 @@ def scalar(sql):
 # Generated package must have been rebuilt after the source pass.
 dbtext=FINAL_SQL.read_text(encoding='utf-8') if FINAL_SQL.exists() else ''
 record('Portable SQL contains final control source','BEGIN database/schema/04_final_controls.sql' in dbtext,'04_final_controls embedded')
-record('Portable SQL contains picking-pack data alignment','BEGIN database/data/02_manual_audit_patch.sql' in dbtext,'02_manual_audit_patch embedded')
+record('Portable SQL contains current-state routine source','BEGIN database/schema/05_validation_routines.sql' in dbtext,'05_validation_routines embedded')
+record('Portable SQL contains picking-pack/contact data alignment','BEGIN database/data/02_manual_audit_patch.sql' in dbtext,'02_manual_audit_patch embedded')
 
 # Live schema must reflect the regenerated sources.
 trigger_count=int(scalar("SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema='cloudrestwines'"))
 routine_count=int(scalar("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema='cloudrestwines'"))
 record('Expanded trigger set installed',trigger_count>=43,f'triggers={trigger_count}')
-record('Validation routines installed',routine_count>=4,f'routines={routine_count}')
+record('Validation/reporting routines installed',routine_count>=5,f'routines={routine_count}')
 
 expected_controls=[
  'trg_employeeaddress_samekind_insert','trg_customeraddress_samekind_insert',
@@ -60,11 +61,17 @@ expected_controls=[
 live_triggers=set(scalar("SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema='cloudrestwines'").splitlines())
 record('Named manual-audit triggers installed',all(x in live_triggers for x in expected_controls),sorted(live_triggers))
 
-# Baseline data should pass deferred pack validation after the supervisor patch.
-baseline=run_sql('USE cloudrestwines; CALL validatePickingPackRules();')
-record('Baseline picking pack passes validation',baseline.returncode==0,baseline.stderr or 'PASS')
+live_routines=set(scalar("SELECT routine_name FROM information_schema.routines WHERE routine_schema='cloudrestwines'").splitlines())
+expected_routines={'getExpiringQualifications','validateCustomerSubtype','validateWineComposition','validatePickingPackRules','validateRequiredCurrentState'}
+record('Named validation/reporting routines installed',expected_routines.issubset(live_routines),sorted(live_routines))
+
+# Baseline data should pass deferred validation after the data patch.
+baseline=run_sql('USE cloudrestwines; CALL validatePickingPackRules(); CALL validateRequiredCurrentState();')
+record('Baseline deferred validations pass',baseline.returncode==0,baseline.stderr or 'PASS')
 pack_supervisor=scalar("SELECT supervisorId FROM cloudrestwines.pickerpack WHERE pickerPackId='PACK001'")
 record('Synthetic pack uses grape-farmer supervisor',pack_supervisor=='EMP0003',pack_supervisor)
+customer_primary=scalar("SELECT COUNT(*) FROM cloudrestwines.customerphone WHERE customerId='CUST002' AND isPrimary=TRUE AND startDateTime<=NOW() AND (endDateTime IS NULL OR endDateTime>NOW())")
+record('Synthetic business customer has a current primary phone',customer_primary=='1',customer_primary)
 
 # Additional negative/positive controls. Every failing script is isolated in its own
 # connection so an uncommitted transaction is rolled back on disconnect.
