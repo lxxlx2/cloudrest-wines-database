@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+*.tmp
+*.bak
+.env
+.idea/
+.vscode/
+tmp/
+database/local/
+source-materials/private/
+
