@@ -1,5 +1,5 @@
 USE cloudrestwines;
--- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
+-- Management question: Which operational areas have gaps in annual safety and sustainability training?
 WITH activeworkforce AS (
   SELECT er.employeeId, er.operationalAreaId
   FROM employeerole er
