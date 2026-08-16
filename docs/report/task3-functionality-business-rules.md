@@ -32,13 +32,13 @@ The design deliberately excludes payroll, detailed payment instruments, delivery
 
 **Violation evidence.** Insert a bottle with `reorderFlag = FALSE` and a NULL comment. MySQL returns Error 3819 for `chk_bottletype_reorder`.
 
-### Rule 3 — Referenced training-course retention
+### Rule 3 — Individual customer legal age
 
-**Plain-English rule.** A training course that is already referenced by a delivered session cannot be deleted because doing so would destroy the meaning of employee training history.
+**Plain-English rule.** The case requires an individual customer's date of birth to demonstrate legal age. Cloudrest Wines therefore rejects an individual younger than 18 at the time the row is inserted or updated.
 
-**Mechanism.** `fk_trainingsession_course` explicitly uses `ON DELETE RESTRICT ON UPDATE CASCADE`.
+**Mechanism.** `trg_individualcustomer_legalage_insert` and its update equivalent compare `dateOfBirth` with the date 18 years before `CURRENT_DATE` and raise `SQLSTATE '45000'` when invalid.
 
-**Violation evidence.** Attempt to delete `TRCR001`, which has several session records. MySQL returns Error 1451 and identifies the foreign key.
+**Violation evidence.** Insert an individual customer whose birth date is only 17 years earlier. MySQL returns Error 1644 with the purpose-written legal-age message.
 
 ### Rule 4 — Physical shipment address
 

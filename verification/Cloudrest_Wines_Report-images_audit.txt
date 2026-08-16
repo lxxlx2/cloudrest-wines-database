@@ -1,0 +1,23 @@
+IMAGE KINDS
+- inline: 19
+
+ROWS (part | kind | size | target)
+- word/document.xml | inline | 6.20 x 0.85 | media/image1.png
+- word/document.xml | inline | 6.20 x 0.85 | media/image2.png
+- word/document.xml | inline | 6.20 x 0.90 | media/image3.png
+- word/document.xml | inline | 6.20 x 0.72 | media/image4.png
+- word/document.xml | inline | 6.20 x 0.80 | media/image5.png
+- word/document.xml | inline | 4.20 x 6.95 | media/image6.png
+- word/document.xml | inline | 6.20 x 1.50 | media/image7.png
+- word/document.xml | inline | 6.20 x 1.66 | media/image8.png
+- word/document.xml | inline | 6.20 x 1.50 | media/image9.png
+- word/document.xml | inline | 6.20 x 1.92 | media/image10.png
+- word/document.xml | inline | 6.20 x 1.51 | media/image11.png
+- word/document.xml | inline | 6.20 x 1.72 | media/image12.png
+- word/document.xml | inline | 6.20 x 0.85 | media/image13.png
+- word/document.xml | inline | 4.37 x 7.20 | media/image14.png
+- word/document.xml | inline | 2.87 x 7.20 | media/image15.png
+- word/document.xml | inline | 4.12 x 7.20 | media/image16.png
+- word/document.xml | inline | 4.08 x 7.20 | media/image17.png
+- word/document.xml | inline | 5.80 x 6.89 | media/image18.png
+- word/document.xml | inline | 4.41 x 7.20 | media/image19.png

@@ -1,0 +1,201 @@
+{
+  "generatedAt": "2026-08-16T22:20:53",
+  "mysqlVersion": "8.4.11",
+  "totalChecks": 31,
+  "passed": 31,
+  "failed": 0,
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "Portable SQL rebuilds from empty database",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0"
+    },
+    {
+      "check": "Expected base tables",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=53, actual=53"
+    },
+    {
+      "check": "Expected views",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=1, actual=1"
+    },
+    {
+      "check": "Expected triggers",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=11, actual=11"
+    },
+    {
+      "check": "Expected routines",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=1, actual=1"
+    },
+    {
+      "check": "Expected columns",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=274, actual=274"
+    },
+    {
+      "check": "Expected foreign keys",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=69, actual=69"
+    },
+    {
+      "check": "Expected check constraints",
+      "passed": true,
+      "severity": "required",
+      "evidence": "expected=47, actual=47"
+    },
+    {
+      "check": "Table names are lowercase without spaces/underscores",
+      "passed": true,
+      "severity": "required",
+      "evidence": "53 compliant names"
+    },
+    {
+      "check": "Attributes use lowerCamelCase-compatible names",
+      "passed": true,
+      "severity": "required",
+      "evidence": "274 compliant names"
+    },
+    {
+      "check": "Every base table has a primary key",
+      "passed": true,
+      "severity": "required",
+      "evidence": "all 53 tables"
+    },
+    {
+      "check": "No picking pack has fewer than four active members",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "All wine compositions total 100 percent",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No employee has multiple active role rows",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No employee has multiple active supervisors",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "Completed training has completion and competency",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No non-reorder bottle lacks a comment",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No shipment uses a postal address",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No shipped order is unpaid",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "Query script executes: 01_trainingcoverage.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=114; "
+    },
+    {
+      "check": "Query script executes: 02_incidentrate.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=122; "
+    },
+    {
+      "check": "Query script executes: 03_trainingimpact.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=239; "
+    },
+    {
+      "check": "Query script executes: 04_overtimerisk.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=422; "
+    },
+    {
+      "check": "Query script executes: 05_expiringqualification.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=347; "
+    },
+    {
+      "check": "Query script executes: 06_openactions.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, outputChars=971; "
+    },
+    {
+      "check": "Integrity test behaves as expected: t01_validtraining.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=0, expectedNeedle=PASS, output=testResult\nPASS: valid completed training was accepted"
+    },
+    {
+      "check": "Integrity test behaves as expected: t02_invalidroledate.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=1, expectedNeedle=chk_employeerole_dates, output=ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated."
+    },
+    {
+      "check": "Integrity test behaves as expected: t03_missingreordercomment.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=1, expectedNeedle=chk_bottletype_reorder, output=ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated."
+    },
+    {
+      "check": "Integrity test behaves as expected: t04_underagecustomer.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=1, expectedNeedle=Individual customer must be at least 18 years old, output=ERROR 1644 (45000) at line 3: Individual customer must be at least 18 years old"
+    },
+    {
+      "check": "Integrity test behaves as expected: t05_postalshipment.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=1, expectedNeedle=Shipment address must be a physical address, output=ERROR 1644 (45000) at line 4: Shipment address must be a physical address, not PO Box or Private Bag"
+    },
+    {
+      "check": "Integrity test behaves as expected: t06_invalidconversionpercentage.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exitCode=1, expectedNeedle=chk_grapevariety_conversion, output=ERROR 3819 (HY000) at line 3: Check constraint 'chk_grapevariety_conversion' is violated."
+    }
+  ],
+  "externalDependencies": [
+    "Official A2 spreadsheet is not supplied; actual cleaning evidence remains pending.",
+    "Week 11 business scenario is not supplied.",
+    "Final Workbench screenshots, four-person video, genuine prompt logs and peer reviews require student action."
+  ]
+}

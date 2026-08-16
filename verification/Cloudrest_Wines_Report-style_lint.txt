@@ -1,0 +1,14 @@
+[style_lint] direct run-formatting runs: 2970
+[style_lint] direct paragraph-formatting paragraphs: 2496
+[style_lint] top fonts by char count: Times New Roman(60285), Menlo(7010)
+[style_lint] heading-like paragraphs not using Heading styles (first 10):
+  - #1: style='Normal' text='CLOUDREST WINES'
+  - #2: style='Normal' text='MySQL Database System Design and Implementation'
+  - #4: style='Normal' text='Course: BISM2207 System Development'
+  - #5: style='Normal' text='Team / company: Cloudrest Wines'
+  - #6: style='Normal' text='Contributors: Mia | Zora | Rianna | 1'
+  - #7: style='Normal' text='Database: MySQL 8.4.x / MySQL Workbench'
+  - #8: style='Normal' text='Submission date: [STUDENT TO COMPLETE]'
+  - #53: style='Normal' text='Readable SQL submitted for Turnitin'
+  - #61: style='Normal' text='Readable SQL submitted for Turnitin'
+  - #69: style='Normal' text='Readable SQL submitted for Turnitin'
