@@ -1,44 +1,48 @@
 # Requirements Traceability Matrix
 
-This matrix is the schema-review baseline. Every material case requirement is mapped to an implementation or an explicit exclusion.
+This matrix is the schema-review baseline. Every material case requirement is mapped to an implementation, an executable deferred validation, or an explicit exclusion.
 
 | Area | Requirement | Planned implementation | Enforcement/evidence |
 |---|---|---|---|
-| Personnel | Unique employee ID and retained TFN | `employee` | PK; encrypted/controlled access discussed in report |
-| Personnel | Multiple phones, one primary, retained history | `phone`, `employeephone` | dated association; trigger prevents invalid dates |
+| Personnel | Unique employee ID and retained TFN | `employee` | PK; sensitive identifier excluded from routine management queries; least-privilege deployment discussed in report |
+| Personnel | Multiple phones, one primary, retained history | `phone`, `employeephone` | dated association; date CHECK; primary-period overlap INSERT/UPDATE triggers |
 | Personnel | Role, permanent/casual, full/part-time and seasonal-work history | `role`, `employeerole` | separate work-time, employment type and employment pattern; dated rows; overlap trigger |
 | Personnel | One current supervisor per employee, retained history | `supervision` | composite key; self-supervision and overlap triggers |
+| Personnel | Employee address history valid on a date | `employeeaddress`, `address` | dated association; same-address-kind overlap triggers |
 | Personnel | Seasonal worker end-of-season rating | `seasonalrating` | unique worker/season record; supervisor FK |
-| Personnel | Picking pack has fun name and at least four pickers | `pickerpack`, `packmember` | membership model; minimum four documented as deferred transaction rule |
-| Vineyard | Unique vineyard, decimal hectares, manager and fixed GPS | `vineyard` | unique name/manager; decimal and coordinate checks |
+| Personnel | Picking pack has fun name and at least four pickers; members report to same grape-farmer supervisor | `pickerpack`, `packmember`, `supervision`, `employeerole` | `validatePickingPackRules()` checks minimum four, current casual-seasonal Picker role, one current pack per picker, active Grape Farmer supervisor and matching supervision |
+| Vineyard | Unique vineyard, decimal hectares, grape-farmer manager, physical address and fixed GPS | `vineyard` | unique name/manager; positive/coordinate CHECKs; vineyard INSERT/UPDATE business triggers verify active Grape Farmer role and PHYSICAL address |
 | Vineyard | One variety per vineyard and vintage, retained planting | `vineyardplanting` | composite PK `(vineyardId, vintageYear)` |
-| Harvest | Weight and ripeness by vineyard and vintage | `harvest` | non-negative and percentage checks |
-| Wine | Unique wine, vintage, category, alcohol and winemaker | `wine`, `winecategory` | PK/FK/checks |
-| Wine | Multi-variety composition and proportion | `winecomposition` | composite PK; 0–100 proportion check |
+| Harvest | Weight and ripeness by vineyard and vintage | `harvest` | planting FK; positive weight and percentage CHECKs |
+| Wine | Unique wine, vintage, category, alcohol and winemaker | `wine`, `winecategory` | PK/FK/CHECKs |
+| Wine | Multi-variety composition and proportion totals 100% before saleable product release | `winecomposition`, `wineproduct` | row percentage CHECK plus `validateWineComposition()` called by product INSERT/UPDATE triggers |
 | Wine | Multiple medals | `medal` | wine FK and unique award tuple |
-| Product | Wine + bottle + case quantity + dated price | `wineproduct`, `productprice` | unique product combination; positive checks; dated price history |
-| Bottle | Capacity, material, colour, inventory, cost and reorder state | `bottletype` | domain checks; comment-required rule |
-| Procurement | Bottle can have several suppliers | `supplierbottle` | M:N association |
-| Procurement | Supplier address and phone changes retained | `supplieraddress`, `supplierphone`, `phone`, `address` | dated associations, FKs, date checks and overlap/current-primary triggers |
-| Procurement | Supplier order has many lines and split receipts | `purchaseorder`, `purchaseorderline`, `receipt`, `receiptline` | compound keys and quantity checks |
-| Customer | Shared customer data plus individual/business details | `customer`, `individualcustomer`, `businesscustomer` | supertype/subtype design |
-| Customer | Multiple phones and retained address history | `customerphone`, `customeraddress` | dated associations and primary indicator |
-| Address | Australian physical/postal structure | `address` | structured optional and required fields; address-kind domain |
-| Order | Multiple product lines; single shipment; paid before shipment | `customerorder`, `orderline`, `shipment` | PK/FK; shipment trigger |
-| Order | Shipment cannot use PO Box/private bag | `shipment` + `address` | shipment trigger |
+| Product | Wine + bottle + case quantity + dated price | `wineproduct`, `productprice` | unique product combination; positive CHECKs; product-price overlap triggers |
+| Bottle | Capacity, material, colour, inventory, cost and reorder state | `bottletype` | domain/CHECK controls; comment-required rule |
+| Procurement | Bottle can have several suppliers and availability state | `supplierbottle` | M:N association and `isAvailable` |
+| Procurement | Supplier address and phone changes retained | `supplieraddress`, `supplierphone`, `phone`, `address` | dated associations; same-address-kind overlap controls; primary-phone period control |
+| Procurement | Supplier order has many lines and split receipts | `purchaseorder`, `purchaseorderline`, `receipt`, `receiptline` | compound keys; quantity CHECKs; receipt-line trigger confirms bottle was ordered; receipt chronology trigger |
+| Customer | Shared customer data plus exactly one matching individual/business subtype before transaction | `customer`, `individualcustomer`, `businesscustomer` | subtype INSERT/UPDATE/type-change triggers plus `validateCustomerSubtype()` on customer-order INSERT/UPDATE |
+| Customer | Multiple phones with one primary and retained address history | `customerphone`, `customeraddress`, `phone`, `address` | dated associations; primary-phone overlap triggers; same-address-kind overlap triggers |
+| Address | Australian physical/postal structure | `address` | structured optional/required fields; address-kind/postcode CHECKs |
+| Order | One or more product lines before dispatch; single shipment; paid before shipment | `customerorder`, `orderline`, `shipment` | positive line quantity; unique shipment per order; shipment controls require at least one line and paid order |
+| Order | Shipment cannot use PO Box/private bag and must use currently valid customer physical address | `shipment`, `customeraddress`, `address` | shipment triggers include address type and start/end validity checks |
+| Order | Shipment cannot precede order receipt; SHIPPED state requires shipment record | `customerorder`, `shipment` | chronology and state-transition triggers |
 | Refund | Short supply and verified transit damage | `refund` | reason domain and verified flag |
 | HR | Operational areas | `operationalarea` | role history and HR activity links |
 | HR | Qualifications and renewal | `qualification`, `employeequalification` | dated certification records |
 | HR | Course, provider, completion, renewal and competency | `trainingcourse`, `trainingsession`, `trainingattendance` | normalised course/session/attendance model |
-| HR | Shifts, labour hours, overtime, task and supervisor | `shift`, `shiftassignment`, `taskcategory` | hour checks and composite assignment PK |
-| HR | Incidents, severity, corrective action and lost time | `incident`, `incidentemployee`, `correctiveaction` | nonnegative lost-time check; serious near miss may have zero lost hours |
-| HR | Check-ins, topics, concerns and actions | `wellbeingcheckin`, `wellbeingtopic`, `checkintopic`, `wellbeingaction` | restricted-detail model and management follow-up |
-| Sustainability | Training completion rate by area | Query 1 | annual parameter/date filtering |
-| Sustainability | Incidents per 1,000 labour hours | Query 2 | date range and safe division |
+| HR | Shifts, labour hours, overtime, task and supervisor | `shift`, `shiftassignment`, `taskcategory` | hour checks and composite assignment PK; same-day shift assumption documented |
+| HR | Incidents, severity, corrective action and lost time | `incident`, `incidentemployee`, `correctiveaction` | nonnegative lost-time check; involvement role separates AFFECTED/WITNESS/REPORTER |
+| HR | Check-ins, topics, concerns and actions | `wellbeingcheckin`, `wellbeingtopic`, `checkintopic`, `wellbeingaction` | restricted-detail model and privacy-aware management output |
+| Sustainability | Training completion rate by area | Query 1 | annual date logic; employee area from active role; company-wide sessions remain eligible |
+| Sustainability | All recorded safety incidents per 1,000 labour hours | Query 2 | rolling 12-month numerator/denominator CTEs; operational-area driving set; safe NULL rate when exposure is zero |
+| Analytics | Pre/post latest safety-training incident comparison | Query 3 | symmetric 180-day windows; AFFECTED involvement only; association only, no causal claim |
+| Analytics | Workload/safety review | Query 4 | separate workload/incident/concern aggregates; no confidential notes and no arbitrary weighted risk score |
 | Exclusion | Payroll | Out of scope | external accounting system |
 | Exclusion | Detailed payment/refund instrument and delivery cost | Out of scope | only paid/refund indicators retained |
 | Exclusion | Cork, label, barrel and packing-box inventory | Out of scope | case instruction |
 
-## Known deferred validations
+## Executable deferred validations
 
-Some cross-row rules cannot safely be represented by a row-level `CHECK`. Pack minimum membership, wine-composition total of exactly 100%, and order stock allocation are documented transaction/service rules. They should be validated through controlled procedures or end-of-transaction checks rather than triggers that make staged data loading impossible.
+Cross-row rules that cannot be represented safely by a single-row `CHECK` are not left as prose-only assumptions. `validatePickingPackRules()` checks the completed picking-pack state before operational use. `validateWineComposition()` is invoked automatically before a wine product is created or changed. `validateCustomerSubtype()` is invoked before an order can be created or reassigned. Order-line presence is checked at shipment finalisation.
