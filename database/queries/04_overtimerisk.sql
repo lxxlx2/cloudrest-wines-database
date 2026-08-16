@@ -9,6 +9,7 @@ WITH workload AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
   FROM incidentemployee ie JOIN incident i ON i.incidentId = ie.incidentId
   WHERE i.incidentDateTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    AND ie.involvementRole = 'AFFECTED'
   GROUP BY ie.employeeId
 ), recentconcern AS (
   SELECT employeeId, COUNT(*) AS concernCount
@@ -25,4 +26,3 @@ JOIN employee e ON e.employeeId = w.employeeId
 LEFT JOIN recentincident ri ON ri.employeeId = w.employeeId
 LEFT JOIN recentconcern rc ON rc.employeeId = w.employeeId
 ORDER BY (w.overtimeHours + COALESCE(ri.incidentCount,0) * 5 + COALESCE(rc.concernCount,0) * 5) DESC;
-
