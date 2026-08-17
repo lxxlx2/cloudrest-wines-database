@@ -3,7 +3,7 @@
 ## Confirmed identity
 
 - Company and group name: Cloudrest Wines
-- Team: Mia, Zora, Rianna and 1
+- Team: Mia, Zora, Rianna and Jason
 - Selected perspective: Human Resources, Workforce Planning and Wellbeing
 - Sustainability initiative: Sustainable Workforce Safety, Training and Wellbeing Monitoring
 
@@ -44,4 +44,4 @@ The incident-rate KPI intentionally uses all safety events recorded in `incident
 - Official A2 spreadsheet
 - Week 11 assigned business scenario
 - Blackboard/RiPPlE submission links and any later clarifications
-- Genuine member contribution dates and peer feedback
+- All four student numbers, submission date, genuine member contribution dates and peer feedback
