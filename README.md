@@ -7,7 +7,7 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 - Mia
 - Zora
 - Rianna
-- 1
+- Jason
 
 ## Project direction
 
@@ -55,7 +55,7 @@ The generated database export, Word reports, verification reports, Data Dictiona
 
 The final Workbench model still requires manual confirmation of **Model → Relationship Notation → UML**, a landscape-oriented complete EER layout, save and fresh export.
 
-Official spreadsheet cleaning, the Week 11 business scenario, genuine Workbench screenshots, RiPPlE work, final contribution records, fourth member identity/student numbers and the four-person video remain genuine course/student dependencies. They must not be fabricated.
+Official spreadsheet cleaning, the Week 11 business scenario, genuine Workbench screenshots, RiPPlE work, final contribution records, student numbers and the four-person video remain genuine course/student dependencies. The fourth team member is now confirmed as **Jason**. Pending evidence must not be fabricated.
 
 ## Review starting points
 
