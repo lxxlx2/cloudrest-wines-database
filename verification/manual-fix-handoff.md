@@ -6,6 +6,15 @@
 - Working branch: `audit/final-manual-fixes`
 - Draft PR: #1
 
+## Confirmed team identity
+
+- Mia
+- Zora
+- Rianna
+- Jason
+
+Jason is the confirmed fourth team member. Student numbers, submission date, actual completion dates/hours and genuine contribution records remain pending.
+
 ## Audit standard for external reviewers
 
 Start with:
@@ -97,7 +106,7 @@ Follow `deliverables/final-submission/README_FIRST.md`. In summary:
 - final Workbench UML confirmation and final ER export
 - four-person video
 - genuine RiPPlE prompt iterations and tutor-confirmed peer reviews
-- fourth member name, four student numbers, submission date, actual completion dates/hours/contributions
+- four student numbers, submission date, actual completion dates/hours/contributions
 - tutor-confirmation questions in `docs/requirements/tutor-confirmations.md`
 
 ## External reviewer guidance
