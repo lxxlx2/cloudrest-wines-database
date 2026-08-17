@@ -13,8 +13,8 @@ This file records the disposition of the second independent grading-oriented aud
 | B06 Week 11 scenario | OPEN course dependency | No fabricated scenario. |
 | B07 four-person video | OPEN student dependency | Script only until genuine recording. |
 | B08 genuine RiPPlE | OPEN student dependency | Capture framework only; peer-review count remains tutor-dependent. |
-| B09 real fourth member, dates/contributions | OPEN student dependency | Final mode requires genuine values. |
-| B10 hard-coded member `1` in Task 1 | RESOLVED IN SOURCE | `build_word_reports.py` uses `member4Name` for every Task 1 responsibility/owner occurrence. |
+| B09 fourth member identity, dates/contributions | PARTIALLY RESOLVED | Fourth member identity is confirmed as Jason. All four student numbers, submission date, actual completion dates/hours and genuine contribution records remain pending. |
+| B10 hard-coded member `1` in Task 1 | RESOLVED IN SOURCE | Project planning and video materials now use Jason. The final-input example is prefilled with Jason, while final report generation still requires the genuine final-input file and remaining student data. |
 | B11 final Appendix C placeholder row | RESOLVED IN SOURCE | Appendix statuses are FINAL_MODE-aware and do not instruct replacement after a successful final build. |
 | B12 student numbers absent | RESOLVED IN SOURCE | `final-inputs.example.json` and report cover support all four student numbers; final mode requires them. |
 | B13 tutor conflicts | OPEN by design | `docs/requirements/tutor-confirmations.md` remains authoritative; no silent resolution. |
