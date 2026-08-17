@@ -24,7 +24,7 @@ The authoritative source files have received an additional manual-audit correcti
 9. Rebuild the Word reports with `python3 tools/build_word_reports.py`.
 10. Render and visually inspect the Word report. Confirm real landscape sections, readable ER diagrams, complete tables and no layout defects.
 11. Capture genuine MySQL Workbench screenshots following `docs/evidence/student-screenshot-checklist.md` and insert the evidence into the final report workflow.
-12. After the fourth member name, all four student numbers, submission date, actual completion dates and genuine evidence are available, create the ignored `project-management/final-inputs.json` from the example and run the final-mode process. Final mode must fail while required genuine data or evidence remains incomplete.
+12. Jason is confirmed as the fourth member. After all four student numbers, submission date, actual completion dates and genuine evidence are available, create the ignored `project-management/final-inputs.json` from the example and run the final-mode process. Final mode must fail while required genuine data or evidence remains incomplete.
 
 The table/column/FK/CHECK structure was not changed by the latest cross-row-control pass. The authoritative trigger sources now contain 43 trigger definitions in total and the schema contains five stored routines when `getExpiringQualifications`, `validateCustomerSubtype`, `validateWineComposition`, `validatePickingPackRules` and `validateRequiredCurrentState` are installed. These are expected source counts only. The live MySQL metadata produced after regeneration is the source of truth.
 
@@ -42,7 +42,7 @@ The database script intentionally drops and rebuilds `cloudrestwines`. Do not ru
 
 ## Items requiring genuine students/course inputs
 
-- Replace placeholder member `1` with the enrolled name and enter all four real student numbers.
+- Team names are confirmed as Mia, Zora, Rianna and Jason. Enter all four real student numbers before final submission.
 - Fill actual completion dates and confirm genuine contribution allocation.
 - Add official A2 spreadsheet error analysis, cleaning SQL and before/after screenshots.
 - Complete the Week 11 assigned business scenario.
