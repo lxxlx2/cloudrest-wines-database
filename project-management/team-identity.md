@@ -9,7 +9,7 @@ This file is the canonical team-name reference for project planning, report gene
 3. Rianna
 4. Jason
 
-The previous fourth-member placeholder `1` is retired and must not appear in current student-facing material.
+The previous fourth-member placeholder is retired and must not appear in current student-facing material.
 
 ## Current planning responsibilities
 
