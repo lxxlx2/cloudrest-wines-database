@@ -8,7 +8,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 FINAL_MODE = os.getenv("FINAL_MODE", "0") == "1"
 FINAL_INPUTS = ROOT / "project-management" / "final-inputs.json"
 
-member4 = "1"
+member4 = "Jason"
 if FINAL_MODE:
     if not FINAL_INPUTS.exists():
         raise RuntimeError("FINAL_MODE requires project-management/final-inputs.json")
