@@ -1,7 +1,7 @@
 USE cloudrestwines;
--- Compare employee incidents in the 180 days before and after completed annual safety training.
+-- Compare affected-employee incidents in symmetric 180-day windows around each employee's latest completed safety training.
 WITH completion AS (
-  SELECT ta.employeeId, MIN(ta.completionDate) AS completionDate
+  SELECT ta.employeeId, MAX(ta.completionDate) AS completionDate
   FROM trainingattendance ta
   JOIN trainingsession ts ON ts.trainingSessionId = ta.trainingSessionId
   JOIN trainingcourse tc ON tc.trainingCourseId = ts.trainingCourseId

@@ -2,15 +2,15 @@
 
 ## Selected perspective and sustainability initiative
 
-Cloudrest Wines extends the complete winery base model through the Human Resources, Workforce Planning and Wellbeing perspective. Its sustainability initiative measures training coverage and incidents per 1,000 labour hours, supported by overtime, qualification expiry, corrective-action and wellbeing indicators. This differentiates the system from a conventional personnel register: management can relate workforce preparation and exposure to safety outcomes by operational area and period. The design stores only the detail needed for responsible follow-up, while aggregated reporting reduces unnecessary exposure of sensitive wellbeing information.
+Cloudrest Wines extends the complete winery base model through the Human Resources, Workforce Planning and Wellbeing perspective. Its sustainability initiative measures training coverage and all recorded safety incidents per 1,000 labour hours, supported by overtime, qualification expiry, corrective-action and wellbeing indicators. This differentiates the system from a conventional personnel register: management can relate workforce preparation and exposure to safety outcomes by operational area and period. The design stores only the detail needed for responsible follow-up, while aggregated reporting reduces unnecessary exposure of sensitive wellbeing information.
 
 ## Decision 1 — Model customer types with a supertype and subtypes
 
-**Challenge and source.** All customers share identifiers, email, phone, address and order behaviour. Individuals require names/date of birth while businesses require company name, ABN, type and contact names (Wine Company Case, pp. 4–5, “Customers”).
+**Challenge and source.** All customers share identifiers, email, phone, address and order behaviour. Individuals require names/date of birth while businesses require company name, ABN, type and contact names (Wine Company Case, pp. 3–4, “Customers”).
 
 **Alternatives.** A single customer table could contain every attribute, with type-dependent nullable columns. Alternatively, separate individual and business tables could duplicate all shared contact and order relationships. The selected model uses `customer` as the supertype and `individualcustomer`/`businesscustomer` as subtype tables.
 
-**Selected design, justification, trade-off and ER traceability.** `customer` is the supertype and `individualcustomer`/`businesscustomer` are subtypes. The structure avoids duplicated common attributes and inapplicable NULLs, supports 3NF and gives every order one enforceable customer FK. Type-specific controls improve data quality and reduce accidental exposure of date of birth. The trade-off is an extra join. The ER traces one customer to exactly one subtype and to dated contact associations.
+**Selected design, justification, trade-off and ER traceability.** `customer` is the supertype and `individualcustomer`/`businesscustomer` are subtypes. The structure avoids duplicated common attributes and inapplicable NULLs, supports 3NF and gives every order one enforceable customer FK. Subtype triggers reject type mismatches or dual membership, while `validateCustomerSubtype()` prevents a staged parent from transacting until exactly one matching subtype exists. Type-specific controls improve data quality and reduce accidental exposure of date of birth. The trade-off is an extra join plus a transaction-boundary validation. The ER traces each customer to its applicable subtype and to dated contact associations.
 
 ## Decision 2 — Separate an address from its time-dependent use
 
@@ -18,7 +18,7 @@ Cloudrest Wines extends the complete winery base model through the Human Resourc
 
 **Alternatives.** Address columns could be copied into every owner table. A second option is a shared `address` table with owner ID/type columns, but that creates a polymorphic foreign key MySQL cannot enforce. The selected model stores address structure once and uses typed association tables such as `employeeaddress` and `customeraddress` with start/end timestamps.
 
-**Selected design, justification, trade-off and ER traceability.** A shared `address` plus typed `employeeaddress`, `customeraddress` and `supplieraddress` associations provide enforceable FKs and preserve validity periods without overwriting. `phone` is similarly reused by dated owner-specific associations. A shipment retains its address key. More joins and overlap controls are required, but temporal accuracy, controlled updates and extensibility outweigh the performance cost at course scale. The ER traces each owner to contact history and the shipment to the actual address used.
+**Selected design, justification, trade-off and ER traceability.** A shared `address` plus typed `employeeaddress`, `customeraddress` and `supplieraddress` associations provide enforceable FKs and preserve validity periods without overwriting. Physical and postal histories can coexist, while same-kind overlap controls keep the address of each type unambiguous at a point in time. `phone` is similarly reused by dated owner-specific associations. A shipment retains its address key. More joins and overlap controls are required, but temporal accuracy, controlled updates and extensibility outweigh the performance cost at course scale. The ER traces each owner to contact history and the shipment to the actual address used.
 
 ## Decision 3 — Separate training definition, delivery and attendance
 

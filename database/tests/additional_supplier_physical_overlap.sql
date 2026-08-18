@@ -1,0 +1,5 @@
+USE cloudrestwines;
+INSERT INTO address VALUES
+('ADDR9002','PHYSICAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'99','Overlap Road','Dandenong','VIC','3175');
+INSERT INTO supplieraddress VALUES
+('SUPP001','ADDR9002',NOW(),NULL);

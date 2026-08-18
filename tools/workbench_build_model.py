@@ -1,4 +1,9 @@
-"""Run inside MySQL Workbench to build an editable model from validated SQL."""
+"""Run inside MySQL Workbench to build an editable model from validated SQL.
+
+The script creates the model and diagrams. Final UML relationship notation and the
+landscape arrangement must still be confirmed in MySQL Workbench before the last
+export; see docs/evidence/workbench-model-finalization.md.
+"""
 import grt
 from pathlib import Path
 
@@ -63,6 +68,7 @@ try:
             grt.modules.Workbench.exportDiagramToPng(d,str(OUT/f'ER_{domain_name}.png'))
         except Exception as exc:
             log.append(f'{domain_name} png error='+repr(exc))
+    log.append('MANUAL REQUIRED: open the saved model, select Model > Relationship Notation > UML, arrange the complete diagram on a wide landscape canvas, save, and re-export the final PNG.')
 except Exception as exc:
     log.append('FATAL='+repr(exc))
     import traceback

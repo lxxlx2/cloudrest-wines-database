@@ -1,5 +1,5 @@
 -- Cloudrest Wines Database — portable MySQL 8.x build
--- Team: Mia, Zora, Rianna, 1
+-- Team: Mia, Zora, Rianna, Jason
 -- Perspective: Human Resources, Workforce Planning and Wellbeing
 -- Open this file in MySQL Workbench and execute the full script.
 -- All data is fictitious and intended only for assessment/testing.
@@ -681,6 +681,68 @@ BEGIN
   END IF;
 END$$
 
+CREATE TRIGGER trg_employeephone_primary_insert
+BEFORE INSERT ON employeephone
+FOR EACH ROW
+BEGIN
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM employeephone ep
+    WHERE ep.employeeId = NEW.employeeId
+      AND ep.isPrimary = TRUE
+      AND NEW.startDateTime <= COALESCE(ep.endDateTime, '9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime, '9999-12-31 23:59:59') >= ep.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee may have only one primary phone during a period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_employeephone_primary_update
+BEFORE UPDATE ON employeephone
+FOR EACH ROW
+BEGIN
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM employeephone ep
+    WHERE ep.employeeId = NEW.employeeId
+      AND ep.isPrimary = TRUE
+      AND NOT (ep.employeeId = OLD.employeeId AND ep.phoneId = OLD.phoneId AND ep.startDateTime = OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(ep.endDateTime, '9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime, '9999-12-31 23:59:59') >= ep.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee may have only one primary phone during a period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerphone_primary_insert
+BEFORE INSERT ON customerphone
+FOR EACH ROW
+BEGIN
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM customerphone cp
+    WHERE cp.customerId = NEW.customerId
+      AND cp.isPrimary = TRUE
+      AND NEW.startDateTime <= COALESCE(cp.endDateTime, '9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime, '9999-12-31 23:59:59') >= cp.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer may have only one primary phone during a period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerphone_primary_update
+BEFORE UPDATE ON customerphone
+FOR EACH ROW
+BEGIN
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM customerphone cp
+    WHERE cp.customerId = NEW.customerId
+      AND cp.isPrimary = TRUE
+      AND NOT (cp.customerId = OLD.customerId AND cp.phoneId = OLD.phoneId AND cp.startDateTime = OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(cp.endDateTime, '9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime, '9999-12-31 23:59:59') >= cp.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer may have only one primary phone during a period';
+  END IF;
+END$$
+
 CREATE TRIGGER trg_shipment_validate_insert
 BEFORE INSERT ON shipment
 FOR EACH ROW
@@ -699,7 +761,10 @@ BEGIN
 
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND startDateTime <= NOW()
+    AND (endDateTime IS NULL OR endDateTime > NOW());
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -728,7 +793,10 @@ BEGIN
   FROM address WHERE addressId = NEW.addressId;
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND startDateTime <= NOW()
+    AND (endDateTime IS NULL OR endDateTime > NOW());
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -784,15 +852,100 @@ BEGIN
   END IF;
 END$$
 
+CREATE TRIGGER trg_individualcustomer_subtype_insert
+BEFORE INSERT ON individualcustomer
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM customer c
+    WHERE c.customerId = NEW.customerId AND c.customerType = 'INDIVIDUAL'
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Individual customer subtype must match parent customerType';
+  END IF;
+  IF EXISTS (SELECT 1 FROM businesscustomer b WHERE b.customerId = NEW.customerId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer cannot belong to both individual and business subtypes';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_individualcustomer_subtype_update
+BEFORE UPDATE ON individualcustomer
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM customer c
+    WHERE c.customerId = NEW.customerId AND c.customerType = 'INDIVIDUAL'
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Individual customer subtype must match parent customerType';
+  END IF;
+  IF EXISTS (SELECT 1 FROM businesscustomer b WHERE b.customerId = NEW.customerId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer cannot belong to both individual and business subtypes';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_businesscustomer_subtype_insert
+BEFORE INSERT ON businesscustomer
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM customer c
+    WHERE c.customerId = NEW.customerId AND c.customerType = 'BUSINESS'
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Business customer subtype must match parent customerType';
+  END IF;
+  IF EXISTS (SELECT 1 FROM individualcustomer i WHERE i.customerId = NEW.customerId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer cannot belong to both individual and business subtypes';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_businesscustomer_subtype_update
+BEFORE UPDATE ON businesscustomer
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM customer c
+    WHERE c.customerId = NEW.customerId AND c.customerType = 'BUSINESS'
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Business customer subtype must match parent customerType';
+  END IF;
+  IF EXISTS (SELECT 1 FROM individualcustomer i WHERE i.customerId = NEW.customerId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer cannot belong to both individual and business subtypes';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customer_type_update
+BEFORE UPDATE ON customer
+FOR EACH ROW
+BEGIN
+  IF NEW.customerType <> OLD.customerType THEN
+    IF NEW.customerType = 'INDIVIDUAL' AND EXISTS (
+      SELECT 1 FROM businesscustomer b WHERE b.customerId = OLD.customerId
+    ) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Parent customerType conflicts with existing business subtype';
+    END IF;
+    IF NEW.customerType = 'BUSINESS' AND EXISTS (
+      SELECT 1 FROM individualcustomer i WHERE i.customerId = OLD.customerId
+    ) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Parent customerType conflicts with existing individual subtype';
+    END IF;
+  END IF;
+END$$
+
 CREATE TRIGGER trg_supplieraddress_nooverlap_insert
 BEFORE INSERT ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId = sa.addressId
     WHERE sa.supplierId = NEW.supplierId
+      AND a.addressKind = vAddressKind
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing address of the same type';
   END IF;
 END$$
 
@@ -800,12 +953,19 @@ CREATE TRIGGER trg_supplieraddress_nooverlap_update
 BEFORE UPDATE ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId = sa.addressId
     WHERE sa.supplierId = NEW.supplierId
-      AND NOT (sa.supplierId=OLD.supplierId AND sa.addressId=OLD.addressId AND sa.startDateTime=OLD.startDateTime)
+      AND a.addressKind = vAddressKind
+      AND NOT (sa.supplierId = OLD.supplierId AND sa.addressId = OLD.addressId AND sa.startDateTime = OLD.startDateTime)
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing address of the same type';
   END IF;
 END$$
 
@@ -813,16 +973,23 @@ CREATE TRIGGER trg_supplierphone_nooverlap_insert
 BEFORE INSERT ON supplierphone
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplierphone sp
+  IF EXISTS (
+    SELECT 1 FROM supplierphone sp
     WHERE sp.supplierId = NEW.supplierId
+      AND sp.phoneId = NEW.phoneId
       AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier phone period overlaps an existing period';
-  END IF;
-  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
-    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime
   ) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier phone period overlaps an existing period for the same phone';
+  END IF;
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND sp.isPrimary = TRUE
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one primary phone during a period';
   END IF;
 END$$
 
@@ -830,18 +997,88 @@ CREATE TRIGGER trg_supplierphone_nooverlap_update
 BEFORE UPDATE ON supplierphone
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplierphone sp
+  IF EXISTS (
+    SELECT 1 FROM supplierphone sp
     WHERE sp.supplierId = NEW.supplierId
-      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+      AND sp.phoneId = NEW.phoneId
+      AND NOT (sp.supplierId = OLD.supplierId AND sp.phoneId = OLD.phoneId AND sp.startDateTime = OLD.startDateTime)
       AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier phone period overlaps an existing period';
-  END IF;
-  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
-    SELECT 1 FROM supplierphone sp WHERE sp.supplierId=NEW.supplierId AND sp.endDateTime IS NULL AND sp.isPrimary
-      AND NOT (sp.supplierId=OLD.supplierId AND sp.phoneId=OLD.phoneId AND sp.startDateTime=OLD.startDateTime)
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime
   ) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one current primary phone';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier phone period overlaps an existing period for the same phone';
+  END IF;
+  IF NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM supplierphone sp
+    WHERE sp.supplierId = NEW.supplierId
+      AND sp.isPrimary = TRUE
+      AND NOT (sp.supplierId = OLD.supplierId AND sp.phoneId = OLD.phoneId AND sp.startDateTime = OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(sp.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sp.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier may have only one primary phone during a period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_receiptline_ordered_insert
+BEFORE INSERT ON receiptline
+FOR EACH ROW
+BEGIN
+  DECLARE vPurchaseOrderId CHAR(8);
+  SELECT purchaseOrderId INTO vPurchaseOrderId
+  FROM receipt WHERE receiptId = NEW.receiptId;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM purchaseorderline pol
+    WHERE pol.purchaseOrderId = vPurchaseOrderId
+      AND pol.bottleTypeId = NEW.bottleTypeId
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Received bottle type must exist on the related purchase order';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_receiptline_ordered_update
+BEFORE UPDATE ON receiptline
+FOR EACH ROW
+BEGIN
+  DECLARE vPurchaseOrderId CHAR(8);
+  SELECT purchaseOrderId INTO vPurchaseOrderId
+  FROM receipt WHERE receiptId = NEW.receiptId;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM purchaseorderline pol
+    WHERE pol.purchaseOrderId = vPurchaseOrderId
+      AND pol.bottleTypeId = NEW.bottleTypeId
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Received bottle type must exist on the related purchase order';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_productprice_nooverlap_insert
+BEFORE INSERT ON productprice
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM productprice pp
+    WHERE pp.productId = NEW.productId
+      AND NEW.effectiveDate <= COALESCE(pp.endDate, '9999-12-31')
+      AND COALESCE(NEW.endDate, '9999-12-31') >= pp.effectiveDate
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Product price period overlaps an existing price period';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_productprice_nooverlap_update
+BEFORE UPDATE ON productprice
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM productprice pp
+    WHERE pp.productId = NEW.productId
+      AND NOT (pp.productId = OLD.productId AND pp.effectiveDate = OLD.effectiveDate)
+      AND NEW.effectiveDate <= COALESCE(pp.endDate, '9999-12-31')
+      AND COALESCE(NEW.endDate, '9999-12-31') >= pp.effectiveDate
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated product price period overlaps an existing price period';
   END IF;
 END$$
 
@@ -893,6 +1130,421 @@ BEGIN
 END$$
 DELIMITER ;
 -- ===== END database/schema/03_reporting.sql =====
+
+-- ===== BEGIN database/schema/04_final_controls.sql =====
+USE cloudrestwines;
+DELIMITER $$
+
+-- Employee and customer address history may include physical and postal rows at the
+-- same time, but periods of the same address kind must not overlap for one owner.
+CREATE TRIGGER trg_employeeaddress_samekind_insert
+BEFORE INSERT ON employeeaddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM employeeaddress ea
+    JOIN address a ON a.addressId = ea.addressId
+    WHERE ea.employeeId = NEW.employeeId
+      AND a.addressKind = vAddressKind
+      AND NEW.startDateTime <= COALESCE(ea.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ea.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Employee address period overlaps an existing address of the same type';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_employeeaddress_samekind_update
+BEFORE UPDATE ON employeeaddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM employeeaddress ea
+    JOIN address a ON a.addressId = ea.addressId
+    WHERE ea.employeeId = NEW.employeeId
+      AND a.addressKind = vAddressKind
+      AND NOT (ea.employeeId=OLD.employeeId AND ea.addressId=OLD.addressId AND ea.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(ea.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ea.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated employee address period overlaps an existing address of the same type';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customeraddress_samekind_insert
+BEFORE INSERT ON customeraddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM customeraddress ca
+    JOIN address a ON a.addressId = ca.addressId
+    WHERE ca.customerId = NEW.customerId
+      AND a.addressKind = vAddressKind
+      AND NEW.startDateTime <= COALESCE(ca.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ca.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Customer address period overlaps an existing address of the same type';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customeraddress_samekind_update
+BEFORE UPDATE ON customeraddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId = NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM customeraddress ca
+    JOIN address a ON a.addressId = ca.addressId
+    WHERE ca.customerId = NEW.customerId
+      AND a.addressKind = vAddressKind
+      AND NOT (ca.customerId=OLD.customerId AND ca.addressId=OLD.addressId AND ca.startDateTime=OLD.startDateTime)
+      AND NEW.startDateTime <= COALESCE(ca.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ca.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated customer address period overlaps an existing address of the same type';
+  END IF;
+END$$
+
+-- A customer may be staged before its subtype is populated, but cannot transact
+-- through an order until exactly one matching subtype exists.
+CREATE PROCEDURE validateCustomerSubtype(IN pCustomerId CHAR(7))
+BEGIN
+  DECLARE vType VARCHAR(12);
+  DECLARE vIndividual INT DEFAULT 0;
+  DECLARE vBusiness INT DEFAULT 0;
+  SELECT customerType INTO vType FROM customer WHERE customerId=pCustomerId;
+  SELECT COUNT(*) INTO vIndividual FROM individualcustomer WHERE customerId=pCustomerId;
+  SELECT COUNT(*) INTO vBusiness FROM businesscustomer WHERE customerId=pCustomerId;
+  IF vType='INDIVIDUAL' AND NOT (vIndividual=1 AND vBusiness=0) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Individual customer must have exactly one matching individual subtype before transacting';
+  END IF;
+  IF vType='BUSINESS' AND NOT (vBusiness=1 AND vIndividual=0) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Business customer must have exactly one matching business subtype before transacting';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerorder_subtype_insert
+BEFORE INSERT ON customerorder
+FOR EACH ROW
+BEGIN
+  CALL validateCustomerSubtype(NEW.customerId);
+END$$
+
+CREATE TRIGGER trg_customerorder_subtype_update
+BEFORE UPDATE ON customerorder
+FOR EACH ROW
+BEGIN
+  CALL validateCustomerSubtype(NEW.customerId);
+END$$
+
+-- A wine recipe can be entered incrementally, but a sellable product may only be
+-- created once the recipe contains at least one row and totals exactly 100 percent.
+CREATE PROCEDURE validateWineComposition(IN pWineId CHAR(7))
+BEGIN
+  DECLARE vRows INT DEFAULT 0;
+  DECLARE vTotal DECIMAL(7,2) DEFAULT 0;
+  SELECT COUNT(*), COALESCE(SUM(proportionPercent),0)
+    INTO vRows, vTotal
+  FROM winecomposition
+  WHERE wineId=pWineId;
+  IF vRows=0 OR ABS(vTotal-100.00) > 0.001 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Wine composition must contain at least one variety and total exactly 100 percent before product release';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_wineproduct_composition_insert
+BEFORE INSERT ON wineproduct
+FOR EACH ROW
+BEGIN
+  CALL validateWineComposition(NEW.wineId);
+END$$
+
+CREATE TRIGGER trg_wineproduct_composition_update
+BEFORE UPDATE ON wineproduct
+FOR EACH ROW
+BEGIN
+  CALL validateWineComposition(NEW.wineId);
+END$$
+
+-- Vineyard values are cross-table business facts: the recorded manager must be an
+-- active grape farmer and the vineyard address must be physical.
+CREATE TRIGGER trg_vineyard_business_insert
+BEFORE INSERT ON vineyard
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM employeerole er JOIN role r ON r.roleId=er.roleId
+    WHERE er.employeeId=NEW.managerId AND r.roleName='Grape Farmer'
+      AND er.startDateTime<=NOW() AND (er.endDateTime IS NULL OR er.endDateTime>NOW())
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Vineyard manager must have an active Grape Farmer role';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM address a WHERE a.addressId=NEW.addressId AND a.addressKind='PHYSICAL') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Vineyard address must be physical';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_vineyard_business_update
+BEFORE UPDATE ON vineyard
+FOR EACH ROW
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM employeerole er JOIN role r ON r.roleId=er.roleId
+    WHERE er.employeeId=NEW.managerId AND r.roleName='Grape Farmer'
+      AND er.startDateTime<=NOW() AND (er.endDateTime IS NULL OR er.endDateTime>NOW())
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Vineyard manager must have an active Grape Farmer role';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM address a WHERE a.addressId=NEW.addressId AND a.addressKind='PHYSICAL') THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Vineyard address must be physical';
+  END IF;
+END$$
+
+-- Shipment is the operational finalisation point for a customer order.
+CREATE TRIGGER trg_shipment_order_complete_insert
+BEFORE INSERT ON shipment
+FOR EACH ROW
+BEGIN
+  DECLARE vReceivedDate DATE;
+  SELECT receivedDate INTO vReceivedDate FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
+  IF NOT EXISTS (SELECT 1 FROM orderline ol WHERE ol.customerOrderId=NEW.customerOrderId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Customer order must contain at least one order line before shipment';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_shipment_order_complete_update
+BEFORE UPDATE ON shipment
+FOR EACH ROW
+BEGIN
+  DECLARE vReceivedDate DATE;
+  SELECT receivedDate INTO vReceivedDate FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
+  IF NOT EXISTS (SELECT 1 FROM orderline ol WHERE ol.customerOrderId=NEW.customerOrderId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Customer order must contain at least one order line before shipment';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerorder_shipped_state
+BEFORE UPDATE ON customerorder
+FOR EACH ROW
+BEGIN
+  IF NEW.orderStatus='SHIPPED' AND OLD.orderStatus<>'SHIPPED'
+     AND NOT EXISTS (SELECT 1 FROM shipment s WHERE s.customerOrderId=NEW.customerOrderId) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Order cannot be marked SHIPPED without a shipment record';
+  END IF;
+END$$
+
+-- Receipt chronology is checked against the purchase order date.
+CREATE TRIGGER trg_receipt_chronology_insert
+BEFORE INSERT ON receipt
+FOR EACH ROW
+BEGIN
+  DECLARE vOrderedDate DATE;
+  SELECT orderedDate INTO vOrderedDate FROM purchaseorder WHERE purchaseOrderId=NEW.purchaseOrderId;
+  IF NEW.receivedDate < vOrderedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Receipt date cannot precede purchase order date';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_receipt_chronology_update
+BEFORE UPDATE ON receipt
+FOR EACH ROW
+BEGIN
+  DECLARE vOrderedDate DATE;
+  SELECT orderedDate INTO vOrderedDate FROM purchaseorder WHERE purchaseOrderId=NEW.purchaseOrderId;
+  IF NEW.receivedDate < vOrderedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Receipt date cannot precede purchase order date';
+  END IF;
+END$$
+
+-- Picking-pack rules are cross-row and are therefore validated explicitly at the
+-- point a completed pack is approved for operational use.
+CREATE PROCEDURE validatePickingPackRules()
+BEGIN
+  IF EXISTS (
+    SELECT pp.pickerPackId
+    FROM pickerpack pp
+    LEFT JOIN packmember pm ON pm.pickerPackId=pp.pickerPackId
+      AND pm.joinedDate<=CURRENT_DATE AND (pm.leftDate IS NULL OR pm.leftDate>CURRENT_DATE)
+    GROUP BY pp.pickerPackId
+    HAVING COUNT(pm.employeeId)<4
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active picking pack must contain at least four current pickers';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pickerpack pp
+    LEFT JOIN employeerole er ON er.employeeId=pp.supervisorId
+      AND er.startDateTime<=NOW() AND (er.endDateTime IS NULL OR er.endDateTime>NOW())
+    LEFT JOIN role r ON r.roleId=er.roleId
+    WHERE r.roleName IS NULL OR r.roleName<>'Grape Farmer'
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Picking-pack supervisor must have an active Grape Farmer role';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM packmember pm
+    JOIN pickerpack pp ON pp.pickerPackId=pm.pickerPackId
+    WHERE pm.joinedDate<=CURRENT_DATE AND (pm.leftDate IS NULL OR pm.leftDate>CURRENT_DATE)
+      AND NOT EXISTS (
+        SELECT 1 FROM employeerole er JOIN role r ON r.roleId=er.roleId
+        WHERE er.employeeId=pm.employeeId AND r.roleName='Seasonal Picker'
+          AND er.employmentType='CASUAL' AND er.employmentPattern='SEASONAL'
+          AND er.startDateTime<=NOW() AND (er.endDateTime IS NULL OR er.endDateTime>NOW())
+      )
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every current pack member must be an active casual seasonal picker';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM packmember pm
+    JOIN pickerpack pp ON pp.pickerPackId=pm.pickerPackId
+    WHERE pm.joinedDate<=CURRENT_DATE AND (pm.leftDate IS NULL OR pm.leftDate>CURRENT_DATE)
+      AND NOT EXISTS (
+        SELECT 1 FROM supervision s
+        WHERE s.employeeId=pm.employeeId AND s.supervisorId=pp.supervisorId
+          AND s.startDateTime<=NOW() AND (s.endDateTime IS NULL OR s.endDateTime>NOW())
+      )
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='All current pack members must report to the pack grape-farmer supervisor';
+  END IF;
+
+  IF EXISTS (
+    SELECT er.employeeId
+    FROM employeerole er JOIN role r ON r.roleId=er.roleId
+    WHERE r.roleName='Seasonal Picker'
+      AND er.startDateTime<=NOW() AND (er.endDateTime IS NULL OR er.endDateTime>NOW())
+      AND NOT EXISTS (
+        SELECT 1 FROM packmember pm
+        WHERE pm.employeeId=er.employeeId AND pm.joinedDate<=CURRENT_DATE
+          AND (pm.leftDate IS NULL OR pm.leftDate>CURRENT_DATE)
+      )
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active seasonal picker must belong to a current picking pack';
+  END IF;
+
+  IF EXISTS (
+    SELECT pm.employeeId
+    FROM packmember pm
+    WHERE pm.joinedDate<=CURRENT_DATE AND (pm.leftDate IS NULL OR pm.leftDate>CURRENT_DATE)
+    GROUP BY pm.employeeId HAVING COUNT(*)>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='A picker may belong to only one current picking pack';
+  END IF;
+END$$
+
+DELIMITER ;
+-- ===== END database/schema/04_final_controls.sql =====
+
+-- ===== BEGIN database/schema/05_validation_routines.sql =====
+USE cloudrestwines;
+DELIMITER $$
+
+-- Required-current-state checks are intentionally implemented as an explicit
+-- validation routine. Row-level triggers enforce at-most-one primary period, while
+-- this routine verifies that staged data has reached a complete operational state.
+CREATE PROCEDURE validateRequiredCurrentState()
+BEGIN
+  IF EXISTS (
+    SELECT e.employeeId
+    FROM employee e
+    WHERE (e.employmentEndDate IS NULL OR e.employmentEndDate>=CURRENT_DATE)
+      AND (
+        SELECT COUNT(*) FROM employeephone ep
+        WHERE ep.employeeId=e.employeeId AND ep.isPrimary=TRUE
+          AND ep.startDateTime<=NOW() AND (ep.endDateTime IS NULL OR ep.endDateTime>NOW())
+      )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active employee must have exactly one current primary phone';
+  END IF;
+
+  IF EXISTS (
+    SELECT e.employeeId
+    FROM employee e
+    WHERE (e.employmentEndDate IS NULL OR e.employmentEndDate>=CURRENT_DATE)
+      AND (
+        SELECT COUNT(*)
+        FROM employeeaddress ea JOIN address a ON a.addressId=ea.addressId
+        WHERE ea.employeeId=e.employeeId AND a.addressKind='PHYSICAL'
+          AND ea.startDateTime<=NOW() AND (ea.endDateTime IS NULL OR ea.endDateTime>NOW())
+      )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active employee must have exactly one current physical address';
+  END IF;
+
+  IF EXISTS (
+    SELECT c.customerId
+    FROM customer c
+    WHERE c.isActive=TRUE
+      AND (
+        SELECT COUNT(*) FROM customerphone cp
+        WHERE cp.customerId=c.customerId AND cp.isPrimary=TRUE
+          AND cp.startDateTime<=NOW() AND (cp.endDateTime IS NULL OR cp.endDateTime>NOW())
+      )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active customer must have exactly one current primary phone';
+  END IF;
+
+  IF EXISTS (
+    SELECT c.customerId
+    FROM customer c
+    WHERE c.isActive=TRUE
+      AND (
+        SELECT COUNT(*)
+        FROM customeraddress ca JOIN address a ON a.addressId=ca.addressId
+        WHERE ca.customerId=c.customerId AND a.addressKind='PHYSICAL'
+          AND ca.startDateTime<=NOW() AND (ca.endDateTime IS NULL OR ca.endDateTime>NOW())
+      )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every active customer must have exactly one current physical address';
+  END IF;
+
+  IF EXISTS (
+    SELECT s.supplierId
+    FROM supplier s
+    WHERE (
+      SELECT COUNT(*)
+      FROM supplieraddress sa JOIN address a ON a.addressId=sa.addressId
+      WHERE sa.supplierId=s.supplierId AND a.addressKind='PHYSICAL'
+        AND sa.startDateTime<=NOW() AND (sa.endDateTime IS NULL OR sa.endDateTime>NOW())
+    )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every supplier must have exactly one current physical address';
+  END IF;
+
+  IF EXISTS (
+    SELECT s.supplierId
+    FROM supplier s
+    WHERE (
+      SELECT COUNT(*) FROM supplierphone sp
+      WHERE sp.supplierId=s.supplierId AND sp.isPrimary=TRUE
+        AND sp.startDateTime<=NOW() AND (sp.endDateTime IS NULL OR sp.endDateTime>NOW())
+    )<>1
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Every supplier must have exactly one current primary phone';
+  END IF;
+END$$
+
+DELIMITER ;
+-- ===== END database/schema/05_validation_routines.sql =====
 
 -- ===== BEGIN database/data/01_testdata.sql =====
 USE cloudrestwines;
@@ -1133,9 +1785,42 @@ INSERT INTO wellbeingaction VALUES
 ('WACT0002','WBCK0002','Schedule supported return-to-work discussion',DATE_ADD(CURRENT_DATE,INTERVAL 5 DAY),NULL,'OPEN');
 -- ===== END database/data/01_testdata.sql =====
 
+-- ===== BEGIN database/data/02_manual_audit_patch.sql =====
+USE cloudrestwines;
+
+-- Align the synthetic picking-pack example with the case wording that seasonal
+-- pickers report to the grape-farmer supervisor.
+UPDATE supervision
+SET supervisorId='EMP0003'
+WHERE employeeId IN ('EMP0008','EMP0009','EMP0010','EMP0013')
+  AND startDateTime <= NOW()
+  AND (endDateTime IS NULL OR endDateTime > NOW());
+
+UPDATE pickerpack
+SET supervisorId='EMP0003'
+WHERE pickerPackId='PACK001';
+
+UPDATE seasonalrating
+SET supervisorId='EMP0003'
+WHERE employeeId IN ('EMP0008','EMP0009','EMP0010','EMP0013')
+  AND seasonYear=YEAR(CURRENT_DATE);
+
+-- Ensure every active synthetic customer has a current primary phone so the
+-- current-state completeness validator tests the intended operational baseline.
+INSERT INTO phone(phoneId,countryCode,phoneNumber,phoneType)
+VALUES('PHON9001','+61','0390009001','WORK');
+INSERT INTO customerphone(customerId,phoneId,startDateTime,endDateTime,isPrimary)
+VALUES('CUST002','PHON9001','2025-01-01 00:00:00',NULL,TRUE);
+
+-- Cross-row rules that cannot be represented by a single-row CHECK are validated
+-- after the incremental fixture has been fully loaded.
+CALL validatePickingPackRules();
+CALL validateRequiredCurrentState();
+-- ===== END database/data/02_manual_audit_patch.sql =====
+
 -- ===== SIX DECISION-SUPPORT QUERIES =====
 USE cloudrestwines;
--- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
+-- Management question: Which operational areas have gaps in annual safety and sustainability training?
 WITH activeworkforce AS (
   SELECT er.employeeId, er.operationalAreaId
   FROM employeerole er
@@ -1163,10 +1848,12 @@ LEFT JOIN completion c ON c.employeeId = aw.employeeId
 GROUP BY oa.operationalAreaId, oa.areaName
 ORDER BY coveragePercent, oa.areaName;
 USE cloudrestwines;
--- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
+-- Sustainability measure: all recorded workplace safety incidents per 1,000 labour hours during the last 12 months.
+-- Areas remain visible even when labour-hour exposure is missing; the rate is NULL when the denominator is zero.
 WITH hoursbyarea AS (
   SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
-  FROM shift s JOIN shiftassignment sa ON sa.shiftId = s.shiftId
+  FROM shift s
+  JOIN shiftassignment sa ON sa.shiftId = s.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
   GROUP BY s.operationalAreaId
 ), incidentsbyarea AS (
@@ -1175,17 +1862,22 @@ WITH hoursbyarea AS (
   WHERE incidentDateTime >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
   GROUP BY operationalAreaId
 )
-SELECT oa.areaName, h.labourHours, COALESCE(i.incidentCount,0) AS incidentCount,
+SELECT oa.areaName,
+       COALESCE(h.labourHours,0) AS labourHours,
+       COALESCE(i.incidentCount,0) AS incidentCount,
        COALESCE(i.lostHours,0) AS lostHours,
-       ROUND(COALESCE(i.incidentCount,0) * 1000.0 / NULLIF(h.labourHours,0), 2) AS incidentsPer1000Hours
-FROM hoursbyarea h
-JOIN operationalarea oa ON oa.operationalAreaId = h.operationalAreaId
-LEFT JOIN incidentsbyarea i ON i.operationalAreaId = h.operationalAreaId
-ORDER BY incidentsPer1000Hours DESC;
+       CASE
+         WHEN COALESCE(h.labourHours,0)=0 THEN NULL
+         ELSE ROUND(COALESCE(i.incidentCount,0) * 1000.0 / h.labourHours, 2)
+       END AS incidentsPer1000Hours
+FROM operationalarea oa
+LEFT JOIN hoursbyarea h ON h.operationalAreaId = oa.operationalAreaId
+LEFT JOIN incidentsbyarea i ON i.operationalAreaId = oa.operationalAreaId
+ORDER BY incidentsPer1000Hours DESC, oa.areaName;
 USE cloudrestwines;
--- Compare employee incidents in the 180 days before and after completed annual safety training.
+-- Compare affected-employee incidents in symmetric 180-day windows around each employee's latest completed safety training.
 WITH completion AS (
-  SELECT ta.employeeId, MIN(ta.completionDate) AS completionDate
+  SELECT ta.employeeId, MAX(ta.completionDate) AS completionDate
   FROM trainingattendance ta
   JOIN trainingsession ts ON ts.trainingSessionId = ta.trainingSessionId
   JOIN trainingcourse tc ON tc.trainingCourseId = ts.trainingCourseId
@@ -1204,32 +1896,47 @@ LEFT JOIN incident i ON i.incidentId = ie.incidentId
 GROUP BY c.employeeId, e.firstName, e.lastName, c.completionDate
 ORDER BY incidentsBefore DESC, incidentsAfter DESC;
 USE cloudrestwines;
--- Identify people for supervisor review without exposing confidential wellbeing notes.
+-- Identify people for supervisor workload/safety review without exposing confidential wellbeing notes.
+-- The query avoids an invented numeric risk score: affected incidents or a recorded concern trigger review;
+-- overtime remains a visible workload indicator and secondary sort key.
 WITH workload AS (
   SELECT sa.employeeId, SUM(sa.regularHours) AS regularHours, SUM(sa.overtimeHours) AS overtimeHours
-  FROM shiftassignment sa JOIN shift s ON s.shiftId = sa.shiftId
+  FROM shiftassignment sa
+  JOIN shift s ON s.shiftId = sa.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
   GROUP BY sa.employeeId
 ), recentincident AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
-  FROM incidentemployee ie JOIN incident i ON i.incidentId = ie.incidentId
+  FROM incidentemployee ie
+  JOIN incident i ON i.incidentId = ie.incidentId
   WHERE i.incidentDateTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    AND ie.involvementRole = 'AFFECTED'
   GROUP BY ie.employeeId
 ), recentconcern AS (
   SELECT employeeId, COUNT(*) AS concernCount
   FROM wellbeingcheckin
-  WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY) AND concernRaisedFlag = TRUE
+  WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+    AND concernRaisedFlag = TRUE
   GROUP BY employeeId
 )
 SELECT w.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName,
-       w.regularHours, w.overtimeHours, COALESCE(ri.incidentCount,0) AS recentIncidents,
+       w.regularHours, w.overtimeHours,
+       COALESCE(ri.incidentCount,0) AS recentIncidents,
        COALESCE(rc.concernCount,0) AS wellbeingConcernCount,
-       CASE WHEN w.overtimeHours >= 4 OR ri.incidentCount > 0 OR rc.concernCount > 0 THEN 'SUPERVISOR REVIEW' ELSE 'MONITOR' END AS recommendedAction
+       CASE
+         WHEN COALESCE(ri.incidentCount,0) > 0 OR COALESCE(rc.concernCount,0) > 0 THEN 'SUPERVISOR REVIEW'
+         WHEN w.overtimeHours > 0 THEN 'MONITOR OVERTIME'
+         ELSE 'ROUTINE'
+       END AS recommendedAction
 FROM workload w
 JOIN employee e ON e.employeeId = w.employeeId
 LEFT JOIN recentincident ri ON ri.employeeId = w.employeeId
 LEFT JOIN recentconcern rc ON rc.employeeId = w.employeeId
-ORDER BY (w.overtimeHours + COALESCE(ri.incidentCount,0) * 5 + COALESCE(rc.concernCount,0) * 5) DESC;
+ORDER BY
+  CASE WHEN COALESCE(ri.incidentCount,0) > 0 OR COALESCE(rc.concernCount,0) > 0 THEN 0
+       WHEN w.overtimeHours > 0 THEN 1 ELSE 2 END,
+  w.overtimeHours DESC,
+  w.employeeId;
 USE cloudrestwines;
 -- Video demonstration must call both parameter values.
 CALL getExpiringQualifications(30);

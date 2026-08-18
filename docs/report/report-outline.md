@@ -3,7 +3,7 @@
 Formatting target: Times New Roman 12 pt, single-spaced; tables may use 10 pt; APA referencing.
 
 1. Cover sheet
-   - Enrolled names: Mia, Zora, Rianna, 1
+   - Enrolled names: Mia, Zora, Rianna, Jason
    - Group/company name: Cloudrest Wines
    - Submission date
 2. AI use declaration
