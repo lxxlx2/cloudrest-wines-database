@@ -1,283 +1,283 @@
 ﻿tableName,attributeName,dataType,domain,nullable,isUnique,isPrimary,foreignReference,purpose
-address,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a address record.
-address,addressKind,"enum('PHYSICAL','POSTAL')","Permitted values: physical, postal.",NO,N,N,,Records the address kind of the address.
-address,postalType,"enum('POBOX','PRIVATEBAG','OTHER')","Permitted values: pobox, privatebag, other.",YES,N,N,,Records the postal type of the address.
-address,unitType,varchar(20),Text up to the implemented varchar(20) size.,YES,N,N,,Records the unit type of the address.
-address,unitNumber,varchar(12),Text up to the implemented varchar(12) size.,YES,N,N,,Records the unit number of the address.
-address,levelType,varchar(20),Text up to the implemented varchar(20) size.,YES,N,N,,Records the level type of the address.
-address,levelNumber,varchar(12),Text up to the implemented varchar(12) size.,YES,N,N,,Records the level number of the address.
-address,buildingName,varchar(100),Text up to the implemented varchar(100) size.,YES,N,N,,Human-readable name used for the address record.
-address,placeName,varchar(100),Text up to the implemented varchar(100) size.,YES,N,N,,Human-readable name used for the address record.
-address,addressNumber,varchar(20),Text up to the implemented varchar(20) size.,YES,N,N,,Records the address number of the address.
-address,streetName,varchar(120),Text up to the implemented varchar(120) size.,YES,N,N,,Human-readable name used for the address record.
-address,locality,varchar(80),Text up to the implemented varchar(80) size.,NO,N,N,,Records the locality of the address.
-address,stateCode,"enum('ACT','NSW','NT','QLD','SA','TAS','VIC','WA')","Permitted values: act, nsw, nt, qld, sa, tas, vic, wa.",NO,N,N,,Records the state code of the address.
-address,postcode,char(4),Exactly 4 numeric digits.,NO,N,N,,Records the postcode of the address.
-bottletype,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a bottletype record.
-bottletype,capacityMl,smallint unsigned,Numeric value within the implemented MySQL type.,NO,N,N,,Records the capacity ml of the bottletype.
-bottletype,bottleShape,varchar(40),Text up to the implemented varchar(40) size.,NO,N,N,,Records the bottle shape of the bottletype.
-bottletype,material,"enum('GLASS','PLASTIC')","Permitted values: glass, plastic.",NO,N,N,,Records the material of the bottletype.
-bottletype,bottleColour,varchar(40),Text up to the implemented varchar(40) size.,NO,N,N,,Records the bottle colour of the bottletype.
-bottletype,inventoryQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity recorded for the bottletype transaction or inventory fact.
-bottletype,usualUnitCost,"decimal(8,2)",Non-negative numeric value.,NO,N,N,,Monetary value recorded for the bottletype fact in Australian dollars.
-bottletype,reorderFlag,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,Indicates whether this bottle type may be reordered.
-bottletype,reorderComment,varchar(500),Text up to the implemented varchar(500) size.,YES,N,N,,Required explanation when a bottle type will not be reordered.
-businesscustomer,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,customer.customerId,Identifies the related customer record.
-businesscustomer,companyName,varchar(120),Text up to the implemented varchar(120) size.,NO,N,N,,Human-readable name used for the businesscustomer record.
-businesscustomer,australianBusinessNumber,char(11),Exactly 11 numeric digits.,NO,Y,N,,Eleven-digit ABN identifying an Australian business customer.
-businesscustomer,contactFirstName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the businesscustomer record.
-businesscustomer,contactLastName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the businesscustomer record.
-businesscustomer,businessType,"enum('RESTAURANT','WINESHOP','EXPORTCOMPANY','OTHER')","Permitted values: restaurant, wineshop, exportcompany, other.",NO,N,N,,Records the business type of the businesscustomer.
-checkintopic,wellbeingCheckinId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,wellbeingcheckin.wellbeingCheckinId,Identifies the related wellbeingcheckin record.
-checkintopic,wellbeingTopicId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,wellbeingtopic.wellbeingTopicId,Identifies the related wellbeingtopic record.
-correctiveaction,correctiveActionId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a correctiveaction record.
-correctiveaction,incidentId,char(8),Text up to the implemented char(8) size.,NO,N,N,incident.incidentId,Identifies the related incident record.
-correctiveaction,actionDescription,varchar(500),Text up to the implemented varchar(500) size.,NO,N,N,,Business description of the correctiveaction record.
-correctiveaction,responsibleEmployeeId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-correctiveaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the correctiveaction record or validity period.
-correctiveaction,completedDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the correctiveaction record or validity period.
-correctiveaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records the action status of the correctiveaction.
-customer,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a customer record.
-customer,customerType,"enum('INDIVIDUAL','BUSINESS')","Permitted values: individual, business.",NO,N,N,,Records the customer type of the customer.
-customer,emailAddress,varchar(254),Text up to the implemented varchar(254) size.,NO,Y,N,,Records the email address of the customer.
-customer,isActive,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE indicator for is active on the customer record.
-customeraddress,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,customer.customerId,Identifies the related customer record.
-customeraddress,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,address.addressId,Identifies the related address record.
-customeraddress,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the customeraddress history period.
-customeraddress,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the customeraddress history period; NULL identifies the current row.
-customerorder,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a customerorder record.
-customerorder,customerId,char(7),Text up to the implemented char(7) size.,NO,N,N,customer.customerId,Identifies the related customer record.
-customerorder,receivedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the customerorder record or validity period.
-customerorder,paidFlag,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,Indicates accounting confirmation that shipment may proceed.
-customerorder,orderStatus,"enum('PENDING','SHIPPED','CANCELLED')","Permitted values: pending, shipped, cancelled.",NO,N,N,,Records the order status of the customerorder.
-customerphone,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,customer.customerId,Identifies the related customer record.
-customerphone,phoneId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,phone.phoneId,Identifies the related phone record.
-customerphone,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the customerphone history period.
-customerphone,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the customerphone history period; NULL identifies the current row.
-customerphone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for is primary on the customerphone record.
-employee,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a employee record.
-employee,firstName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the employee record.
-employee,lastName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the employee record.
-employee,taxFileNumber,char(9),Exactly 9 numeric digits.,NO,Y,N,,Australian tax file number; sensitive HR identifier.
-employee,employmentStartDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the employee record or validity period.
-employee,employmentEndDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the employee record or validity period.
-employeeaddress,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-employeeaddress,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,address.addressId,Identifies the related address record.
-employeeaddress,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the employeeaddress history period.
-employeeaddress,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the employeeaddress history period; NULL identifies the current row.
-employeephone,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-employeephone,phoneId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,phone.phoneId,Identifies the related phone record.
-employeephone,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the employeephone history period.
-employeephone,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the employeephone history period; NULL identifies the current row.
-employeephone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for is primary on the employeephone record.
-employeequalification,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-employeequalification,qualificationId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,qualification.qualificationId,Identifies the related qualification record.
-employeequalification,awardedDate,date,Valid MySQL date value.,NO,Y,Y,,Date associated with the employeequalification record or validity period.
-employeequalification,expiryDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the employeequalification record or validity period.
-employeequalification,certificateReference,varchar(80),Text up to the implemented varchar(80) size.,YES,Y,N,,Records the certificate reference of the employeequalification.
-employeerole,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-employeerole,roleId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,role.roleId,Identifies the related role record.
-employeerole,operationalAreaId,char(6),Text up to the implemented char(6) size.,NO,N,N,operationalarea.operationalAreaId,Identifies the related operationalarea record.
-employeerole,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the employeerole history period.
-employeerole,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the employeerole history period; NULL identifies the current row.
-employeerole,workTimeType,"enum('FULLTIME','PARTTIME')","Permitted values: fulltime, parttime.",NO,N,N,,Indicates whether the appointment is full-time or part-time.
-employeerole,employmentType,"enum('PERMANENT','CASUAL')","Permitted values: permanent, casual.",NO,N,N,,Legal engagement category: permanent or casual.
-employeerole,employmentPattern,"enum('ONGOING','SEASONAL')","Permitted values: ongoing, seasonal.",NO,N,N,,Indicates ongoing or seasonal work pattern independently of employment type.
-grapevariety,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a grapevariety record.
-grapevariety,varietyName,varchar(80),Text up to the implemented varchar(80) size.,NO,Y,N,,Human-readable name used for the grapevariety record.
-grapevariety,juiceConversionPercent,"decimal(5,2)","Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented.",NO,N,N,,Expected percentage of grape weight converted to juice.
-grapevariety,storageContainer,"enum('STAINLESSSTEEL','OAKBARREL','OTHER')","Permitted values: stainlesssteel, oakbarrel, other.",NO,N,N,,Records the storage container of the grapevariety.
-grapevariety,agingDays,smallint unsigned,Numeric value within the implemented MySQL type.,NO,N,N,,Records the aging days of the grapevariety.
-harvest,harvestId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a harvest record.
-harvest,vineyardId,char(7),Text up to the implemented char(7) size.,NO,N,N,vineyardplanting.vineyardId,Identifies the related vineyardplanting record.
-harvest,vintageYear,year,Valid MySQL year value.,NO,N,N,vineyardplanting.vintageYear,Records the vintage year of the harvest.
-harvest,harvestedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the harvest record or validity period.
-harvest,weightKg,"decimal(12,2)",Positive numeric value.,NO,N,N,,Records the weight kg of the harvest.
-harvest,ripenessSugarPercent,"decimal(5,2)","Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented.",NO,N,N,,Harvest ripeness expressed as percentage sugar.
-incident,incidentId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a incident record.
-incident,incidentDateTime,datetime,Valid MySQL datetime value.,NO,N,N,,Records the incident date time of the incident.
-incident,operationalAreaId,char(6),Text up to the implemented char(6) size.,NO,N,N,operationalarea.operationalAreaId,Identifies the related operationalarea record.
-incident,incidentType,"enum('INJURY','NEARMISS','ILLNESS','EQUIPMENT','ENVIRONMENTAL','OTHER')","Permitted values: injury, nearmiss, illness, equipment, environmental, other.",NO,N,N,,Records the incident type of the incident.
-incident,severity,"enum('LOW','MODERATE','HIGH','CRITICAL')","Permitted values: low, moderate, high, critical.",NO,N,N,,Classifies incident seriousness for safety follow-up and reporting.
-incident,incidentDescription,varchar(1000),Text up to the implemented varchar(1000) size.,NO,N,N,,Business description of the incident record.
-incident,totalLostHours,"decimal(7,2)",Non-negative numeric value.,NO,N,N,,Non-negative total labour hours lost because of an incident; may be zero for a serious near miss.
-incident,reportableFlag,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for reportable flag on the incident record.
-incidentemployee,incidentId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,incident.incidentId,Identifies the related incident record.
-incidentemployee,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-incidentemployee,involvementRole,"enum('AFFECTED','WITNESS','REPORTER')","Permitted values: affected, witness, reporter.",NO,N,N,,Records the involvement role of the incidentemployee.
-incidentemployee,employeeLostHours,"decimal(7,2)",Numeric value within the implemented MySQL type; default 0.00.,NO,N,N,,Records the employee lost hours of the incidentemployee.
-individualcustomer,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,customer.customerId,Identifies the related customer record.
-individualcustomer,firstName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the individualcustomer record.
-individualcustomer,lastName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the individualcustomer record.
-individualcustomer,dateOfBirth,date,Valid MySQL date value.,NO,N,N,,Birth date retained to demonstrate an individual customer's legal age.
-medal,medalId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a medal record.
-medal,wineId,char(7),Text up to the implemented char(7) size.,NO,Y,N,wine.wineId,Identifies the related wine record.
-medal,medalType,"enum('BRONZE','SILVER','GOLD','TROPHY')","Permitted values: bronze, silver, gold, trophy.",NO,Y,N,,Records the medal type of the medal.
-medal,awardYear,year,Valid MySQL year value.,NO,Y,N,,Records the award year of the medal.
-medal,awardingOrganisation,varchar(120),Text up to the implemented varchar(120) size.,NO,Y,N,,Records the awarding organisation of the medal.
-openincidentaction,correctiveActionId,char(8),Text up to the implemented char(8) size.,NO,N,N,,Stable identifier for a openincidentaction record.
-openincidentaction,incidentId,char(8),Text up to the implemented char(8) size.,NO,N,N,,Stable identifier for a openincidentaction record.
-openincidentaction,incidentDateTime,datetime,Valid MySQL datetime value.,NO,N,N,,Records the incident date time of the openincidentaction.
-openincidentaction,severity,"enum('LOW','MODERATE','HIGH','CRITICAL')","Permitted values: low, moderate, high, critical.",NO,N,N,,Classifies incident seriousness for safety follow-up and reporting.
-openincidentaction,areaName,varchar(60),Text up to the implemented varchar(60) size.,NO,N,N,,Human-readable name used for the openincidentaction record.
-openincidentaction,actionDescription,varchar(500),Text up to the implemented varchar(500) size.,NO,N,N,,Business description of the openincidentaction record.
-openincidentaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the openincidentaction record or validity period.
-openincidentaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records the action status of the openincidentaction.
-openincidentaction,responsibleEmployee,varchar(101),Text up to the implemented varchar(101) size.,YES,N,N,,Records the responsible employee of the openincidentaction.
-openincidentaction,daysOverdue,int,Numeric value within the implemented MySQL type.,YES,N,N,,Records the days overdue of the openincidentaction.
-operationalarea,operationalAreaId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,,Stable identifier for a operationalarea record.
-operationalarea,areaName,varchar(60),Text up to the implemented varchar(60) size.,NO,Y,N,,Human-readable name used for the operationalarea record.
-operationalarea,areaDescription,varchar(255),Text up to the implemented varchar(255) size.,YES,N,N,,Business description of the operationalarea record.
-orderline,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,customerorder.customerOrderId,Identifies the related customerorder record.
-orderline,productId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,wineproduct.productId,Identifies the related wineproduct record.
-orderline,caseQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity recorded for the orderline transaction or inventory fact.
-orderline,agreedCasePrice,"decimal(10,2)",Numeric value within the implemented MySQL type.,NO,N,N,,Monetary value recorded for the orderline fact in Australian dollars.
-packmember,pickerPackId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,pickerpack.pickerPackId,Identifies the related pickerpack record.
-packmember,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-packmember,joinedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the packmember record or validity period.
-packmember,leftDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the packmember record or validity period.
-phone,phoneId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a phone record.
-phone,countryCode,varchar(4),Text up to the implemented varchar(4) size; default +61.,NO,Y,N,,Records the country code of the phone.
-phone,phoneNumber,varchar(20),Text up to the implemented varchar(20) size.,NO,Y,N,,Records the phone number of the phone.
-phone,phoneType,"enum('MOBILE','WORK','HOME','OTHER')","Permitted values: mobile, work, home, other.",NO,N,N,,Records the phone type of the phone.
-pickerpack,pickerPackId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a pickerpack record.
-pickerpack,packName,varchar(60),Text up to the implemented varchar(60) size.,NO,Y,N,,Human-readable name used for the pickerpack record.
-pickerpack,supervisorId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-pickerpack,seasonYear,year,Valid MySQL year value.,NO,N,N,,Records the season year of the pickerpack.
-productprice,productId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,wineproduct.productId,Identifies the related wineproduct record.
-productprice,effectiveDate,date,Valid MySQL date value.,NO,Y,Y,,Date associated with the productprice record or validity period.
-productprice,endDate,date,"NULL for current, otherwise not earlier than the corresponding start/effective date.",YES,N,N,,Date associated with the productprice record or validity period.
-productprice,casePrice,"decimal(10,2)",Positive numeric value.,NO,N,N,,Monetary value recorded for the productprice fact in Australian dollars.
-purchaseorder,purchaseOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a purchaseorder record.
-purchaseorder,supplierId,char(7),Text up to the implemented char(7) size.,NO,N,N,supplier.supplierId,Identifies the related supplier record.
-purchaseorder,orderedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the purchaseorder record or validity period.
-purchaseorder,orderStatus,"enum('PLACED','PARTRECEIVED','RECEIVED','CANCELLED')","Permitted values: placed, partreceived, received, cancelled.",NO,N,N,,Records the order status of the purchaseorder.
-purchaseorderline,purchaseOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,purchaseorder.purchaseOrderId,Identifies the related purchaseorder record.
-purchaseorderline,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,bottletype.bottleTypeId,Identifies the related bottletype record.
-purchaseorderline,orderedQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity recorded for the purchaseorderline transaction or inventory fact.
-purchaseorderline,quotedUnitPrice,"decimal(8,2)",Non-negative numeric value.,YES,N,N,,Monetary value recorded for the purchaseorderline fact in Australian dollars.
-qualification,qualificationId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a qualification record.
-qualification,qualificationName,varchar(120),Text up to the implemented varchar(120) size.,NO,Y,N,,Human-readable name used for the qualification record.
-qualification,issuingAuthority,varchar(120),Text up to the implemented varchar(120) size.,NO,N,N,,TRUE/FALSE indicator for issuing authority on the qualification record.
-qualification,defaultValidityMonths,smallint unsigned,Numeric value within the implemented MySQL type.,YES,N,N,,Records the default validity months of the qualification.
-qualification,isSafetyCritical,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for is safety critical on the qualification record.
-receipt,receiptId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a receipt record.
-receipt,purchaseOrderId,char(8),Text up to the implemented char(8) size.,NO,N,N,purchaseorder.purchaseOrderId,Identifies the related purchaseorder record.
-receipt,receivedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the receipt record or validity period.
-receiptline,receiptId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,receipt.receiptId,Identifies the related receipt record.
-receiptline,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,bottletype.bottleTypeId,Identifies the related bottletype record.
-receiptline,receivedQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity recorded for the receiptline transaction or inventory fact.
-receiptline,actualUnitPrice,"decimal(8,2)",Non-negative numeric value.,NO,N,N,,Monetary value recorded for the receiptline fact in Australian dollars.
-refund,refundId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a refund record.
-refund,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,N,N,customerorder.customerOrderId,Identifies the related customerorder record.
-refund,refundDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the refund record or validity period.
-refund,refundReason,"enum('SHORTSUPPLY','TRANSITDAMAGE')","Permitted values: shortsupply, transitdamage.",NO,N,N,,Records the refund reason of the refund.
-refund,verifiedFlag,tinyint(1),TRUE/FALSE.,NO,N,N,,TRUE/FALSE indicator for verified flag on the refund record.
-refund,refundAmount,"decimal(10,2)",Non-negative numeric value.,NO,N,N,,Monetary value recorded for the refund fact in Australian dollars.
-role,roleId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,,Stable identifier for a role record.
-role,roleName,varchar(80),Text up to the implemented varchar(80) size.,NO,Y,N,,Human-readable name used for the role record.
-role,roleDescription,varchar(255),Text up to the implemented varchar(255) size.,NO,N,N,,Business description of the role record.
-seasonalrating,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-seasonalrating,seasonYear,year,Valid MySQL year value.,NO,Y,Y,,Records the season year of the seasonalrating.
-seasonalrating,supervisorId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-seasonalrating,ratingValue,tinyint,Integer from 1 to 5.,NO,N,N,,Records the rating value of the seasonalrating.
-seasonalrating,recommendReemployment,tinyint(1),TRUE/FALSE.,NO,N,N,,Records the recommend reemployment of the seasonalrating.
-seasonalrating,ratingComment,varchar(500),Text up to the implemented varchar(500) size.,YES,N,N,,Records the rating comment of the seasonalrating.
-shift,shiftId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a shift record.
-shift,shiftDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the shift record or validity period.
-shift,startTime,time,Valid MySQL time value.,NO,N,N,,Records the start time of the shift.
-shift,endTime,time,Valid MySQL time value.,NO,N,N,,Records the end time of the shift.
-shift,operationalAreaId,char(6),Text up to the implemented char(6) size.,NO,N,N,operationalarea.operationalAreaId,Identifies the related operationalarea record.
-shift,taskCategoryId,char(6),Text up to the implemented char(6) size.,NO,N,N,taskcategory.taskCategoryId,Identifies the related taskcategory record.
-shift,supervisorId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-shiftassignment,shiftId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,shift.shiftId,Identifies the related shift record.
-shiftassignment,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-shiftassignment,regularHours,"decimal(4,2)",Non-negative numeric value.,NO,N,N,,Regular labour hours worked on the assigned shift.
-shiftassignment,overtimeHours,"decimal(4,2)",Non-negative numeric value.,NO,N,N,,Overtime hours used in workload and safety analysis.
-shipment,shipmentId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a shipment record.
-shipment,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,N,customerorder.customerOrderId,Identifies the related customerorder record.
-shipment,addressId,char(8),Text up to the implemented char(8) size.,NO,N,N,address.addressId,Identifies the related address record.
-shipment,shippedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the shipment record or validity period.
-supervision,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-supervision,supervisorId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-supervision,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the supervision history period.
-supervision,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the supervision history period; NULL identifies the current row.
-supplier,supplierId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a supplier record.
-supplier,supplierName,varchar(120),Text up to the implemented varchar(120) size.,NO,Y,N,,Human-readable name used for the supplier record.
-supplier,contactFirstName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the supplier record.
-supplier,contactLastName,varchar(50),Text up to the implemented varchar(50) size.,NO,N,N,,Human-readable name used for the supplier record.
-supplier,contactEmail,varchar(254),Text up to the implemented varchar(254) size.,NO,N,N,,Records the contact email of the supplier.
-supplieraddress,supplierId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,supplier.supplierId,Identifies the related supplier record.
-supplieraddress,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,address.addressId,Identifies the related address record.
-supplieraddress,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the supplieraddress history period.
-supplieraddress,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the supplieraddress history period; NULL identifies the current row.
-supplierbottle,supplierId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,supplier.supplierId,Identifies the related supplier record.
-supplierbottle,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,bottletype.bottleTypeId,Identifies the related bottletype record.
-supplierbottle,supplierBottleCode,varchar(40),Text up to the implemented varchar(40) size.,YES,N,N,,Records the supplier bottle code of the supplierbottle.
-supplierbottle,isAvailable,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE indicator for is available on the supplierbottle record.
-supplierphone,supplierId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,supplier.supplierId,Identifies the related supplier record.
-supplierphone,phoneId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,phone.phoneId,Identifies the related phone record.
-supplierphone,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the supplierphone history period.
-supplierphone,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the supplierphone history period; NULL identifies the current row.
-supplierphone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for is primary on the supplierphone record.
-taskcategory,taskCategoryId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,,Stable identifier for a taskcategory record.
-taskcategory,categoryName,varchar(60),Text up to the implemented varchar(60) size.,NO,Y,N,,Human-readable name used for the taskcategory record.
-trainingattendance,trainingSessionId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,trainingsession.trainingSessionId,Identifies the related trainingsession record.
-trainingattendance,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-trainingattendance,attendanceStatus,"enum('REGISTERED','COMPLETED','FAILED','ABSENT')","Permitted values: registered, completed, failed, absent.",NO,N,N,,Records the attendance status of the trainingattendance.
-trainingattendance,completionDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the trainingattendance record or validity period.
-trainingattendance,renewalDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the trainingattendance record or validity period.
-trainingattendance,competencyLevel,"enum('AWARENESS','COMPETENT','ADVANCED')","Permitted values: awareness, competent, advanced.",YES,N,N,,Records the competency level of the trainingattendance.
-trainingcourse,trainingCourseId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a trainingcourse record.
-trainingcourse,courseName,varchar(120),Text up to the implemented varchar(120) size.,NO,Y,N,,Human-readable name used for the trainingcourse record.
-trainingcourse,courseProvider,varchar(120),Text up to the implemented varchar(120) size.,NO,N,N,,Records the course provider of the trainingcourse.
-trainingcourse,trainingCategory,"enum('SAFETY','SUSTAINABILITY','TECHNICAL','WELLBEING','OTHER')","Permitted values: safety, sustainability, technical, wellbeing, other.",NO,N,N,,Records the training category of the trainingcourse.
-trainingcourse,renewalMonths,smallint unsigned,Numeric value within the implemented MySQL type.,YES,N,N,,Records the renewal months of the trainingcourse.
-trainingcourse,isMandatory,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE indicator for is mandatory on the trainingcourse record.
-trainingsession,trainingSessionId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a trainingsession record.
-trainingsession,trainingCourseId,char(7),Text up to the implemented char(7) size.,NO,N,N,trainingcourse.trainingCourseId,Identifies the related trainingcourse record.
-trainingsession,sessionDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the trainingsession record or validity period.
-trainingsession,operationalAreaId,char(6),Text up to the implemented char(6) size.,YES,N,N,operationalarea.operationalAreaId,Identifies the related operationalarea record.
-trainingsession,trainerName,varchar(100),Text up to the implemented varchar(100) size.,NO,N,N,,Human-readable name used for the trainingsession record.
-trainingsession,deliveryMode,"enum('INPERSON','ONLINE','BLENDED')","Permitted values: inperson, online, blended.",NO,N,N,,Records the delivery mode of the trainingsession.
-vineyard,vineyardId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a vineyard record.
-vineyard,vineyardName,varchar(80),Text up to the implemented varchar(80) size.,NO,Y,N,,Human-readable name used for the vineyard record.
-vineyard,areaHectares,"decimal(6,2)",Positive decimal hectares.,NO,N,N,,Records the area hectares of the vineyard.
-vineyard,latitude,"decimal(9,6)",Decimal latitude from -90 to 90.,NO,N,N,,Records the latitude of the vineyard.
-vineyard,longitude,"decimal(9,6)",Decimal longitude from -180 to 180.,NO,N,N,,Records the longitude of the vineyard.
-vineyard,managerId,char(7),Text up to the implemented char(7) size.,NO,Y,N,employee.employeeId,Identifies the related employee record.
-vineyard,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,N,address.addressId,Identifies the related address record.
-vineyardplanting,vineyardId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,vineyard.vineyardId,Identifies the related vineyard record.
-vineyardplanting,vintageYear,year,Valid MySQL year value.,NO,Y,Y,,Records the vintage year of the vineyardplanting.
-vineyardplanting,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,N,N,grapevariety.grapeVarietyId,Identifies the related grapevariety record.
-vineyardplanting,plantedDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the vineyardplanting record or validity period.
-wellbeingaction,wellbeingActionId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a wellbeingaction record.
-wellbeingaction,wellbeingCheckinId,char(8),Text up to the implemented char(8) size.,NO,N,N,wellbeingcheckin.wellbeingCheckinId,Identifies the related wellbeingcheckin record.
-wellbeingaction,actionDescription,varchar(500),Text up to the implemented varchar(500) size.,NO,N,N,,Business description of the wellbeingaction record.
-wellbeingaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the wellbeingaction record or validity period.
-wellbeingaction,completedDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the wellbeingaction record or validity period.
-wellbeingaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records the action status of the wellbeingaction.
-wellbeingcheckin,wellbeingCheckinId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a wellbeingcheckin record.
-wellbeingcheckin,employeeId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-wellbeingcheckin,managerId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-wellbeingcheckin,checkinDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the wellbeingcheckin record or validity period.
-wellbeingcheckin,concernRaisedFlag,tinyint(1),TRUE/FALSE.,NO,N,N,,TRUE/FALSE indicator for concern raised flag on the wellbeingcheckin record.
-wellbeingcheckin,confidentialNote,varchar(1000),Text up to the implemented varchar(1000) size.,YES,N,N,,Restricted wellbeing note; excluded from routine management reporting.
-wellbeingtopic,wellbeingTopicId,char(6),Text up to the implemented char(6) size.,NO,Y,Y,,Stable identifier for a wellbeingtopic record.
-wellbeingtopic,topicName,varchar(80),Text up to the implemented varchar(80) size.,NO,Y,N,,Human-readable name used for the wellbeingtopic record.
-wine,wineId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a wine record.
-wine,wineName,varchar(100),Text up to the implemented varchar(100) size.,NO,Y,N,,Human-readable name used for the wine record.
-wine,vintageYear,year,Valid MySQL year value.,NO,Y,N,,Records the vintage year of the wine.
-wine,wineCategoryId,char(5),Text up to the implemented char(5) size.,NO,N,N,winecategory.wineCategoryId,Identifies the related winecategory record.
-wine,alcoholPercent,"decimal(4,2)","Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented.",NO,N,N,,Records the alcohol percent of the wine.
-wine,winemakerId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
-winecategory,wineCategoryId,char(5),Text up to the implemented char(5) size.,NO,Y,Y,,Stable identifier for a winecategory record.
-winecategory,categoryName,varchar(40),Text up to the implemented varchar(40) size.,NO,Y,N,,Human-readable name used for the winecategory record.
-winecomposition,wineId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,wine.wineId,Identifies the related wine record.
-winecomposition,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,grapevariety.grapeVarietyId,Identifies the related grapevariety record.
-winecomposition,proportionPercent,"decimal(5,2)","Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented.",NO,N,N,,Percentage contribution of a grape variety to a wine composition.
-wineproduct,productId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,,Stable identifier for a wineproduct record.
-wineproduct,wineId,char(7),Text up to the implemented char(7) size.,NO,Y,N,wine.wineId,Identifies the related wine record.
-wineproduct,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,N,bottletype.bottleTypeId,Identifies the related bottletype record.
-wineproduct,caseQuantity,smallint unsigned,Positive numeric value.,NO,Y,N,,Quantity recorded for the wineproduct transaction or inventory fact.
-wineproduct,isActive,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE indicator for is active on the wineproduct record.
+address,addressId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a address record.
+address,addressKind,"enum('PHYSICAL','POSTAL')","Permitted values: physical, postal.",NO,N,N,,Records address kind required for the address business record.
+address,postalType,"enum('POBOX','PRIVATEBAG','OTHER')","Permitted values: pobox, privatebag, other.",YES,N,N,,Records postal type required for the address business record.
+address,unitType,varchar(20),Text within the implemented varchar(20) length.,YES,N,N,,Records unit type required for the address business record.
+address,unitNumber,varchar(12),Text within the implemented varchar(12) length.,YES,N,N,,Records unit number required for the address business record.
+address,levelType,varchar(20),Text within the implemented varchar(20) length.,YES,N,N,,Records level type required for the address business record.
+address,levelNumber,varchar(12),Text within the implemented varchar(12) length.,YES,N,N,,Records level number required for the address business record.
+address,buildingName,varchar(100),Text within the implemented varchar(100) length.,YES,N,N,,Human-readable business name of the address.
+address,placeName,varchar(100),Text within the implemented varchar(100) length.,YES,N,N,,Human-readable business name of the address.
+address,addressNumber,varchar(20),Text within the implemented varchar(20) length.,YES,N,N,,Records address number required for the address business record.
+address,streetName,varchar(120),Text within the implemented varchar(120) length.,YES,N,N,,Human-readable business name of the address.
+address,locality,varchar(80),Text within the implemented varchar(80) length.,NO,N,N,,Records locality required for the address business record.
+address,stateCode,"enum('ACT','NSW','NT','QLD','SA','TAS','VIC','WA')","Permitted values: act, nsw, nt, qld, sa, tas, vic, wa.",NO,N,N,,Records state code required for the address business record.
+address,postcode,char(4),Exactly 4 numeric digits.,NO,N,N,,Records postcode required for the address business record.
+bottletype,bottleTypeId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a bottletype record.
+bottletype,capacityMl,smallint unsigned,Positive whole-number millilitres (> 0).,NO,N,N,,Nominal bottle capacity in millilitres.
+bottletype,bottleShape,varchar(40),Text within the implemented varchar(40) length.,NO,N,N,,Records bottle shape required for the bottletype business record.
+bottletype,material,"enum('GLASS','PLASTIC')","Permitted values: glass, plastic.",NO,N,N,,Records material required for the bottletype business record.
+bottletype,bottleColour,varchar(40),Text within the implemented varchar(40) length.,NO,N,N,,Records bottle colour required for the bottletype business record.
+bottletype,inventoryQuantity,int unsigned,Non-negative whole-number bottle quantity (>= 0).,NO,N,N,,Current number of bottles of this type held in inventory.
+bottletype,usualUnitCost,"decimal(8,2)",Non-negative numeric value.,NO,N,N,,Usual expected procurement cost for one bottle of this type.
+bottletype,reorderFlag,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,Indicates whether the winery intends to reorder the bottle type.
+bottletype,reorderComment,varchar(500),Text within the implemented varchar(500) length.,YES,N,N,,Records the required explanation when a bottle type will not be reordered.
+businesscustomer,customerId,char(7),Text within the implemented char(7) length.,NO,Y,Y,customer.customerId,References the related customer record required for this businesscustomer fact.
+businesscustomer,companyName,varchar(120),Text within the implemented varchar(120) length.,NO,N,N,,Human-readable business name of the businesscustomer.
+businesscustomer,australianBusinessNumber,char(11),Exactly 11 numeric digits.,NO,Y,N,,Australian Business Number identifying a business customer.
+businesscustomer,contactFirstName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the businesscustomer.
+businesscustomer,contactLastName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the businesscustomer.
+businesscustomer,businessType,"enum('RESTAURANT','WINESHOP','EXPORTCOMPANY','OTHER')","Permitted values: restaurant, wineshop, exportcompany, other.",NO,N,N,,Records business type required for the businesscustomer business record.
+checkintopic,wellbeingCheckinId,char(8),Text within the implemented char(8) length.,NO,N,Y,wellbeingcheckin.wellbeingCheckinId,References the related wellbeingcheckin record required for this checkintopic fact.
+checkintopic,wellbeingTopicId,char(6),Text within the implemented char(6) length.,NO,N,Y,wellbeingtopic.wellbeingTopicId,References the related wellbeingtopic record required for this checkintopic fact.
+correctiveaction,correctiveActionId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a correctiveaction record.
+correctiveaction,incidentId,char(8),Text within the implemented char(8) length.,NO,N,N,incident.incidentId,References the related incident record required for this correctiveaction fact.
+correctiveaction,actionDescription,varchar(500),Text within the implemented varchar(500) length.,NO,N,N,,Business description used to explain the correctiveaction.
+correctiveaction,responsibleEmployeeId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this correctiveaction fact.
+correctiveaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the correctiveaction event or validity period.
+correctiveaction,completedDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the correctiveaction event or validity period.
+correctiveaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records action status required for the correctiveaction business record.
+customer,customerId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a customer record.
+customer,customerType,"enum('INDIVIDUAL','BUSINESS')","Permitted values: individual, business.",NO,N,N,,Records customer type required for the customer business record.
+customer,emailAddress,varchar(254),Text within the implemented varchar(254) length.,NO,Y,N,,Records email address required for the customer business record.
+customer,isActive,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE business indicator for is active.
+customeraddress,customerId,char(7),Text within the implemented char(7) length.,NO,N,Y,customer.customerId,References the related customer record required for this customeraddress fact.
+customeraddress,addressId,char(8),Text within the implemented char(8) length.,NO,N,Y,address.addressId,References the related address record required for this customeraddress fact.
+customeraddress,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the customeraddress history period.
+customeraddress,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the customeraddress history period; NULL represents an open-ended period.
+customerorder,customerOrderId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a customerorder record.
+customerorder,customerId,char(7),Text within the implemented char(7) length.,NO,N,N,customer.customerId,References the related customer record required for this customerorder fact.
+customerorder,receivedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the customerorder event or validity period.
+customerorder,paidFlag,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,Accounting confirmation used by the shipment control to determine whether dispatch may proceed.
+customerorder,orderStatus,"enum('PENDING','SHIPPED','CANCELLED')","Permitted values: pending, shipped, cancelled.",NO,N,N,,Records order status required for the customerorder business record.
+customerphone,customerId,char(7),Text within the implemented char(7) length.,NO,N,Y,customer.customerId,References the related customer record required for this customerphone fact.
+customerphone,phoneId,char(8),Text within the implemented char(8) length.,NO,N,Y,phone.phoneId,References the related phone record required for this customerphone fact.
+customerphone,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the customerphone history period.
+customerphone,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the customerphone history period; NULL represents an open-ended period.
+customerphone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE business indicator for is primary.
+employee,employeeId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a employee record.
+employee,firstName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the employee.
+employee,lastName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the employee.
+employee,taxFileNumber,char(9),Exactly 9 numeric digits.,NO,Y,N,,Australian tax file number retained as a sensitive HR identifier for authorised administration.
+employee,employmentStartDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the employee event or validity period.
+employee,employmentEndDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the employee event or validity period.
+employeeaddress,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this employeeaddress fact.
+employeeaddress,addressId,char(8),Text within the implemented char(8) length.,NO,N,Y,address.addressId,References the related address record required for this employeeaddress fact.
+employeeaddress,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the employeeaddress history period.
+employeeaddress,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the employeeaddress history period; NULL represents an open-ended period.
+employeephone,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this employeephone fact.
+employeephone,phoneId,char(8),Text within the implemented char(8) length.,NO,N,Y,phone.phoneId,References the related phone record required for this employeephone fact.
+employeephone,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the employeephone history period.
+employeephone,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the employeephone history period; NULL represents an open-ended period.
+employeephone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE business indicator for is primary.
+employeequalification,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this employeequalification fact.
+employeequalification,qualificationId,char(7),Text within the implemented char(7) length.,NO,N,Y,qualification.qualificationId,References the related qualification record required for this employeequalification fact.
+employeequalification,awardedDate,date,Valid MySQL date value.,NO,N,Y,,Business date associated with the employeequalification event or validity period.
+employeequalification,expiryDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the employeequalification event or validity period.
+employeequalification,certificateReference,varchar(80),Text within the implemented varchar(80) length.,YES,Y,N,,Records certificate reference required for the employeequalification business record.
+employeerole,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this employeerole fact.
+employeerole,roleId,char(6),Text within the implemented char(6) length.,NO,N,Y,role.roleId,References the related role record required for this employeerole fact.
+employeerole,operationalAreaId,char(6),Text within the implemented char(6) length.,NO,N,N,operationalarea.operationalAreaId,References the related operationalarea record required for this employeerole fact.
+employeerole,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the employeerole history period.
+employeerole,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the employeerole history period; NULL represents an open-ended period.
+employeerole,workTimeType,"enum('FULLTIME','PARTTIME')","Permitted values: fulltime, parttime.",NO,N,N,,Full-time or part-time work-time classification for the role period.
+employeerole,employmentType,"enum('PERMANENT','CASUAL')","Permitted values: permanent, casual.",NO,N,N,,"Employment engagement category, kept separately from work-time and seasonal pattern."
+employeerole,employmentPattern,"enum('ONGOING','SEASONAL')","Permitted values: ongoing, seasonal.",NO,N,N,,"Ongoing or seasonal work pattern, independent of permanent/casual engagement."
+grapevariety,grapeVarietyId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a grapevariety record.
+grapevariety,varietyName,varchar(80),Text within the implemented varchar(80) length.,NO,Y,N,,Human-readable business name of the grapevariety.
+grapevariety,juiceConversionPercent,"decimal(5,2)",Percentage greater than 0 and no more than 100.,NO,N,N,,Expected percentage of harvested grape weight converted to juice for the variety.
+grapevariety,storageContainer,"enum('STAINLESSSTEEL','OAKBARREL','OTHER')","Permitted values: stainlesssteel, oakbarrel, other.",NO,N,N,,Records storage container required for the grapevariety business record.
+grapevariety,agingDays,smallint unsigned,Unsigned whole-number days (>= 0).,NO,N,N,,Usual ageing duration in days for wine made from the grape variety.
+harvest,harvestId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a harvest record.
+harvest,vineyardId,char(7),Text within the implemented char(7) length.,NO,N,N,vineyardplanting.vineyardId,References the related vineyardplanting record required for this harvest fact.
+harvest,vintageYear,year,Valid MySQL year value.,NO,N,N,vineyardplanting.vintageYear,Records vintage year required for the harvest business record.
+harvest,harvestedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the harvest event or validity period.
+harvest,weightKg,"decimal(12,2)",Positive numeric value.,NO,N,N,,Records weight kg required for the harvest business record.
+harvest,ripenessSugarPercent,"decimal(5,2)",Percentage from 0 to 100 inclusive.,NO,N,N,,Sugar percentage recorded at harvest as the grape-ripeness measure.
+incident,incidentId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a incident record.
+incident,incidentDateTime,datetime,Valid MySQL datetime value.,NO,N,N,,Records incident date time required for the incident business record.
+incident,operationalAreaId,char(6),Text within the implemented char(6) length.,NO,N,N,operationalarea.operationalAreaId,References the related operationalarea record required for this incident fact.
+incident,incidentType,"enum('INJURY','NEARMISS','ILLNESS','EQUIPMENT','ENVIRONMENTAL','OTHER')","Permitted values: injury, nearmiss, illness, equipment, environmental, other.",NO,N,N,,Records incident type required for the incident business record.
+incident,severity,"enum('LOW','MODERATE','HIGH','CRITICAL')","Permitted values: low, moderate, high, critical.",NO,N,N,,Incident seriousness classification used for safety follow-up and corrective-action priority.
+incident,incidentDescription,varchar(1000),Text within the implemented varchar(1000) length.,NO,N,N,,Business description used to explain the incident.
+incident,totalLostHours,"decimal(7,2)",Non-negative numeric value.,NO,N,N,,Labour hours lost because of an incident; zero remains valid for a near miss.
+incident,reportableFlag,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,Indicates whether the safety incident is classified as reportable; retained separately from the all-incident management KPI.
+incidentemployee,incidentId,char(8),Text within the implemented char(8) length.,NO,N,Y,incident.incidentId,References the related incident record required for this incidentemployee fact.
+incidentemployee,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this incidentemployee fact.
+incidentemployee,involvementRole,"enum('AFFECTED','WITNESS','REPORTER')","Permitted values: affected, witness, reporter.",NO,N,N,,Records involvement role required for the incidentemployee business record.
+incidentemployee,employeeLostHours,"decimal(7,2)",Decimal value within the implemented precision/scale; default 0.00.,NO,N,N,,Records employee lost hours required for the incidentemployee business record.
+individualcustomer,customerId,char(7),Text within the implemented char(7) length.,NO,Y,Y,customer.customerId,References the related customer record required for this individualcustomer fact.
+individualcustomer,firstName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the individualcustomer.
+individualcustomer,lastName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the individualcustomer.
+individualcustomer,dateOfBirth,date,Valid MySQL date value.,NO,N,N,,Birth date used to demonstrate that an individual customer satisfies the legal-age requirement.
+medal,medalId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a medal record.
+medal,wineId,char(7),Text within the implemented char(7) length.,NO,N,N,wine.wineId,References the related wine record required for this medal fact.
+medal,medalType,"enum('BRONZE','SILVER','GOLD','TROPHY')","Permitted values: bronze, silver, gold, trophy.",NO,N,N,,Records medal type required for the medal business record.
+medal,awardYear,year,Valid MySQL year value.,NO,N,N,,Records award year required for the medal business record.
+medal,awardingOrganisation,varchar(120),Text within the implemented varchar(120) length.,NO,N,N,,Records awarding organisation required for the medal business record.
+openincidentaction,correctiveActionId,char(8),Text within the implemented char(8) length.,NO,N,N,,Stable business identifier for a openincidentaction record.
+openincidentaction,incidentId,char(8),Text within the implemented char(8) length.,NO,N,N,,Stable business identifier for a openincidentaction record.
+openincidentaction,incidentDateTime,datetime,Valid MySQL datetime value.,NO,N,N,,Records incident date time required for the openincidentaction business record.
+openincidentaction,severity,"enum('LOW','MODERATE','HIGH','CRITICAL')","Permitted values: low, moderate, high, critical.",NO,N,N,,Incident seriousness classification used for safety follow-up and corrective-action priority.
+openincidentaction,areaName,varchar(60),Text within the implemented varchar(60) length.,NO,N,N,,Human-readable business name of the openincidentaction.
+openincidentaction,actionDescription,varchar(500),Text within the implemented varchar(500) length.,NO,N,N,,Business description used to explain the openincidentaction.
+openincidentaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the openincidentaction event or validity period.
+openincidentaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records action status required for the openincidentaction business record.
+openincidentaction,responsibleEmployee,varchar(101),Text within the implemented varchar(101) length.,YES,N,N,,Records responsible employee required for the openincidentaction business record.
+openincidentaction,daysOverdue,int,Whole number within the implemented MySQL type.,YES,N,N,,Records days overdue required for the openincidentaction business record.
+operationalarea,operationalAreaId,char(6),Text within the implemented char(6) length.,NO,Y,Y,,Stable business identifier for a operationalarea record.
+operationalarea,areaName,varchar(60),Text within the implemented varchar(60) length.,NO,Y,N,,Human-readable business name of the operationalarea.
+operationalarea,areaDescription,varchar(255),Text within the implemented varchar(255) length.,YES,N,N,,Business description used to explain the operationalarea.
+orderline,customerOrderId,char(8),Text within the implemented char(8) length.,NO,N,Y,customerorder.customerOrderId,References the related customerorder record required for this orderline fact.
+orderline,productId,char(7),Text within the implemented char(7) length.,NO,N,Y,wineproduct.productId,References the related wineproduct record required for this orderline fact.
+orderline,caseQuantity,int unsigned,Positive whole-number case quantity (> 0).,NO,N,N,,Number of cases of the product requested on the customer order line.
+orderline,agreedCasePrice,"decimal(10,2)",Positive numeric value.,NO,N,N,,Case price agreed for the product when the customer order was placed.
+packmember,pickerPackId,char(7),Text within the implemented char(7) length.,NO,N,Y,pickerpack.pickerPackId,References the related pickerpack record required for this packmember fact.
+packmember,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this packmember fact.
+packmember,joinedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the packmember event or validity period.
+packmember,leftDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the packmember event or validity period.
+phone,phoneId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a phone record.
+phone,countryCode,varchar(4),Text within the implemented varchar(4) length; default +61.,NO,N,N,,Records country code required for the phone business record.
+phone,phoneNumber,varchar(20),Text within the implemented varchar(20) length.,NO,N,N,,Records phone number required for the phone business record.
+phone,phoneType,"enum('MOBILE','WORK','HOME','OTHER')","Permitted values: mobile, work, home, other.",NO,N,N,,Records phone type required for the phone business record.
+pickerpack,pickerPackId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a pickerpack record.
+pickerpack,packName,varchar(60),Text within the implemented varchar(60) length.,NO,Y,N,,Human-readable business name of the pickerpack.
+pickerpack,supervisorId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,Grape-farmer employee responsible for supervising the picking pack during the season.
+pickerpack,seasonYear,year,Valid MySQL year value.,NO,N,N,,Records season year required for the pickerpack business record.
+productprice,productId,char(7),Text within the implemented char(7) length.,NO,N,Y,wineproduct.productId,References the related wineproduct record required for this productprice fact.
+productprice,effectiveDate,date,Valid MySQL date value.,NO,N,Y,,Date on which the productprice value becomes effective.
+productprice,endDate,date,NULL/open-ended or a value not earlier than the corresponding start/effective date.,YES,N,N,,Optional final effective date for the productprice value; NULL represents an open-ended period.
+productprice,casePrice,"decimal(10,2)",Positive numeric value.,NO,N,N,,Sale price for one case of the product during the effective date period.
+purchaseorder,purchaseOrderId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a purchaseorder record.
+purchaseorder,supplierId,char(7),Text within the implemented char(7) length.,NO,N,N,supplier.supplierId,References the related supplier record required for this purchaseorder fact.
+purchaseorder,orderedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the purchaseorder event or validity period.
+purchaseorder,orderStatus,"enum('PLACED','PARTRECEIVED','RECEIVED','CANCELLED')","Permitted values: placed, partreceived, received, cancelled.",NO,N,N,,Records order status required for the purchaseorder business record.
+purchaseorderline,purchaseOrderId,char(8),Text within the implemented char(8) length.,NO,N,Y,purchaseorder.purchaseOrderId,References the related purchaseorder record required for this purchaseorderline fact.
+purchaseorderline,bottleTypeId,char(7),Text within the implemented char(7) length.,NO,N,Y,bottletype.bottleTypeId,References the related bottletype record required for this purchaseorderline fact.
+purchaseorderline,orderedQuantity,int unsigned,Positive whole-number quantity (> 0).,NO,N,N,,Number of bottle units ordered on the purchase-order line.
+purchaseorderline,quotedUnitPrice,"decimal(8,2)",Non-negative numeric value.,YES,N,N,,Supplier quoted unit price for the bottle type on the purchase order.
+qualification,qualificationId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a qualification record.
+qualification,qualificationName,varchar(120),Text within the implemented varchar(120) length.,NO,Y,N,,Human-readable business name of the qualification.
+qualification,issuingAuthority,varchar(120),Text within the implemented varchar(120) length.,NO,N,N,,TRUE/FALSE business indicator for issuing authority.
+qualification,defaultValidityMonths,smallint unsigned,Non-negative whole number within the implemented unsigned MySQL type.,YES,N,N,,Records default validity months required for the qualification business record.
+qualification,isSafetyCritical,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE business indicator for is safety critical.
+receipt,receiptId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a receipt record.
+receipt,purchaseOrderId,char(8),Text within the implemented char(8) length.,NO,N,N,purchaseorder.purchaseOrderId,References the related purchaseorder record required for this receipt fact.
+receipt,receivedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the receipt event or validity period.
+receiptline,receiptId,char(8),Text within the implemented char(8) length.,NO,N,Y,receipt.receiptId,References the related receipt record required for this receiptline fact.
+receiptline,bottleTypeId,char(7),Text within the implemented char(7) length.,NO,N,Y,bottletype.bottleTypeId,References the related bottletype record required for this receiptline fact.
+receiptline,receivedQuantity,int unsigned,Positive whole-number quantity (> 0).,NO,N,N,,Number of bottle units actually received on the receipt line.
+receiptline,actualUnitPrice,"decimal(8,2)",Non-negative numeric value.,NO,N,N,,Actual unit price paid/recorded for the bottle type on this receipt.
+refund,refundId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a refund record.
+refund,customerOrderId,char(8),Text within the implemented char(8) length.,NO,N,N,customerorder.customerOrderId,References the related customerorder record required for this refund fact.
+refund,refundDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the refund event or validity period.
+refund,refundReason,"enum('SHORTSUPPLY','TRANSITDAMAGE')","Permitted values: shortsupply, transitdamage.",NO,N,N,,Records refund reason required for the refund business record.
+refund,verifiedFlag,tinyint(1),TRUE/FALSE.,NO,N,N,,TRUE/FALSE business indicator for verified flag.
+refund,refundAmount,"decimal(10,2)",Non-negative numeric value.,NO,N,N,,Monetary amount recorded for the refund fact in Australian dollars.
+role,roleId,char(6),Text within the implemented char(6) length.,NO,Y,Y,,Stable business identifier for a role record.
+role,roleName,varchar(80),Text within the implemented varchar(80) length.,NO,Y,N,,Human-readable business name of the role.
+role,roleDescription,varchar(255),Text within the implemented varchar(255) length.,NO,N,N,,Business description used to explain the role.
+seasonalrating,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this seasonalrating fact.
+seasonalrating,seasonYear,year,Valid MySQL year value.,NO,N,Y,,Records season year required for the seasonalrating business record.
+seasonalrating,supervisorId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this seasonalrating fact.
+seasonalrating,ratingValue,tinyint,Integer from 1 to 5 inclusive.,NO,N,N,,Records rating value required for the seasonalrating business record.
+seasonalrating,recommendReemployment,tinyint(1),TRUE/FALSE.,NO,N,N,,Records recommend reemployment required for the seasonalrating business record.
+seasonalrating,ratingComment,varchar(500),Text within the implemented varchar(500) length.,YES,N,N,,Records rating comment required for the seasonalrating business record.
+shift,shiftId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a shift record.
+shift,shiftDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the shift event or validity period.
+shift,startTime,time,Valid MySQL time value.,NO,N,N,,Records start time required for the shift business record.
+shift,endTime,time,Valid MySQL time value.,NO,N,N,,Records end time required for the shift business record.
+shift,operationalAreaId,char(6),Text within the implemented char(6) length.,NO,N,N,operationalarea.operationalAreaId,References the related operationalarea record required for this shift fact.
+shift,taskCategoryId,char(6),Text within the implemented char(6) length.,NO,N,N,taskcategory.taskCategoryId,References the related taskcategory record required for this shift fact.
+shift,supervisorId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this shift fact.
+shiftassignment,shiftId,char(8),Text within the implemented char(8) length.,NO,N,Y,shift.shiftId,References the related shift record required for this shiftassignment fact.
+shiftassignment,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this shiftassignment fact.
+shiftassignment,regularHours,"decimal(4,2)",Hours greater than 0 and no more than 16; combined regular plus overtime hours no more than 18.,NO,N,N,,Regular labour hours worked by an employee on the assigned shift.
+shiftassignment,overtimeHours,"decimal(4,2)",Non-negative hours; combined regular plus overtime hours no more than 18.,NO,N,N,,Overtime labour hours used for workload and safety exposure analysis.
+shipment,shipmentId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a shipment record.
+shipment,customerOrderId,char(8),Text within the implemented char(8) length.,NO,Y,N,customerorder.customerOrderId,References the related customerorder record required for this shipment fact.
+shipment,addressId,char(8),Text within the implemented char(8) length.,NO,N,N,address.addressId,Physical customer address actually used for the shipment after current-address validation.
+shipment,shippedDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the shipment event or validity period.
+supervision,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this supervision fact.
+supervision,supervisorId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this supervision fact.
+supervision,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the supervision history period.
+supervision,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the supervision history period; NULL represents an open-ended period.
+supplier,supplierId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a supplier record.
+supplier,supplierName,varchar(120),Text within the implemented varchar(120) length.,NO,Y,N,,Human-readable business name of the supplier.
+supplier,contactFirstName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the supplier.
+supplier,contactLastName,varchar(50),Text within the implemented varchar(50) length.,NO,N,N,,Human-readable business name of the supplier.
+supplier,contactEmail,varchar(254),Text within the implemented varchar(254) length.,NO,N,N,,Records contact email required for the supplier business record.
+supplieraddress,supplierId,char(7),Text within the implemented char(7) length.,NO,N,Y,supplier.supplierId,References the related supplier record required for this supplieraddress fact.
+supplieraddress,addressId,char(8),Text within the implemented char(8) length.,NO,N,Y,address.addressId,References the related address record required for this supplieraddress fact.
+supplieraddress,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the supplieraddress history period.
+supplieraddress,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the supplieraddress history period; NULL represents an open-ended period.
+supplierbottle,supplierId,char(7),Text within the implemented char(7) length.,NO,N,Y,supplier.supplierId,References the related supplier record required for this supplierbottle fact.
+supplierbottle,bottleTypeId,char(7),Text within the implemented char(7) length.,NO,N,Y,bottletype.bottleTypeId,References the related bottletype record required for this supplierbottle fact.
+supplierbottle,supplierBottleCode,varchar(40),Text within the implemented varchar(40) length.,YES,N,N,,Records supplier bottle code required for the supplierbottle business record.
+supplierbottle,isAvailable,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE business indicator for is available.
+supplierphone,supplierId,char(7),Text within the implemented char(7) length.,NO,N,Y,supplier.supplierId,References the related supplier record required for this supplierphone fact.
+supplierphone,phoneId,char(8),Text within the implemented char(8) length.,NO,N,Y,phone.phoneId,References the related phone record required for this supplierphone fact.
+supplierphone,startDateTime,datetime,Valid MySQL datetime value.,NO,N,Y,,Inclusive start date/time of the supplierphone history period.
+supplierphone,endDateTime,datetime,NULL/open-ended or a value not earlier than the corresponding startDateTime.,YES,N,N,,Optional end date/time of the supplierphone history period; NULL represents an open-ended period.
+supplierphone,isPrimary,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE business indicator for is primary.
+taskcategory,taskCategoryId,char(6),Text within the implemented char(6) length.,NO,Y,Y,,Stable business identifier for a taskcategory record.
+taskcategory,categoryName,varchar(60),Text within the implemented varchar(60) length.,NO,Y,N,,Human-readable business name of the taskcategory.
+trainingattendance,trainingSessionId,char(8),Text within the implemented char(8) length.,NO,N,Y,trainingsession.trainingSessionId,References the related trainingsession record required for this trainingattendance fact.
+trainingattendance,employeeId,char(7),Text within the implemented char(7) length.,NO,N,Y,employee.employeeId,References the related employee record required for this trainingattendance fact.
+trainingattendance,attendanceStatus,"enum('REGISTERED','COMPLETED','FAILED','ABSENT')","Permitted values: registered, completed, failed, absent.",NO,N,N,,Records attendance status required for the trainingattendance business record.
+trainingattendance,completionDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the trainingattendance event or validity period.
+trainingattendance,renewalDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the trainingattendance event or validity period.
+trainingattendance,competencyLevel,"enum('AWARENESS','COMPETENT','ADVANCED')","Permitted values: awareness, competent, advanced.",YES,N,N,,Records competency level required for the trainingattendance business record.
+trainingcourse,trainingCourseId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a trainingcourse record.
+trainingcourse,courseName,varchar(120),Text within the implemented varchar(120) length.,NO,Y,N,,Human-readable business name of the trainingcourse.
+trainingcourse,courseProvider,varchar(120),Text within the implemented varchar(120) length.,NO,N,N,,Records course provider required for the trainingcourse business record.
+trainingcourse,trainingCategory,"enum('SAFETY','SUSTAINABILITY','TECHNICAL','WELLBEING','OTHER')","Permitted values: safety, sustainability, technical, wellbeing, other.",NO,N,N,,Records training category required for the trainingcourse business record.
+trainingcourse,renewalMonths,smallint unsigned,Non-negative whole number within the implemented unsigned MySQL type.,YES,N,N,,Records renewal months required for the trainingcourse business record.
+trainingcourse,isMandatory,tinyint(1),TRUE/FALSE; default 0.,NO,N,N,,TRUE/FALSE business indicator for is mandatory.
+trainingsession,trainingSessionId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a trainingsession record.
+trainingsession,trainingCourseId,char(7),Text within the implemented char(7) length.,NO,N,N,trainingcourse.trainingCourseId,References the related trainingcourse record required for this trainingsession fact.
+trainingsession,sessionDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the trainingsession event or validity period.
+trainingsession,operationalAreaId,char(6),Text within the implemented char(6) length.,YES,N,N,operationalarea.operationalAreaId,References the related operationalarea record required for this trainingsession fact.
+trainingsession,trainerName,varchar(100),Text within the implemented varchar(100) length.,NO,N,N,,Human-readable business name of the trainingsession.
+trainingsession,deliveryMode,"enum('INPERSON','ONLINE','BLENDED')","Permitted values: inperson, online, blended.",NO,N,N,,Records delivery mode required for the trainingsession business record.
+vineyard,vineyardId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a vineyard record.
+vineyard,vineyardName,varchar(80),Text within the implemented varchar(80) length.,NO,Y,N,,Human-readable business name of the vineyard.
+vineyard,areaHectares,"decimal(6,2)",Positive decimal hectares (> 0).,NO,N,N,,Records area hectares required for the vineyard business record.
+vineyard,latitude,"decimal(9,6)",Decimal latitude from -90 to 90 inclusive.,NO,N,N,,Records latitude required for the vineyard business record.
+vineyard,longitude,"decimal(9,6)",Decimal longitude from -180 to 180 inclusive.,NO,N,N,,Records longitude required for the vineyard business record.
+vineyard,managerId,char(7),Text within the implemented char(7) length.,NO,Y,N,employee.employeeId,Current grape-farmer employee responsible for managing the vineyard.
+vineyard,addressId,char(8),Text within the implemented char(8) length.,NO,Y,N,address.addressId,References the related address record required for this vineyard fact.
+vineyardplanting,vineyardId,char(7),Text within the implemented char(7) length.,NO,N,Y,vineyard.vineyardId,References the related vineyard record required for this vineyardplanting fact.
+vineyardplanting,vintageYear,year,Valid MySQL year value.,NO,N,Y,,Records vintage year required for the vineyardplanting business record.
+vineyardplanting,grapeVarietyId,char(7),Text within the implemented char(7) length.,NO,N,N,grapevariety.grapeVarietyId,References the related grapevariety record required for this vineyardplanting fact.
+vineyardplanting,plantedDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the vineyardplanting event or validity period.
+wellbeingaction,wellbeingActionId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a wellbeingaction record.
+wellbeingaction,wellbeingCheckinId,char(8),Text within the implemented char(8) length.,NO,N,N,wellbeingcheckin.wellbeingCheckinId,References the related wellbeingcheckin record required for this wellbeingaction fact.
+wellbeingaction,actionDescription,varchar(500),Text within the implemented varchar(500) length.,NO,N,N,,Business description used to explain the wellbeingaction.
+wellbeingaction,targetDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the wellbeingaction event or validity period.
+wellbeingaction,completedDate,date,Valid MySQL date value.,YES,N,N,,Business date associated with the wellbeingaction event or validity period.
+wellbeingaction,actionStatus,"enum('OPEN','INPROGRESS','COMPLETED','CANCELLED')","Permitted values: open, inprogress, completed, cancelled.",NO,N,N,,Records action status required for the wellbeingaction business record.
+wellbeingcheckin,wellbeingCheckinId,char(8),Text within the implemented char(8) length.,NO,Y,Y,,Stable business identifier for a wellbeingcheckin record.
+wellbeingcheckin,employeeId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this wellbeingcheckin fact.
+wellbeingcheckin,managerId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this wellbeingcheckin fact.
+wellbeingcheckin,checkinDate,date,Valid MySQL date value.,NO,N,N,,Business date associated with the wellbeingcheckin event or validity period.
+wellbeingcheckin,concernRaisedFlag,tinyint(1),TRUE/FALSE.,NO,N,N,,TRUE/FALSE business indicator for concern raised flag.
+wellbeingcheckin,confidentialNote,varchar(1000),Text within the implemented varchar(1000) length.,YES,N,N,,Restricted wellbeing note excluded from routine management query output.
+wellbeingtopic,wellbeingTopicId,char(6),Text within the implemented char(6) length.,NO,Y,Y,,Stable business identifier for a wellbeingtopic record.
+wellbeingtopic,topicName,varchar(80),Text within the implemented varchar(80) length.,NO,Y,N,,Human-readable business name of the wellbeingtopic.
+wine,wineId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a wine record.
+wine,wineName,varchar(100),Text within the implemented varchar(100) length.,NO,N,N,,Human-readable business name of the wine.
+wine,vintageYear,year,Valid MySQL year value.,NO,N,N,,Records vintage year required for the wine business record.
+wine,wineCategoryId,char(5),Text within the implemented char(5) length.,NO,N,N,winecategory.wineCategoryId,References the related winecategory record required for this wine fact.
+wine,alcoholPercent,"decimal(4,2)",Percentage greater than 0 and no more than 25.,NO,N,N,,Records alcohol percent required for the wine business record.
+wine,winemakerId,char(7),Text within the implemented char(7) length.,NO,N,N,employee.employeeId,References the related employee record required for this wine fact.
+winecategory,wineCategoryId,char(5),Text within the implemented char(5) length.,NO,Y,Y,,Stable business identifier for a winecategory record.
+winecategory,categoryName,varchar(40),Text within the implemented varchar(40) length.,NO,Y,N,,Human-readable business name of the winecategory.
+winecomposition,wineId,char(7),Text within the implemented char(7) length.,NO,N,Y,wine.wineId,References the related wine record required for this winecomposition fact.
+winecomposition,grapeVarietyId,char(7),Text within the implemented char(7) length.,NO,N,Y,grapevariety.grapeVarietyId,References the related grapevariety record required for this winecomposition fact.
+winecomposition,proportionPercent,"decimal(5,2)",Percentage greater than 0 and no more than 100.,NO,N,N,,Percentage contribution of a grape variety to a wine recipe.
+wineproduct,productId,char(7),Text within the implemented char(7) length.,NO,Y,Y,,Stable business identifier for a wineproduct record.
+wineproduct,wineId,char(7),Text within the implemented char(7) length.,NO,N,N,wine.wineId,References the related wine record required for this wineproduct fact.
+wineproduct,bottleTypeId,char(7),Text within the implemented char(7) length.,NO,N,N,bottletype.bottleTypeId,References the related bottletype record required for this wineproduct fact.
+wineproduct,caseQuantity,smallint unsigned,Positive whole-number bottles per case (> 0).,NO,N,N,,Number of bottles packaged in one saleable case of this wine product.
+wineproduct,isActive,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE business indicator for is active.
