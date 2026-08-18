@@ -23,101 +23,82 @@ Start with:
 - `source-materials/assessment/AUDIT_STANDARD.md`
 - `docs/requirements/tutor-confirmations.md`
 
-`AUDIT_STANDARD.md` is a structured audit map derived from the four student-supplied source documents: the main assessment specification, BISM2207 rubric, Wine Company Case and separate RiPPlE reflection instructions. It preserves known conflicts instead of silently resolving them.
+`AUDIT_STANDARD.md` is the structured audit map derived from the supplied assessment specification, rubric, Wine Company Case and RiPPlE instructions. Known source conflicts remain explicit pending tutor confirmation.
 
-The original PDFs are not copied into this public repository by automation. If redistribution is permitted, or if the repository is made private, the students can add the four original PDFs next to the audit map for direct source-to-project comparison.
+## Current source and generated-artifact status
 
-## Source changes completed
+The authoritative schema, query, report-source and verification files have received two grading-oriented manual-audit passes.
 
-Two independent manual-audit passes have now been applied to authoritative sources. The branch includes controls or corrections for:
-
-- supplier physical/postal address coexistence with same-type overlap protection
-- supplier phone history semantics
-- employee/customer primary-phone period uniqueness
-- required-current-state validation for active employee/customer/supplier contacts
-- employee/customer same-address-kind temporal overlap
-- customer subtype consistency and exact subtype before transaction
-- future-dated shipment-address rejection
-- receipt-line validation against purchase-order lines
-- receipt/order and shipment/order chronology
-- at least one order line before shipment and SHIPPED-state protection
-- product-price validity-period overlap
-- wine composition total validation before saleable product creation
-- picking-pack minimum/member/role/supervisor rules through an executable validation procedure
-- synthetic picking-pack supervisor alignment to the active Grape Farmer
-- vineyard active Grape Farmer manager and physical-address validation
-- Query 2 KPI semantics, zero-hour-area visibility and corrected manual reconciliation
-- Query 3 latest-completed-safety-training semantics
-- Query 4 `AFFECTED` incident semantics and removal of arbitrary risk-score weights
-- corrected Case page citations
-- Task 3 report ordering
-- real Word landscape/portrait section creation
-- FINAL_MODE fourth-member replacement, student-number inputs and conditional final checklist state
-- Data Dictionary individual-uniqueness semantics and stronger context-specific domains/purposes
-- tutor-dependent RiPPlE peer-review wording retained as unresolved
-- expanded traceability, assumptions, verification and negative tests
-
-The five assessed Task 3b business rules and the five assessed Task 6 integrity tests remain unchanged. New controls are additional integrity evidence and should not silently replace assessed items.
-
-## Expected schema effect after regeneration
-
-The table/column/FK/CHECK structure remains unchanged by the second pass. The existing trigger files plus `database/schema/04_final_controls.sql` contain an expected total of 43 trigger definitions. The database should contain five stored routines when `getExpiringQualifications`, `validateCustomerSubtype`, `validateWineComposition`, `validatePickingPackRules` and `validateRequiredCurrentState` are installed.
-
-These are source counts only. Actual live counts must be obtained from MySQL 8.4 after `Cloudrest_Wines_Database.sql` is rebuilt and imported.
-
-## Generated artifacts currently stale until rebuilt
-
-Do not audit the following files as current final outputs until the regeneration sequence has been run:
+The GitHub Actions source-verification workflow now rebuilds and verifies the authoritative SQL under MySQL 8.4. After a successful push verification on `audit/final-manual-fixes`, it automatically refreshes these generated text artifacts on the branch:
 
 - `deliverables/final-submission/Cloudrest_Wines_Database.sql`
 - `deliverables/final-submission/Cloudrest_Wines_Queries.sql`
+- `docs/report/data-dictionary.csv`
+- `docs/report/data-dictionary.md`
+
+These four files therefore no longer belong to the old stale-generated set when the latest auto-refresh commit is present. `Cloudrest_Wines_Database.sql` identifies the team as Mia, Zora, Rianna and Jason and contains the latest controls.
+
+## Artifacts that still require manual/final completion
+
+Do not treat the following as final submission evidence yet:
+
 - `deliverables/final-submission/Cloudrest_Wines_Report.docx`
 - `deliverables/final-submission/Cloudrest_Wines_Verification_Report.docx`
 - `deliverables/final-submission/Cloudrest_Wines_Model.mwb`
 - `deliverables/final-submission/Cloudrest_Wines_ER_Diagram.png`
-- `docs/report/data-dictionary.csv`
-- `docs/report/data-dictionary.md`
 - `verification/verification-report.json`
 - `verification/verification-report.md`
 - final SHA-256 manifest
 
-## Required local regeneration
+The report is a working evidence-insertion document until genuine Workbench screenshots, the final UML ER export, Official A2 evidence, Week 11 Scenario material and final student metadata are inserted and visually checked.
 
-Follow `deliverables/final-submission/README_FIRST.md`. In summary:
+The `.mwb` and ER PNG remain manual MySQL Workbench gates. The final model must use **Model → Relationship Notation → UML**, be saved after selecting UML, arranged on a readable landscape canvas and re-exported.
 
-1. `python3 tools/build_submission_sql.py`
-2. clean-import rebuilt SQL into MySQL 8.4
-3. `python3 tools/generate_data_dictionary.py`
-4. `python3 tools/verify_project.py`
-5. `python3 tools/verify_manual_audit_controls.py`
-6. rebuild `.mwb` and diagrams inside MySQL Workbench
-7. manually select UML relationship notation, arrange the complete model landscape, save and re-export
-8. rerun both verification layers
-9. rebuild Word reports
-10. render and visually inspect the Word report
-11. capture and insert genuine student Workbench screenshots
-12. run final mode only after genuine student/course inputs exist
+## Scheme B final-report workflow
+
+The team will use manual evidence insertion into the current Word report.
+
+1. Use the refreshed `Cloudrest_Wines_Database.sql` to build `cloudrestwines` in MySQL Workbench.
+2. Capture the 14 unique genuine Workbench screenshots listed in `docs/evidence/student-screenshot-checklist.md`.
+3. Finalise the `.mwb` in UML notation and export the final landscape ER PNG.
+4. One team member inserts the genuine screenshots and final ER image into the current Word report and removes the matching placeholders.
+5. When the Official A2 Workbook arrives, add the actual cleaning analysis, SQL and before/after evidence.
+6. When the Week 11 Assigned Scenario arrives, complete and document the allocated scenario.
+7. Fill genuine student numbers, submission date, actual completion dates and contribution records.
+8. Visually inspect the completed report at 100% zoom and confirm that all figures, tables, SQL and captions are readable.
+9. Run the final verification/QA checks after all genuine course inputs exist.
+
+Students do not need Git. Student-facing instructions are under `deliverables/student-pack/`.
+
+## Current expected schema state
+
+The latest verified source design expects:
+
+- 55 base tables
+- 1 view
+- 282 columns
+- 72 foreign keys
+- 48 CHECK constraints
+- 43 triggers
+- 5 stored routines
+
+Live MySQL metadata after the student's clean import remains the final technical source of truth.
 
 ## Manual items intentionally unresolved
 
-- official A2 workbook and real cleaning evidence
-- Week 11 assigned scenario
-- genuine student screenshots
-- final Workbench UML confirmation and final ER export
+- Official A2 Workbook and actual cleaning evidence
+- Week 11 Assigned Scenario
+- 14 genuine Workbench screenshots
+- final Workbench UML confirmation and landscape ER export
 - four-person video
 - genuine RiPPlE prompt iterations and tutor-confirmed peer reviews
 - four student numbers, submission date, actual completion dates/hours/contributions
 - tutor-confirmation questions in `docs/requirements/tutor-confirmations.md`
 
+## Tutor-confirmation file
+
+Keep `docs/requirements/tutor-confirmations.md` unchanged until the students receive an actual Tutor/LMS answer. Record the real answer rather than silently choosing an interpretation.
+
 ## External reviewer guidance
 
-Review PR #1 source changes first. Do not use the historical `64/64` report or old generated Word/SQL/ER artifacts as evidence for this branch. A new expanded verification result is required after local regeneration.
-
-For grading-oriented audit, classify findings as:
-
-- BLOCKING
-- LIKELY MARK LOSS
-- HD IMPROVEMENT
-- OPTIONAL ROBUSTNESS
-
-Do not treat automated test success as proof of rubric interpretation, visual legibility, genuine student evidence or tutor-dependent requirements.
+Technical verification and generated SQL/data-dictionary consistency do not replace visual legibility, genuine student evidence, final Workbench confirmation or tutor-dependent interpretation. Continue classifying findings as BLOCKING, LIKELY MARK LOSS, HD IMPROVEMENT or OPTIONAL ROBUSTNESS.
