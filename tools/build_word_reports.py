@@ -28,7 +28,7 @@ def is_placeholder(value):
 def load_final_inputs():
     if not FINAL_MODE:
         return {
-            'member4Name':'1',
+            'member4Name':'Jason',
             'studentNumbers':{'Mia':'[STUDENT TO COMPLETE]','Zora':'[STUDENT TO COMPLETE]','Rianna':'[STUDENT TO COMPLETE]','member4':'[STUDENT TO COMPLETE]'},
             'submissionDate':'[STUDENT TO COMPLETE]',
             'actualCompletionDates':{}
