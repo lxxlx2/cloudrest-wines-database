@@ -2,12 +2,13 @@
 from __future__ import annotations
 import csv
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MYSQL = "/opt/homebrew/opt/mysql@8.4/bin/mysql"
+MYSQL = os.getenv("MYSQL_BIN", "/opt/homebrew/opt/mysql@8.4/bin/mysql")
 
 
 def query(sql: str) -> list[dict]:
