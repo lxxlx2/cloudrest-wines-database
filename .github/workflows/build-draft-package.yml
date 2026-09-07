@@ -1,0 +1,44 @@
+name: Build draft submission artifact
+on:
+  push:
+    branches:
+      - artifact/draft-submission-20260907
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install python-docx pillow
+      - name: Build deliverables
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tools/build_submission_sql.py')
+          s=p.read_text()
+          s=s.replace('Mia, Zora, Rianna, 1','Mia, Zora, Rianna, Jason')
+          p.write_text(s)
+          p=Path('tools/build_word_reports.py')
+          s=p.read_text()
+          s=s.replace('Mia | Zora | Rianna | 1','Mia | Zora | Rianna | Jason')
+          s=s.replace("('Submission date','[STUDENT TO COMPLETE]')","('Submission date','Draft submission')")
+          p.write_text(s)
+          PY
+          python tools/build_submission_sql.py
+          python tools/build_word_reports.py
+      - name: Stage artifact
+        run: |
+          mkdir -p artifact
+          cp deliverables/final-submission/Cloudrest_Wines_Database.sql artifact/
+          cp deliverables/final-submission/Cloudrest_Wines_Queries.sql artifact/
+          cp deliverables/final-submission/Cloudrest_Wines_Rule_Violations.sql artifact/
+          cp deliverables/final-submission/Cloudrest_Wines_Report.docx artifact/
+          cp deliverables/final-submission/Cloudrest_Wines_Model.mwb artifact/
+          cp deliverables/final-submission/Cloudrest_Wines_ER_Diagram.png artifact/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloudrest-draft-core
+          path: artifact/
+          retention-days: 2
