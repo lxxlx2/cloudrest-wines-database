@@ -15,7 +15,7 @@ query_parts = [ROOT / f"database/queries/0{i}_{name}.sql" for i, name in [
     (1,"trainingcoverage"),(2,"incidentrate"),(3,"trainingimpact"),
     (4,"overtimerisk"),(5,"expiringqualification"),(6,"openactions")]]
 header = """-- Cloudrest Wines Database — portable MySQL 8.x build
--- Team: Mia, Zora, Rianna, 1
+-- Team: Mia, Zora, Rianna, Jason
 -- Perspective: Human Resources, Workforce Planning and Wellbeing
 -- Open this file in MySQL Workbench and execute the full script.
 -- All data is fictitious and intended only for assessment/testing.
