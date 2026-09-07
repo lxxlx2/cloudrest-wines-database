@@ -21,7 +21,7 @@ The database script intentionally drops and rebuilds `cloudrestwines`. Do not ru
 
 ## Items requiring the students/course inputs
 
-- Replace placeholder member `1` with the enrolled name before submission.
+- Confirm the enrolled team names: Mia, Zora, Rianna and Jason.
 - Fill actual completion dates and confirm genuine contribution allocation.
 - Add official A2 spreadsheet error analysis, cleaning SQL and before/after screenshots.
 - Complete the Week 11 assigned business scenario.
