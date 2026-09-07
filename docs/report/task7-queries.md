@@ -16,9 +16,9 @@ The specification inconsistently states five and six queries. Cloudrest Wines su
 
 ## Query 3 — Incidents before and after training
 
-**Decision.** Assess whether annual safety training is associated with fewer employee incidents. The query uses each employee's first completed safety course and counts incidents in symmetric 180-day windows. Test employee EMP0008 changes from one incident before to zero after; the report must not claim causality from this small synthetic sample.
+**Decision.** Assess whether annual safety training is associated with fewer employee incidents. For each employee, the query uses the first completed safety course and compares equal observed periods before and after training, capped at 180 days. If fewer than 180 days have elapsed since training, the pre-training window is shortened to the same number of days so that the comparison is not biased by unequal observation time. The result is an association indicator only; the report must not claim causality from this small synthetic sample.
 
-**Features.** Pre/post date arithmetic, conditional aggregation, employee/course/session/incident joins.
+**Features.** Matched pre/post observation windows, date arithmetic, conditional aggregation, employee/course/session/incident joins.
 
 ## Query 4 — Recent overtime and review indicators
 
