@@ -40,7 +40,7 @@ VALUES ('SHIP0999','CORD0001','ADDR0004',CURRENT_DATE);
 DELETE FROM shipment WHERE shipmentId = 'SHIP0998';
 DELETE FROM customerorder WHERE customerOrderId = 'CORD0998';
 INSERT INTO customerorder
-(customerOrderId, customerId, orderDate, paidFlag, orderStatus)
+(customerOrderId, customerId, receivedDate, paidFlag, orderStatus)
 VALUES ('CORD0998','CUST001',CURRENT_DATE,FALSE,'PENDING');
 INSERT INTO shipment
 (shipmentId, customerOrderId, addressId, shippedDate)
