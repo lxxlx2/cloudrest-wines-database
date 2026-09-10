@@ -1,0 +1,71 @@
+name: QA Task 3b
+
+on:
+  push:
+    branches:
+      - qa/rule-tests-20260910
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build clean database
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat database/schema/01_tables.sql database/schema/02_triggers.sql database/schema/03_reporting.sql database/data/01_testdata.sql \
+            | docker exec -i ${{ job.services.mysql.id }} mysql -uroot -proot
+
+      - name: Split five assessed rule blocks
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('database/tests/task3b_ruleviolations.sql').read_text()
+          parts=re.split(r'(?=-- ={10,}\n-- Rule [1-5]:)', text)
+          for part in parts:
+              m=re.search(r'-- Rule ([1-5]):', part)
+              if m:
+                  Path(f'/tmp/rule{m.group(1)}.sql').write_text('USE cloudrestwines;\n'+part)
+          PY
+
+      - name: Verify all rule outcomes twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          cid='${{ job.services.mysql.id }}'
+          run_rule() {
+            n="$1"; code="$2"; message="$3"
+            set +e
+            out=$(docker exec -i "$cid" mysql -uroot -proot < "/tmp/rule${n}.sql" 2>&1)
+            rc=$?
+            set -e
+            printf '%s\n' "$out"
+            test "$rc" -ne 0
+            printf '%s\n' "$out" | grep -Fq "$code"
+            printf '%s\n' "$out" | grep -Fq "$message"
+          }
+
+          for pass in 1 2; do
+            echo "PASS $pass"
+            run_rule 1 "ERROR 3819" "chk_employeerole_dates"
+            run_rule 2 "ERROR 3819" "chk_bottletype_reorder"
+            run_rule 3 "ERROR 1644" "Shipment address must be a physical address, not PO Box or Private Bag"
+            run_rule 4 "ERROR 1644" "Order must be paid before shipment"
+            run_rule 5 "ERROR 1644" "Employee already has a supervisor during this period"
+          done
