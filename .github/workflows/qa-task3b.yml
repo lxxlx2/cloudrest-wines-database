@@ -5,6 +5,7 @@ on:
     branches:
       - qa/rule-tests-20260910
 
+# rerun after Rule 4 receivedDate correction
 jobs:
   qa:
     runs-on: ubuntu-latest
