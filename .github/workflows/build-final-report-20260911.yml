@@ -34,13 +34,19 @@ jobs:
           sudo apt-get install -y default-mysql-client
           sudo mkdir -p /opt/homebrew/opt/mysql@8.4/bin
           sudo ln -sf /usr/bin/mysql /opt/homebrew/opt/mysql@8.4/bin/mysql
+          cat > "$HOME/.my.cnf" <<'EOF'
+          [client]
+          host=127.0.0.1
+          port=3306
+          user=root
+          password=root
+          EOF
+          chmod 600 "$HOME/.my.cnf"
 
       - name: Rebuild portable SQL
         run: python tools/build_submission_sql.py
 
       - name: Refresh verification report against MySQL 8.4
-        env:
-          MYSQL_PWD: root
         run: python tools/verify_project.py
 
       - name: Build reviewed Word report
