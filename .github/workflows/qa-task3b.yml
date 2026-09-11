@@ -5,7 +5,6 @@ on:
     branches:
       - qa/rule-tests-20260910
 
-# rerun after Rule 4 receivedDate correction
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -31,6 +30,44 @@ jobs:
           cat database/schema/01_tables.sql database/schema/02_triggers.sql database/schema/03_reporting.sql database/data/01_testdata.sql \
             | docker exec -i ${{ job.services.mysql.id }} mysql -uroot -proot
 
+      - name: Verify revised management queries and EXPLAIN
+        shell: bash
+        run: |
+          set -euo pipefail
+          cid='${{ job.services.mysql.id }}'
+          echo '--- QUERY 2 ---'
+          docker exec -i "$cid" mysql -uroot -proot < database/queries/02_incidentrate.sql | tee /tmp/q2.txt
+          test "$(tail -n +2 /tmp/q2.txt | wc -l)" -eq 4
+          echo '--- QUERY 4 ---'
+          docker exec -i "$cid" mysql -uroot -proot < database/queries/04_overtimerisk.sql | tee /tmp/q4.txt
+          test "$(tail -n +2 /tmp/q4.txt | wc -l)" -eq 13
+          echo '--- QUERY 6 EXPLAIN ---'
+          docker exec -i "$cid" mysql -uroot -proot < database/queries/06_openactions.sql | tee /tmp/q6.txt
+
+      - name: Verify NULL procedure validation and edge constraints
+        shell: bash
+        run: |
+          set -euo pipefail
+          cid='${{ job.services.mysql.id }}'
+          expect_error() {
+            sql="$1"; message="$2"
+            set +e
+            out=$(printf '%s\n' "$sql" | docker exec -i "$cid" mysql -uroot -proot cloudrestwines 2>&1)
+            rc=$?
+            set -e
+            printf '%s\n' "$out"
+            test "$rc" -ne 0
+            printf '%s\n' "$out" | grep -Fq "$message"
+          }
+          expect_error "CALL getExpiringQualifications(NULL);" "daysAhead must be a non-NULL value between 0 and 730"
+          expect_error "INSERT INTO address VALUES ('ADDR9998','POSTAL',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Richmond','VIC','3121');" "Postal address requires postalType"
+          docker exec -i "$cid" mysql -uroot -proot cloudrestwines -e "INSERT INTO customerorder VALUES ('CORD9997','CUST001',CURRENT_DATE,TRUE,'CANCELLED');"
+          expect_error "INSERT INTO shipment VALUES ('SHIP9997','CORD9997','ADDR0003',CURRENT_DATE);" "Cancelled order cannot be shipped"
+          docker exec -i "$cid" mysql -uroot -proot cloudrestwines -e "INSERT INTO customerorder VALUES ('CORD9996','CUST001',CURRENT_DATE,TRUE,'PENDING');"
+          expect_error "INSERT INTO shipment VALUES ('SHIP9996','CORD9996','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY));" "Shipment date cannot precede order received date"
+          mismatch=$(docker exec -i "$cid" mysql -N -uroot -proot cloudrestwines -e "SELECT COUNT(*) FROM incident i WHERE i.totalLostHours <> COALESCE((SELECT SUM(ie.employeeLostHours) FROM incidentemployee ie WHERE ie.incidentId=i.incidentId),0);")
+          test "$mismatch" -eq 0
+
       - name: Split five assessed rule blocks
         shell: bash
         run: |
@@ -45,7 +82,7 @@ jobs:
                   Path(f'/tmp/rule{m.group(1)}.sql').write_text('USE cloudrestwines;\n'+part)
           PY
 
-      - name: Verify all rule outcomes twice
+      - name: Verify all assessed rule outcomes twice
         shell: bash
         run: |
           set -euo pipefail
@@ -61,7 +98,6 @@ jobs:
             printf '%s\n' "$out" | grep -Fq "$code"
             printf '%s\n' "$out" | grep -Fq "$message"
           }
-
           for pass in 1 2; do
             echo "PASS $pass"
             run_rule 1 "ERROR 3819" "chk_employeerole_dates"
