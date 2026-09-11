@@ -1,4 +1,9 @@
 USE cloudrestwines;
+
+ALTER TABLE address
+  ADD CONSTRAINT chk_address_postaltype_required
+  CHECK (addressKind <> 'POSTAL' OR postalType IS NOT NULL);
+
 DELIMITER $$
 
 CREATE TRIGGER trg_employeerole_nooverlap_insert
@@ -71,12 +76,16 @@ FOR EACH ROW
 BEGIN
   DECLARE vPaid BOOLEAN;
   DECLARE vCustomer CHAR(7);
+  DECLARE vReceivedDate DATE;
+  DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
-  SELECT paidFlag, customerId INTO vPaid, vCustomer
-  FROM customerorder WHERE customerOrderId = NEW.customerOrderId;
+  SELECT paidFlag, customerId, receivedDate, orderStatus
+    INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
+  FROM customerorder
+  WHERE customerOrderId = NEW.customerOrderId;
 
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
   FROM address WHERE addressId = NEW.addressId;
@@ -87,6 +96,12 @@ BEGIN
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  END IF;
+  IF vOrderStatus = 'CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
@@ -102,20 +117,32 @@ FOR EACH ROW
 BEGIN
   DECLARE vPaid BOOLEAN;
   DECLARE vCustomer CHAR(7);
+  DECLARE vReceivedDate DATE;
+  DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
-  SELECT paidFlag, customerId INTO vPaid, vCustomer
-  FROM customerorder WHERE customerOrderId = NEW.customerOrderId;
+  SELECT paidFlag, customerId, receivedDate, orderStatus
+    INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
+  FROM customerorder
+  WHERE customerOrderId = NEW.customerOrderId;
+
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
   FROM address WHERE addressId = NEW.addressId;
+
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
   WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  END IF;
+  IF vOrderStatus = 'CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
