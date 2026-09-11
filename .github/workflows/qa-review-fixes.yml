@@ -42,7 +42,9 @@ jobs:
           grep -Fq 'Cellar' /tmp/q2.txt
           grep -Fq 'employeeId' /tmp/q4.txt
           grep -Fq 'EMP0006' /tmp/q4.txt
-          grep -Fq 'correctiveaction' /tmp/q6.txt
+          grep -Fq 'idx_action_status_date' /tmp/q6.txt
+          grep -Fq $'ca\tNULL\trange' /tmp/q6.txt
+          grep -Fq $'i\tNULL\teq_ref' /tmp/q6.txt
 
       - name: Verify Query 2 retains incident-only area
         shell: bash
@@ -51,12 +53,10 @@ jobs:
           cid='${{ job.services.mysql.id }}'
           docker exec -i "$cid" mysql -uroot -proot <<'SQL'
           USE cloudrestwines;
-          START TRANSACTION;
           INSERT INTO incident
             (incidentId, incidentDateTime, operationalAreaId, incidentType, severity, incidentDescription, totalLostHours, reportableFlag)
           VALUES
             ('INCD0999', NOW(), 'AREA03', 'NEARMISS', 'LOW', 'QA incident without recorded labour hours', 0, FALSE);
-          COMMIT;
           SQL
           docker exec -i "$cid" mysql -uroot -proot < database/queries/02_incidentrate.sql | tee /tmp/q2_edge.txt
           grep -Fq 'Hospitality' /tmp/q2_edge.txt
@@ -84,30 +84,23 @@ jobs:
           expect_error EARLY_SHIPMENT 'Shipment date cannot precede order received date' "USE cloudrestwines; INSERT INTO customerorder VALUES ('CORD0996','CUST001',CURRENT_DATE,TRUE,'PENDING'); INSERT INTO shipment VALUES ('SHIP0996','CORD0996','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY));"
           docker exec -i "$cid" mysql -uroot -proot -e "USE cloudrestwines; DELETE FROM customerorder WHERE customerOrderId='CORD0996';"
 
-      - name: Verify assessed Rule 1 to Rule 5 outcomes with rollback cleanup
+      - name: Verify assessed Rule 1 to Rule 5 outcomes and rollback cleanup
         shell: bash
         run: |
           set -euo pipefail
           cid='${{ job.services.mysql.id }}'
-          run_rule() {
-            label="$1"; needle="$2"; setup="$3"; bad="$4"
-            docker exec -i "$cid" mysql -uroot -proot -e "USE cloudrestwines; ROLLBACK; START TRANSACTION; $setup"
-            set +e
-            out=$(docker exec -i "$cid" mysql -uroot -proot -e "USE cloudrestwines; $bad" 2>&1)
-            rc=$?
-            set -e
-            printf '%s: %s\n' "$label" "$out"
-            test "$rc" -ne 0
-            printf '%s\n' "$out" | grep -Fq "$needle"
-            docker exec -i "$cid" mysql -uroot -proot -e "USE cloudrestwines; ROLLBACK;"
-          }
-          run_rule RULE1 'chk_employeerole_dates' "INSERT INTO employee VALUES ('EMP9999','Rule','Test','998877665','2026-01-01',NULL);" "INSERT INTO employeerole VALUES ('EMP9999','ROLE07','AREA04','2026-06-01 09:00:00','2026-05-01 09:00:00','PARTTIME','PERMANENT','ONGOING');"
-          run_rule RULE2 'chk_bottletype_reorder' ':' "INSERT INTO bottletype VALUES ('BOTL099',750,'Test','GLASS','Green',0,1.00,FALSE,NULL);"
-          run_rule RULE3 'Shipment address must be a physical address' ':' "INSERT INTO shipment VALUES ('SHIP0999','CORD0001','ADDR0004',CURRENT_DATE);"
-          run_rule RULE4 'Order must be paid before shipment' "INSERT INTO customerorder VALUES ('CORD0998','CUST001',CURRENT_DATE,FALSE,'PENDING');" "INSERT INTO shipment VALUES ('SHIP0998','CORD0998','ADDR0003',CURRENT_DATE);"
-          run_rule RULE5 'Employee already has a supervisor during this period' ':' "INSERT INTO supervision VALUES ('EMP0008','EMP0001','2026-02-01 09:00:00',NULL);"
+          set +e
+          out=$(docker exec -i "$cid" mysql --force -uroot -proot < database/tests/task3b_ruleviolations.sql 2>&1)
+          set -e
+          printf '%s\n' "$out"
+          printf '%s\n' "$out" | grep -Fq "chk_employeerole_dates"
+          printf '%s\n' "$out" | grep -Fq "chk_bottletype_reorder"
+          printf '%s\n' "$out" | grep -Fq "Shipment address must be a physical address"
+          printf '%s\n' "$out" | grep -Fq "Order must be paid before shipment"
+          printf '%s\n' "$out" | grep -Fq "Employee already has a supervisor during this period"
           test "$(docker exec -i "$cid" mysql -N -uroot -proot -e "USE cloudrestwines; SELECT COUNT(*) FROM employee WHERE employeeId='EMP9999';")" = "0"
           test "$(docker exec -i "$cid" mysql -N -uroot -proot -e "USE cloudrestwines; SELECT COUNT(*) FROM customerorder WHERE customerOrderId='CORD0998';")" = "0"
+          test "$(docker exec -i "$cid" mysql -N -uroot -proot -e "USE cloudrestwines; SELECT COUNT(*) FROM bottletype WHERE bottleTypeId='BOTL099';")" = "0"
 
       - name: Reconcile incident lost-hour summary
         shell: bash
