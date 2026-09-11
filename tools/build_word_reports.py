@@ -91,7 +91,7 @@ def add_title_page(doc):
     set_font(p.add_run('CLOUDREST WINES'),size=28,bold=True,color=BLUE)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; set_font(p.add_run('MySQL Database System Design and Implementation'),size=17,bold=True,color=DARK)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after=Pt(38); set_font(p.add_run('Human Resources, Workforce Planning and Wellbeing Perspective'),size=13,italic=True,color=MUTED)
-    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Mia | Zora | Rianna | 1'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','[STUDENT TO COMPLETE]')]:
+    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Mia | Zora | Rianna | Jason'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','[STUDENT TO COMPLETE]')]:
         p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER
         set_font(p.add_run(label+': '),size=12,bold=True); set_font(p.add_run(value),size=12)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before=Pt(50)
@@ -178,11 +178,11 @@ def build_main():
       ('HR scope and KPIs','Mia / Rianna','Mia','5','Week 4','Pending','Defined measures','Metric not calculable','Define numerator/denominator','Alternatives/critique'),
       ('Base and HR ER model','Zora / All','Zora','28','Week 7','Pending','Workbench model and alternatives','Cardinality error','Peer review against case','Modelling critique'),
       ('Design decisions','Mia / Zora','Mia','10','Week 8','Pending','Four cited decision records','Weak trade-offs','Trace each to ER','Draft/critique'),
-      ('Schema and rules','1 / Zora','1','32','Week 10','Pending','Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
-      ('Data dictionary','Zora / 1','Zora','16','Week 10','Pending','Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
-      ('Official cleaning','1 / Mia','1','23','After workbook','Pending','Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
-      ('Test data and integrity','1 / Rianna','1','20','Week 10','Pending','Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
-      ('Six analytical queries','Rianna / 1','Rianna','28','Week 11','Pending','Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
+      ('Schema and rules','Jason / Zora','Jason','32','Week 10','Pending','Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
+      ('Data dictionary','Zora / Jason','Zora','16','Week 10','Pending','Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
+      ('Official cleaning','Jason / Mia','Jason','23','After workbook','Pending','Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
+      ('Test data and integrity','Jason / Rianna','Jason','20','Week 10','Pending','Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
+      ('Six analytical queries','Rianna / Jason','Rianna','28','Week 11','Pending','Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
       ('Reflection','All','Rianna','10','Week 12','Pending','Genuine RiPPlE evidence','Fabrication risk','Save real iterations','Reflection subject'),
       ('Video','All','Rianna','12','Week 12','Pending','Five-minute demonstration','Over time','Timed rehearsal','Structure/timing'),
       ('Final integration and QA','Mia / All','Mia','10','Week 12','Pending','Submission package/audit','Cross-file mismatch','Automated and human QA','Consistency checking')]
@@ -199,7 +199,7 @@ def build_main():
     doc.add_heading('Task 3 — Database Functionality and Business Rules',level=1)
     stakeholder_rows=[('Owners / management','Reliable compliance data','Integrated history and decision queries','Normalised schema and six queries','Reporting convenience vs integrity'),('HR manager','Accurate private HR records','Temporal roles/classifications','Dated HR tables; restricted notes','Privacy first'),('Supervisors','Current teams and workload','One supervisor at a time','Overlap trigger','Integrity first'),('Permanent employees','Correct history','Current and historical contacts','Dated associations','High'),('Casual / seasonal employees','Correct seasonal status','CASUAL + SEASONAL dimensions','Separate type/pattern','Avoid conflation'),('Safety / compliance','Multi-person/near-miss evidence','Roles and zero lost hours','Incident association','Evidence accuracy'),('Customers','Postal contact, physical delivery','Multiple addresses','Shipment trigger','Delivery integrity'),('Suppliers','Retained contact changes','Temporal address/phone','Supplier associations','Extra joins accepted'),('Reporting users','Reproducible private metrics','Aggregates and safeguards','Defined query logic','Accuracy/privacy'),('Community','Safe responsible operations','Auditable training/actions','Traceable records','Public value/privacy')]
     add_table(doc,['Stakeholder','Need / Risk','Database Requirement','Design Response','Priority / Trade-off'],stakeholder_rows,[1300,1700,1900,2200,2260],7.2)
-    mapping={1:'t02_invalidroledate',2:'t03_missingreordercomment',3:'additional_postalshipment',4:'t04_unpaidshipment',5:'t05_overlappingsupervision'}
+    task3b_sql=(ROOT/'database/tests/task3b_ruleviolations.sql').read_text(encoding='utf-8')
     current=[]; active_rule=None
     def flush_task3():
         nonlocal current
@@ -209,8 +209,14 @@ def build_main():
             if raw: add_para(doc,raw)
             current=[]
     def add_rule_evidence(rule_no):
-        name=mapping[rule_no]
-        add_code(doc,(ROOT/'database/tests'/f'{name}.sql').read_text(encoding='utf-8'),'Readable SQL submitted for Turnitin')
+        marker=f'-- Rule {rule_no}:'
+        start=task3b_sql.index(marker)
+        if rule_no < 5:
+            end=task3b_sql.index(f'-- Rule {rule_no+1}:', start)
+        else:
+            end=len(task3b_sql)
+        block=task3b_sql[start:end].strip()
+        add_code(doc,block,'Readable SQL submitted for Turnitin')
         add_note(doc,'Genuine evidence required',f'[PENDING STUDENT WORKBENCH SCREENSHOT — RULE {rule_no}] Capture readable SQL and the expected MySQL result under the submitting student account.')
     for line in (ROOT/'docs/report/task3-functionality-business-rules.md').read_text(encoding='utf-8').splitlines()[1:]:
         if line.startswith('## '):

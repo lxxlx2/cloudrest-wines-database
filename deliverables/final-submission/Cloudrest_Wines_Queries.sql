@@ -26,8 +26,8 @@ DROP PROCEDURE IF EXISTS getExpiringQualifications;
 DELIMITER $$
 CREATE PROCEDURE getExpiringQualifications(IN daysAhead INT)
 BEGIN
-  IF daysAhead < 0 OR daysAhead > 730 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'daysAhead must be between 0 and 730';
+  IF daysAhead IS NULL OR daysAhead < 0 OR daysAhead > 730 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'daysAhead must be a non-NULL value between 0 and 730';
   END IF;
 
   SELECT
@@ -78,28 +78,47 @@ ORDER BY coveragePercent, oa.areaName;
 -- ===== QUERY 02: incidentrate =====
 USE cloudrestwines;
 -- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
+-- Operational area is the driver so an area with incidents but no recorded hours is still visible.
 WITH hoursbyarea AS (
   SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
-  FROM shift s JOIN shiftassignment sa ON sa.shiftId = s.shiftId
+  FROM shift s
+  JOIN shiftassignment sa ON sa.shiftId = s.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
   GROUP BY s.operationalAreaId
+), incidentloss AS (
+  SELECT i.incidentId,
+         i.operationalAreaId,
+         COALESCE(SUM(ie.employeeLostHours), 0) AS lostHours
+  FROM incident i
+  LEFT JOIN incidentemployee ie ON ie.incidentId = i.incidentId
+  WHERE i.incidentDateTime >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+  GROUP BY i.incidentId, i.operationalAreaId
 ), incidentsbyarea AS (
-  SELECT operationalAreaId, COUNT(*) AS incidentCount, SUM(totalLostHours) AS lostHours
-  FROM incident
-  WHERE incidentDateTime >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
+  SELECT operationalAreaId,
+         COUNT(*) AS incidentCount,
+         SUM(lostHours) AS lostHours
+  FROM incidentloss
   GROUP BY operationalAreaId
 )
-SELECT oa.areaName, h.labourHours, COALESCE(i.incidentCount,0) AS incidentCount,
-       COALESCE(i.lostHours,0) AS lostHours,
-       ROUND(COALESCE(i.incidentCount,0) * 1000.0 / NULLIF(h.labourHours,0), 2) AS incidentsPer1000Hours
-FROM hoursbyarea h
-JOIN operationalarea oa ON oa.operationalAreaId = h.operationalAreaId
-LEFT JOIN incidentsbyarea i ON i.operationalAreaId = h.operationalAreaId
-ORDER BY incidentsPer1000Hours DESC;
+SELECT oa.areaName,
+       COALESCE(h.labourHours, 0) AS labourHours,
+       COALESCE(i.incidentCount, 0) AS incidentCount,
+       COALESCE(i.lostHours, 0) AS lostHours,
+       CASE
+         WHEN COALESCE(h.labourHours, 0) = 0 THEN NULL
+         ELSE ROUND(COALESCE(i.incidentCount, 0) * 1000.0 / h.labourHours, 2)
+       END AS incidentsPer1000Hours
+FROM operationalarea oa
+LEFT JOIN hoursbyarea h ON h.operationalAreaId = oa.operationalAreaId
+LEFT JOIN incidentsbyarea i ON i.operationalAreaId = oa.operationalAreaId
+WHERE h.labourHours IS NOT NULL OR i.incidentCount IS NOT NULL
+ORDER BY (incidentsPer1000Hours IS NULL), incidentsPer1000Hours DESC, oa.areaName;
 
 -- ===== QUERY 03: trainingimpact =====
 USE cloudrestwines;
--- Compare employee incidents in the 180 days before and after completed annual safety training.
+-- Compare employee incidents before and after completed annual safety training using
+-- equal observed windows of up to 180 days. This avoids understating post-training
+-- incidents when fewer than 180 days have elapsed since training.
 WITH completion AS (
   SELECT ta.employeeId, MIN(ta.completionDate) AS completionDate
   FROM trainingattendance ta
@@ -107,47 +126,90 @@ WITH completion AS (
   JOIN trainingcourse tc ON tc.trainingCourseId = ts.trainingCourseId
   WHERE ta.attendanceStatus = 'COMPLETED' AND tc.trainingCategory = 'SAFETY'
   GROUP BY ta.employeeId
+), observed AS (
+  SELECT employeeId,
+         completionDate,
+         LEAST(180, GREATEST(DATEDIFF(CURRENT_DATE, completionDate), 0)) AS observationDays
+  FROM completion
 )
-SELECT c.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName, c.completionDate,
-       SUM(CASE WHEN i.incidentDateTime >= DATE_SUB(c.completionDate, INTERVAL 180 DAY)
-                 AND i.incidentDateTime < c.completionDate THEN 1 ELSE 0 END) AS incidentsBefore,
-       SUM(CASE WHEN i.incidentDateTime >= c.completionDate
-                 AND i.incidentDateTime < DATE_ADD(c.completionDate, INTERVAL 180 DAY) THEN 1 ELSE 0 END) AS incidentsAfter
-FROM completion c
-JOIN employee e ON e.employeeId = c.employeeId
-LEFT JOIN incidentemployee ie ON ie.employeeId = c.employeeId AND ie.involvementRole = 'AFFECTED'
+SELECT o.employeeId,
+       CONCAT(e.firstName,' ',e.lastName) AS employeeName,
+       o.completionDate,
+       o.observationDays,
+       SUM(CASE WHEN i.incidentDateTime >= DATE_SUB(o.completionDate, INTERVAL o.observationDays DAY)
+                 AND i.incidentDateTime < o.completionDate THEN 1 ELSE 0 END) AS incidentsBefore,
+       SUM(CASE WHEN i.incidentDateTime >= o.completionDate
+                 AND i.incidentDateTime < DATE_ADD(o.completionDate, INTERVAL o.observationDays DAY)
+                 AND i.incidentDateTime < DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY)
+                THEN 1 ELSE 0 END) AS incidentsAfter
+FROM observed o
+JOIN employee e ON e.employeeId = o.employeeId
+LEFT JOIN incidentemployee ie ON ie.employeeId = o.employeeId AND ie.involvementRole = 'AFFECTED'
 LEFT JOIN incident i ON i.incidentId = ie.incidentId
-GROUP BY c.employeeId, e.firstName, e.lastName, c.completionDate
+GROUP BY o.employeeId, e.firstName, e.lastName, o.completionDate, o.observationDays
 ORDER BY incidentsBefore DESC, incidentsAfter DESC;
 
 -- ===== QUERY 04: overtimerisk =====
 USE cloudrestwines;
--- Identify people for supervisor review without exposing confidential wellbeing notes.
-WITH workload AS (
-  SELECT sa.employeeId, SUM(sa.regularHours) AS regularHours, SUM(sa.overtimeHours) AS overtimeHours
-  FROM shiftassignment sa JOIN shift s ON s.shiftId = sa.shiftId
+-- Workforce review query: surface recent workload/safety/wellbeing indicators without exposing confidential notes.
+WITH activeworkforce AS (
+  SELECT e.employeeId,
+         e.firstName,
+         e.lastName,
+         er.operationalAreaId,
+         r.roleName
+  FROM employee e
+  JOIN employeerole er ON er.employeeId = e.employeeId
+  JOIN role r ON r.roleId = er.roleId
+  WHERE e.employmentStartDate <= CURRENT_DATE
+    AND (e.employmentEndDate IS NULL OR e.employmentEndDate >= CURRENT_DATE)
+    AND er.startDateTime <= NOW()
+    AND (er.endDateTime IS NULL OR er.endDateTime >= NOW())
+), workload AS (
+  SELECT sa.employeeId,
+         SUM(sa.regularHours) AS regularHours,
+         SUM(sa.overtimeHours) AS overtimeHours
+  FROM shiftassignment sa
+  JOIN shift s ON s.shiftId = sa.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
   GROUP BY sa.employeeId
 ), recentincident AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
-  FROM incidentemployee ie JOIN incident i ON i.incidentId = ie.incidentId
+  FROM incidentemployee ie
+  JOIN incident i ON i.incidentId = ie.incidentId
   WHERE i.incidentDateTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
   GROUP BY ie.employeeId
 ), recentconcern AS (
   SELECT employeeId, COUNT(*) AS concernCount
   FROM wellbeingcheckin
-  WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY) AND concernRaisedFlag = TRUE
+  WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+    AND concernRaisedFlag = TRUE
   GROUP BY employeeId
 )
-SELECT w.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName,
-       w.regularHours, w.overtimeHours, COALESCE(ri.incidentCount,0) AS recentIncidents,
-       COALESCE(rc.concernCount,0) AS wellbeingConcernCount,
-       CASE WHEN w.overtimeHours >= 4 OR ri.incidentCount > 0 OR rc.concernCount > 0 THEN 'SUPERVISOR REVIEW' ELSE 'MONITOR' END AS recommendedAction
-FROM workload w
-JOIN employee e ON e.employeeId = w.employeeId
-LEFT JOIN recentincident ri ON ri.employeeId = w.employeeId
-LEFT JOIN recentconcern rc ON rc.employeeId = w.employeeId
-ORDER BY (w.overtimeHours + COALESCE(ri.incidentCount,0) * 5 + COALESCE(rc.concernCount,0) * 5) DESC;
+SELECT aw.employeeId,
+       CONCAT(aw.firstName, ' ', aw.lastName) AS employeeName,
+       oa.areaName,
+       aw.roleName,
+       COALESCE(w.regularHours, 0) AS regularHours,
+       COALESCE(w.overtimeHours, 0) AS overtimeHours,
+       COALESCE(ri.incidentCount, 0) AS recentIncidents,
+       COALESCE(rc.concernCount, 0) AS wellbeingConcernCount,
+       CASE
+         WHEN COALESCE(ri.incidentCount, 0) > 0
+           OR COALESCE(rc.concernCount, 0) > 0
+           OR COALESCE(w.overtimeHours, 0) > 0
+         THEN 'SUPERVISOR REVIEW'
+         ELSE 'NO RECENT INDICATOR'
+       END AS recommendedAction
+FROM activeworkforce aw
+JOIN operationalarea oa ON oa.operationalAreaId = aw.operationalAreaId
+LEFT JOIN workload w ON w.employeeId = aw.employeeId
+LEFT JOIN recentincident ri ON ri.employeeId = aw.employeeId
+LEFT JOIN recentconcern rc ON rc.employeeId = aw.employeeId
+ORDER BY (COALESCE(ri.incidentCount, 0) > 0) DESC,
+         (COALESCE(rc.concernCount, 0) > 0) DESC,
+         COALESCE(w.overtimeHours, 0) DESC,
+         employeeName;
 
 -- ===== QUERY 05: expiringqualification =====
 USE cloudrestwines;
