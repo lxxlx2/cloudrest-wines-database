@@ -6,7 +6,9 @@ Cloudrest Wines needs a transactional database because spreadsheet and document 
 
 The design targets 3NF and OLTP use. Repeating phones and addresses are separate entities; temporal association tables preserve employee, customer and supplier contact history. Course definitions, delivered sessions and individual attendance are separated. Many-to-many facts use associative tables, including wine composition, incident involvement and training attendance. Role, supervisor, address, phone and price histories retain effective dates rather than overwriting facts.
 
-Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, current, physical shipment addresses. Negative test records remain outside the clean baseline. Privacy is prioritised for TFNs, dates of birth, contact data, incident participation and wellbeing notes: operational reporting uses IDs or aggregates and excludes confidential notes.
+Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, non-cancelled, current, physical shipment addresses with shipment dates on or after order receipt. Assessed negative tests are run in isolated transactions and rolled back after evidence capture so setup rows do not contaminate the clean baseline. Employee/customer contact histories are stored with effective dates; the test data follows sensible current-contact patterns, while the current schema does not claim an exactly-one-current rule for every employee/customer phone or address association.
+
+Privacy is handled in the submitted build through data minimisation: routine decision-support output uses IDs or aggregates and excludes confidential wellbeing notes. The SQL submission does not define production MySQL users/roles or application authorisation policies, so the report does not claim database-level access control that is absent from the code. A production deployment would add least-privilege database roles and application-level access control for TFNs, dates of birth, contact data, incident participation and wellbeing details.
 
 Payroll, payment instruments, delivery costing and unrelated inventory remain outside scope, consistent with the case. The system provides reliable operational evidence without adding enterprise functions the four-person team could not explain or validate.
 
@@ -34,7 +36,7 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 - **Rule:** An employee role end date/time cannot precede its start date/time.
 - **Case source:** Personnel requires role history with start and end dates (Wine Company Case, pp. 1–2).
 - **Mechanism:** `chk_employeerole_dates` CHECK.
-- **Violation:** `database/tests/t02_invalidroledate.sql` inserts an end in May before a June start.
+- **Violation:** `database/tests/task3b_ruleviolations.sql` creates a temporary test employee inside a transaction and inserts an end in May before a June start.
 - **Expected result:** MySQL Error 3819 naming `chk_employeerole_dates`.
 - **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 1]`
 
@@ -43,7 +45,7 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 - **Rule:** `reorderFlag = FALSE` requires a nonblank explanation.
 - **Case source:** Bottle quality problems and reasons for not reordering must be recorded (Wine Company Case, p. 3).
 - **Mechanism:** `chk_bottletype_reorder` CHECK.
-- **Violation:** `database/tests/t03_missingreordercomment.sql` supplies NULL.
+- **Violation:** `database/tests/task3b_ruleviolations.sql` supplies NULL inside an isolated transaction.
 - **Expected result:** MySQL Error 3819 naming `chk_bottletype_reorder`.
 - **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 2]`
 
@@ -52,7 +54,7 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 - **Rule:** Shipment must use the customer's current physical address, never a PO Box or Private Bag.
 - **Case source:** Orders are delivered to the current physical address and not postal addresses (Wine Company Case, p. 5).
 - **Mechanism:** shipment insert/update triggers inspect `address` and current `customeraddress` rows.
-- **Violation:** `database/tests/additional_postalshipment.sql` uses current PO Box `ADDR0004`.
+- **Violation:** `database/tests/task3b_ruleviolations.sql` uses current PO Box `ADDR0004`.
 - **Expected result:** MySQL Error 1644 with the physical-address message.
 - **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 3]`
 
@@ -61,7 +63,7 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 - **Rule:** An order must have `paidFlag = TRUE` before shipment.
 - **Case source:** The order is shipped only after accounting confirms payment (Wine Company Case, p. 5).
 - **Mechanism:** shipment insert/update triggers read `customerorder.paidFlag`.
-- **Violation:** `database/tests/t04_unpaidshipment.sql` attempts shipment for an unpaid order.
+- **Violation:** `database/tests/task3b_ruleviolations.sql` creates an unpaid order inside a transaction and attempts shipment.
 - **Expected result:** MySQL Error 1644: `Order must be paid before shipment`.
 - **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 4]`
 
@@ -70,8 +72,8 @@ Exception coverage includes multi-person incidents; employee role, supervisor, a
 - **Rule:** A supervised employee may have only one supervisor at any point in time.
 - **Case source:** Each supervised employee reports to only one supervisor and supervisor history is retained (Wine Company Case, p. 1).
 - **Mechanism:** supervision insert/update overlap triggers.
-- **Violation:** `database/tests/t05_overlappingsupervision.sql` inserts a second current supervisor for `EMP0008`.
+- **Violation:** `database/tests/task3b_ruleviolations.sql` inserts a second current supervisor for `EMP0008` inside an isolated transaction.
 - **Expected result:** MySQL Error 1644 with the overlapping-supervision message.
 - **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 5]`
 
-Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age and grape-conversion validation remain additional controls rather than assessed Task 3b rules.
+After each screenshot the transaction is rolled back. Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age, postal-address completeness, cancelled-shipment and shipment-date validation remain additional controls rather than assessed Task 3b rules.
