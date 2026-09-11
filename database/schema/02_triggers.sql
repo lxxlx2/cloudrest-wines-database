@@ -65,17 +65,38 @@ BEGIN
   END IF;
 END$$
 
+CREATE TRIGGER trg_address_validate_insert
+BEFORE INSERT ON address
+FOR EACH ROW
+BEGIN
+  IF NEW.addressKind = 'POSTAL' AND NEW.postalType IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Postal address requires postalType';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_address_validate_update
+BEFORE UPDATE ON address
+FOR EACH ROW
+BEGIN
+  IF NEW.addressKind = 'POSTAL' AND NEW.postalType IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Postal address requires postalType';
+  END IF;
+END$$
+
 CREATE TRIGGER trg_shipment_validate_insert
 BEFORE INSERT ON shipment
 FOR EACH ROW
 BEGIN
   DECLARE vPaid BOOLEAN;
   DECLARE vCustomer CHAR(7);
+  DECLARE vOrderStatus VARCHAR(12);
+  DECLARE vReceivedDate DATE;
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
-  SELECT paidFlag, customerId INTO vPaid, vCustomer
+  SELECT paidFlag, customerId, orderStatus, receivedDate
+    INTO vPaid, vCustomer, vOrderStatus, vReceivedDate
   FROM customerorder WHERE customerOrderId = NEW.customerOrderId;
 
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
@@ -87,6 +108,12 @@ BEGIN
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  END IF;
+  IF vOrderStatus = 'CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
@@ -102,11 +129,14 @@ FOR EACH ROW
 BEGIN
   DECLARE vPaid BOOLEAN;
   DECLARE vCustomer CHAR(7);
+  DECLARE vOrderStatus VARCHAR(12);
+  DECLARE vReceivedDate DATE;
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
-  SELECT paidFlag, customerId INTO vPaid, vCustomer
+  SELECT paidFlag, customerId, orderStatus, receivedDate
+    INTO vPaid, vCustomer, vOrderStatus, vReceivedDate
   FROM customerorder WHERE customerOrderId = NEW.customerOrderId;
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
   FROM address WHERE addressId = NEW.addressId;
@@ -116,6 +146,12 @@ BEGIN
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  END IF;
+  IF vOrderStatus = 'CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  END IF;
+  IF NEW.shippedDate < vReceivedDate THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
@@ -130,6 +166,38 @@ AFTER INSERT ON shipment
 FOR EACH ROW
 BEGIN
   UPDATE customerorder SET orderStatus = 'SHIPPED' WHERE customerOrderId = NEW.customerOrderId;
+END$$
+
+CREATE TRIGGER trg_incidentemployee_rollup_insert
+AFTER INSERT ON incidentemployee
+FOR EACH ROW
+BEGIN
+  UPDATE incident
+  SET totalLostHours = COALESCE((SELECT SUM(ie.employeeLostHours) FROM incidentemployee ie WHERE ie.incidentId = NEW.incidentId),0)
+  WHERE incidentId = NEW.incidentId;
+END$$
+
+CREATE TRIGGER trg_incidentemployee_rollup_update
+AFTER UPDATE ON incidentemployee
+FOR EACH ROW
+BEGIN
+  UPDATE incident
+  SET totalLostHours = COALESCE((SELECT SUM(ie.employeeLostHours) FROM incidentemployee ie WHERE ie.incidentId = OLD.incidentId),0)
+  WHERE incidentId = OLD.incidentId;
+  IF NEW.incidentId <> OLD.incidentId THEN
+    UPDATE incident
+    SET totalLostHours = COALESCE((SELECT SUM(ie.employeeLostHours) FROM incidentemployee ie WHERE ie.incidentId = NEW.incidentId),0)
+    WHERE incidentId = NEW.incidentId;
+  END IF;
+END$$
+
+CREATE TRIGGER trg_incidentemployee_rollup_delete
+AFTER DELETE ON incidentemployee
+FOR EACH ROW
+BEGIN
+  UPDATE incident
+  SET totalLostHours = COALESCE((SELECT SUM(ie.employeeLostHours) FROM incidentemployee ie WHERE ie.incidentId = OLD.incidentId),0)
+  WHERE incidentId = OLD.incidentId;
 END$$
 
 CREATE TRIGGER trg_wellbeingcheckin_notself
