@@ -4,15 +4,15 @@ The specification inconsistently states five and six queries. Cloudrest Wines su
 
 ## Query 1 — Annual safety and sustainability training coverage
 
-**Decision.** Direct training resources to operational areas below target. The query counts active workers and employees who completed both categories during the current year. Current test results show Vineyard at 50%, while Cellar and Administration are 0%; management should schedule the missing sustainability/safety sessions rather than treating attendance at either category as full coverage.
+**Decision.** Direct training resources to operational areas below target. The query counts active workers and employees who completed both categories during the current year. Current test results show gaps that management can use to schedule missing sustainability/safety sessions rather than treating attendance at either category as full coverage.
 
 **Features.** Six tables/CTEs, left join, annual date logic, distinct-category validation, safe percentage calculation.
 
 ## Query 2 — Incidents per 1,000 labour hours
 
-**Decision.** Prioritise intervention using an exposure-adjusted measure rather than raw event counts. In the current test baseline, Vineyard records 22.73 incidents per 1,000 hours and Cellar 18.52. Because the dataset is intentionally small, these are demonstration results and not real operational estimates.
+**Decision.** Prioritise intervention using an exposure-adjusted measure rather than raw event counts. `operationalarea` is the driver, so an area with incidents but no recorded labour hours remains visible instead of disappearing from the result. Its rate is shown as `NULL` because a denominator of zero cannot support a valid rate. Lost-hours context is aggregated from `incidentemployee.employeeLostHours`, while each incident is counted once per operational area.
 
-**Features.** Rolling 12-month window, separate numerator/denominator CTEs, several joins, safe division, lost-hours context. This is sustainability query two.
+**Features.** Rolling 12-month window, operational-area driver, separate numerator/denominator CTEs, multiple joins, zero-denominator handling and employee-level lost-hours aggregation. This is sustainability query two.
 
 ## Query 3 — Incidents before and after training
 
@@ -20,22 +20,22 @@ The specification inconsistently states five and six queries. Cloudrest Wines su
 
 **Features.** Matched pre/post observation windows, date arithmetic, conditional aggregation, employee/course/session/incident joins.
 
-## Query 4 — Recent overtime and review indicators
+## Query 4 — Recent workforce review indicators
 
-**Decision.** Identify employees for supervisor workload/safety review without exposing confidential wellbeing notes. The test output flags EMP0009 and EMP0011 because each has seven overtime hours plus a recent incident and concern. Results are triage indicators, not medical or disciplinary conclusions.
+**Decision.** Surface active employees with recent workload, safety or wellbeing indicators for supervisor judgement without exposing confidential wellbeing notes. The query starts from the active workforce and left-joins recent shifts, incidents and concerns, so an employee is still visible even when there is no shift in the last 30 days. It does not use an arbitrary weighted risk score. Any recent overtime, incident or wellbeing concern produces a `SUPERVISOR REVIEW` label; management still interprets the underlying columns rather than treating the label as a medical or disciplinary conclusion.
 
-**Features.** Last-30-days logic, three CTEs, left joins, privacy-aware output and rule-based action label.
+**Features.** Active-workforce driver, last-30-days logic, multiple CTEs, left joins, area/role context, privacy-aware output and transparent review flag.
 
 ## Query 5 — Expiring qualifications procedure
 
-**Decision.** Plan renewals using different horizons. `CALL getExpiringQualifications(30)` returns one first-aid certificate; `CALL getExpiringQualifications(90)` adds a chemical-handling permit. The parameter is constrained to 0–730 days to reject unreasonable input.
+**Decision.** Plan renewals using different horizons. `CALL getExpiringQualifications(30)` and `CALL getExpiringQualifications(90)` demonstrate different planning windows. The input is validated as non-NULL and between 0 and 730 days; invalid values raise an error rather than silently returning an empty result.
 
-**Features.** Stored procedure with input parameter, two video calls, current-date interval logic, multiple joins.
+**Features.** Stored procedure with input parameter, two video calls, current-date interval logic, multiple joins and explicit parameter validation.
 
 ## Query 6 — Open corrective actions View and EXPLAIN
 
-**Decision.** Prioritise overdue/high-severity corrective action. The View reports one action five days overdue and one future high-severity action. It excludes completed/cancelled actions and calculates days overdue consistently.
+**Decision.** Prioritise overdue/high-severity corrective action. The View excludes completed/cancelled actions and calculates days overdue consistently.
 
 **Features.** View, multiple joins, current-date elapsed logic and `EXPLAIN`.
 
-**Execution-plan interpretation (under 100 words).** MySQL uses `idx_action_status_date` with range access to filter open/in-progress actions, then resolves incident, operational-area and employee joins using `eq_ref` primary-key lookups (one matching row each). This indicates efficient join access. The final calculated ordering requires a temporary table and filesort because it combines `daysOverdue`, a Boolean expression and custom severity ordering. That is acceptable for the small action queue; if volume grows, a persisted priority or simpler indexed ordering should be evaluated without denormalising the authoritative incident data prematurely.
+**Execution-plan interpretation (under 100 words).** On the small synthetic dataset, MySQL chooses a full scan of `correctiveaction` rather than the available `idx_action_status_date`; that is a normal cost-based choice when the table has only a few rows. The incident join uses the corrective-action foreign-key relationship, while operational-area and employee rows are resolved with indexed key lookups. The calculated priority ordering requires a temporary result/filesort. The plan should therefore be described from the captured `EXPLAIN` output rather than claiming the status/date index is selected when it is not.
