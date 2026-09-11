@@ -7,7 +7,7 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 - Mia
 - Zora
 - Rianna
-- 1
+- Jason
 
 ## Project direction
 
@@ -34,13 +34,13 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Current status
 
-The HR-focused schema, MySQL implementation, synthetic data, five assessed rule demonstrations, six management queries, Workbench model/ER exports, development report and reproducibility audit are complete. The clean portable build currently passes all 64 development-mode checks under MySQL 8.4.11.
+The HR-focused schema, MySQL implementation, synthetic data, five assessed rule demonstrations, six management queries, Workbench model/ER exports, development report and reproducibility audit are complete. Review-driven fixes for Query 2 coverage, Query 4 workforce coverage, shipment edge cases, qualification procedure NULL validation, negative-test rollback isolation, privacy wording and lost-hours reconciliation have been validated under MySQL 8.4.11.
 
 Official spreadsheet cleaning, the Week 11 business scenario, RiPPlE peer reviews, final contribution records and the four-person video still require course inputs or genuine team activity. These are identified explicitly rather than represented as completed evidence.
 
 ## Ready-to-review package
 
-Start with `deliverables/README_FIRST.md`. The `deliverables/final-submission/` directory contains the Word report, verification report, portable database SQL, query SQL, rule-violation SQL, native Workbench model and full ER export.
+Start with `deliverables/README_FIRST.md`. The `deliverables/final-submission/` directory contains the Word report, verification report, portable database SQL, query SQL, rule-violation SQL, native Workbench model and full ER export. Generated deliverables should be rebuilt from the authoritative source scripts after material source changes.
 
 ## Access
 
