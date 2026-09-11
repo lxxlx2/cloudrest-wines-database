@@ -23,8 +23,8 @@ DROP PROCEDURE IF EXISTS getExpiringQualifications;
 DELIMITER $$
 CREATE PROCEDURE getExpiringQualifications(IN daysAhead INT)
 BEGIN
-  IF daysAhead < 0 OR daysAhead > 730 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'daysAhead must be between 0 and 730';
+  IF daysAhead IS NULL OR daysAhead < 0 OR daysAhead > 730 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'daysAhead must be a non-NULL value between 0 and 730';
   END IF;
 
   SELECT
