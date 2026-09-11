@@ -1,5 +1,6 @@
 USE cloudrestwines;
--- Identify people for supervisor review without exposing confidential wellbeing notes.
+-- Identify active employees for workload/safety/wellbeing review without exposing confidential notes.
+-- employee is the driver so active employees with no recent shift are still visible.
 WITH workload AS (
   SELECT sa.employeeId, SUM(sa.regularHours) AS regularHours, SUM(sa.overtimeHours) AS overtimeHours
   FROM shiftassignment sa JOIN shift s ON s.shiftId = sa.shiftId
@@ -16,13 +17,20 @@ WITH workload AS (
   WHERE checkinDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY) AND concernRaisedFlag = TRUE
   GROUP BY employeeId
 )
-SELECT w.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName,
-       w.regularHours, w.overtimeHours, COALESCE(ri.incidentCount,0) AS recentIncidents,
+SELECT e.employeeId, CONCAT(e.firstName,' ',e.lastName) AS employeeName,
+       COALESCE(w.regularHours,0) AS regularHours,
+       COALESCE(w.overtimeHours,0) AS overtimeHours,
+       COALESCE(ri.incidentCount,0) AS recentIncidents,
        COALESCE(rc.concernCount,0) AS wellbeingConcernCount,
-       CASE WHEN w.overtimeHours >= 4 OR ri.incidentCount > 0 OR rc.concernCount > 0 THEN 'SUPERVISOR REVIEW' ELSE 'MONITOR' END AS recommendedAction
-FROM workload w
-JOIN employee e ON e.employeeId = w.employeeId
-LEFT JOIN recentincident ri ON ri.employeeId = w.employeeId
-LEFT JOIN recentconcern rc ON rc.employeeId = w.employeeId
-ORDER BY (w.overtimeHours + COALESCE(ri.incidentCount,0) * 5 + COALESCE(rc.concernCount,0) * 5) DESC;
-
+       CASE
+         WHEN COALESCE(ri.incidentCount,0) > 0 OR COALESCE(rc.concernCount,0) > 0 THEN 'PRIORITY REVIEW'
+         WHEN COALESCE(w.overtimeHours,0) > 0 THEN 'WORKLOAD REVIEW'
+         ELSE 'MONITOR'
+       END AS recommendedAction
+FROM employee e
+LEFT JOIN workload w ON w.employeeId = e.employeeId
+LEFT JOIN recentincident ri ON ri.employeeId = e.employeeId
+LEFT JOIN recentconcern rc ON rc.employeeId = e.employeeId
+WHERE e.employmentEndDate IS NULL OR e.employmentEndDate >= CURRENT_DATE
+ORDER BY FIELD(recommendedAction,'PRIORITY REVIEW','WORKLOAD REVIEW','MONITOR'),
+         overtimeHours DESC, recentIncidents DESC, wellbeingConcernCount DESC, employeeName;
