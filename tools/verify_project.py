@@ -14,10 +14,21 @@ checks=[]
 
 def record(name,passed,evidence,severity="required"):
     checks.append({"check":name,"passed":bool(passed),"severity":severity,"evidence":str(evidence)})
+MYSQL_HOST=os.getenv("MYSQL_HOST")
+MYSQL_PORT=os.getenv("MYSQL_PORT","3306")
+MYSQL_USER=os.getenv("MYSQL_USER","root")
+
+def mysql_base_args():
+    args=[MYSQL]
+    if MYSQL_HOST:
+        args += ["-h",MYSQL_HOST,"-P",MYSQL_PORT]
+    args += ["-u",MYSQL_USER]
+    return args
+
 def run_file(path):
-    return subprocess.run([MYSQL,"-u","root"],input=Path(path).read_text(encoding="utf-8"),text=True,capture_output=True)
+    return subprocess.run(mysql_base_args(),input=Path(path).read_text(encoding="utf-8"),text=True,capture_output=True)
 def scalar(sql):
-    r=subprocess.run([MYSQL,"-u","root","--batch","--skip-column-names","-e",sql],text=True,capture_output=True)
+    r=subprocess.run(mysql_base_args()+["--batch","--skip-column-names","-e",sql],text=True,capture_output=True)
     if r.returncode: raise RuntimeError(r.stderr)
     return r.stdout.strip()
 def contains(path,*needles):
