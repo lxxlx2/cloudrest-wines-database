@@ -1507,7 +1507,6 @@ INSERT INTO wellbeingaction VALUES
 -- ===== END database/data/01_testdata.sql =====
 
 -- ===== SIX DECISION-SUPPORT QUERIES =====
--- ===== QUERY 01: trainingcoverage =====
 USE cloudrestwines;
 -- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
 WITH activeworkforce AS (
@@ -1537,7 +1536,6 @@ LEFT JOIN completion c ON c.employeeId = aw.employeeId
 GROUP BY oa.operationalAreaId, oa.areaName
 ORDER BY coveragePercent, oa.areaName;
 
--- ===== QUERY 02: incidentrate =====
 USE cloudrestwines;
 -- Sustainability measure: incidents per 1,000 actual labour hours during the last 12 months.
 -- Labour hours are derived from assignment start/end times so they cannot disagree with stored hour totals.
@@ -1583,7 +1581,6 @@ LEFT JOIN incidentsbyarea i ON i.operationalAreaId = oa.operationalAreaId
 WHERE h.labourHours IS NOT NULL OR i.incidentCount IS NOT NULL
 ORDER BY (incidentsPer1000Hours IS NULL), incidentsPer1000Hours DESC, oa.areaName;
 
--- ===== QUERY 03: trainingimpact =====
 USE cloudrestwines;
 -- Compare employee incidents before and after completed annual safety training using
 -- equal observed windows of up to 180 days. This avoids understating post-training
@@ -1618,7 +1615,6 @@ LEFT JOIN incident i ON i.incidentId = ie.incidentId
 GROUP BY o.employeeId, e.firstName, e.lastName, o.completionDate, o.observationDays
 ORDER BY incidentsBefore DESC, incidentsAfter DESC;
 
--- ===== QUERY 04: overtimerisk =====
 USE cloudrestwines;
 -- Workforce review query: surface recent workload/safety/wellbeing indicators without exposing confidential notes.
 -- Worked hours are calculated from actual assignment times. Overtime is the portion above 8 hours per assignment.
@@ -1688,13 +1684,11 @@ ORDER BY (COALESCE(ri.incidentCount, 0) > 0) DESC,
          COALESCE(w.overtimeHours, 0) DESC,
          employeeName;
 
--- ===== QUERY 05: expiringqualification =====
 USE cloudrestwines;
 -- Video demonstration must call both parameter values.
 CALL getExpiringQualifications(30);
 CALL getExpiringQualifications(90);
 
--- ===== QUERY 06: openactions =====
 USE cloudrestwines;
 -- View-based management query: prioritise overdue and high-severity corrective actions.
 SELECT correctiveActionId, incidentId, incidentDateTime, severity, areaName,
