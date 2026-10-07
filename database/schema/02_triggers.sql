@@ -92,7 +92,10 @@ BEGIN
 
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY')
+    AND endDateTime IS NULL;
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -133,7 +136,10 @@ BEGIN
 
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY')
+    AND endDateTime IS NULL;
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -199,26 +205,40 @@ CREATE TRIGGER trg_supplieraddress_nooverlap_insert
 BEFORE INSERT ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId=sa.addressId
     WHERE sa.supplierId = NEW.supplierId
+      AND a.addressKind = vAddressKind
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing address of the same kind';
   END IF;
-END$$
+END$
 
 CREATE TRIGGER trg_supplieraddress_nooverlap_update
 BEFORE UPDATE ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId=sa.addressId
     WHERE sa.supplierId = NEW.supplierId
+      AND a.addressKind = vAddressKind
       AND NOT (sa.supplierId=OLD.supplierId AND sa.addressId=OLD.addressId AND sa.startDateTime=OLD.startDateTime)
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing address of the same kind';
   END IF;
-END$$
+END$
 
 CREATE TRIGGER trg_supplierphone_nooverlap_insert
 BEFORE INSERT ON supplierphone
