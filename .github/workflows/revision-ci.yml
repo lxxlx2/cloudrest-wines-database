@@ -77,6 +77,14 @@ jobs:
             mysql -h127.0.0.1 -uroot -proot < "$q"
           done
 
+      - name: Run repository verifier
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: "3306"
+          MYSQL_USER: root
+          MYSQL_PWD: root
+        run: python3 tools/verify_project.py
+
       - name: Schema smoke checks
         run: |
           mysql -N -h127.0.0.1 -uroot -proot -e "
