@@ -118,7 +118,7 @@ CREATE TABLE packmember (
   employeeId CHAR(7) NOT NULL,
   joinedDate DATE NOT NULL,
   leftDate DATE NULL,
-  PRIMARY KEY (pickerPackId, employeeId),
+  PRIMARY KEY (pickerPackId, employeeId, joinedDate),
   CONSTRAINT fk_packmember_pack FOREIGN KEY (pickerPackId) REFERENCES pickerpack(pickerPackId) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_packmember_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_packmember_dates CHECK (leftDate IS NULL OR leftDate >= joinedDate)
@@ -166,7 +166,7 @@ CREATE TABLE vineyardplanting (
   vintageYear YEAR NOT NULL,
   grapeVarietyId CHAR(7) NOT NULL,
   plantedDate DATE NULL,
-  PRIMARY KEY (vineyardId, vintageYear),
+  PRIMARY KEY (vineyardId, vintageYear, grapeVarietyId),
   CONSTRAINT fk_planting_vineyard FOREIGN KEY (vineyardId) REFERENCES vineyard(vineyardId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_planting_variety FOREIGN KEY (grapeVarietyId) REFERENCES grapevariety(grapeVarietyId) ON UPDATE CASCADE ON DELETE RESTRICT
 );
@@ -175,10 +175,13 @@ CREATE TABLE harvest (
   harvestId CHAR(8) PRIMARY KEY,
   vineyardId CHAR(7) NOT NULL,
   vintageYear YEAR NOT NULL,
+  grapeVarietyId CHAR(7) NOT NULL,
   harvestedDate DATE NOT NULL,
   weightKg DECIMAL(12,2) NOT NULL,
   ripenessSugarPercent DECIMAL(5,2) NOT NULL,
-  CONSTRAINT fk_harvest_planting FOREIGN KEY (vineyardId, vintageYear) REFERENCES vineyardplanting(vineyardId, vintageYear) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_harvest_planting FOREIGN KEY (vineyardId, vintageYear, grapeVarietyId)
+    REFERENCES vineyardplanting(vineyardId, vintageYear, grapeVarietyId)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_harvest_weight CHECK (weightKg > 0),
   CONSTRAINT chk_harvest_ripeness CHECK (ripenessSugarPercent BETWEEN 0 AND 100)
 );
@@ -382,6 +385,7 @@ CREATE TABLE customerphone (
 CREATE TABLE customeraddress (
   customerId CHAR(7) NOT NULL,
   addressId CHAR(8) NOT NULL,
+  addressPurpose ENUM('PRIMARY','DELIVERY','BILLING','CORRESPONDENCE') NOT NULL DEFAULT 'PRIMARY',
   startDateTime DATETIME NOT NULL,
   endDateTime DATETIME NULL,
   PRIMARY KEY (customerId, addressId, startDateTime),
@@ -423,11 +427,14 @@ CREATE TABLE shipment (
 CREATE TABLE refund (
   refundId CHAR(8) PRIMARY KEY,
   customerOrderId CHAR(8) NOT NULL,
+  productId CHAR(7) NOT NULL,
   refundDate DATE NOT NULL,
   refundReason ENUM('SHORTSUPPLY','TRANSITDAMAGE') NOT NULL,
   verifiedFlag BOOLEAN NOT NULL,
   refundAmount DECIMAL(10,2) NOT NULL,
-  CONSTRAINT fk_refund_order FOREIGN KEY (customerOrderId) REFERENCES customerorder(customerOrderId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_refund_orderline FOREIGN KEY (customerOrderId, productId)
+    REFERENCES orderline(customerOrderId, productId)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_refund_amount CHECK (refundAmount > 0),
   CONSTRAINT chk_refund_verified CHECK (refundReason <> 'TRANSITDAMAGE' OR verifiedFlag = TRUE)
 );
@@ -512,12 +519,17 @@ CREATE TABLE shift (
 CREATE TABLE shiftassignment (
   shiftId CHAR(8) NOT NULL,
   employeeId CHAR(7) NOT NULL,
-  regularHours DECIMAL(4,2) NOT NULL,
-  overtimeHours DECIMAL(4,2) NOT NULL DEFAULT 0,
+  actualStartTime TIME NOT NULL,
+  actualEndTime TIME NOT NULL,
+  breakMinutes SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (shiftId, employeeId),
   CONSTRAINT fk_shiftassignment_shift FOREIGN KEY (shiftId) REFERENCES shift(shiftId) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_shiftassignment_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_shiftassignment_hours CHECK (regularHours > 0 AND regularHours <= 16 AND overtimeHours >= 0 AND regularHours + overtimeHours <= 18)
+  CONSTRAINT chk_shiftassignment_time CHECK (actualEndTime > actualStartTime),
+  CONSTRAINT chk_shiftassignment_break CHECK (
+    breakMinutes < TIMESTAMPDIFF(MINUTE, actualStartTime, actualEndTime)
+    AND TIMESTAMPDIFF(MINUTE, actualStartTime, actualEndTime) - breakMinutes <= 1080
+  )
 );
 
 CREATE TABLE incident (
