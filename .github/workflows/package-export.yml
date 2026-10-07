@@ -1,0 +1,16 @@
+name: Package export
+on:
+  push:
+    branches:
+      - temp/package-export-20261008
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloudrest-final-submission
+          path: deliverables/final-submission
+          if-no-files-found: error
+          retention-days: 1
