@@ -11,9 +11,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MYSQL = os.environ.get("MYSQL") or shutil.which("mysql") or "/opt/homebrew/opt/mysql@8.4/bin/mysql"
 
+MYSQL_HOST = os.environ.get("MYSQL_HOST")
+MYSQL_PORT = os.environ.get("MYSQL_PORT", "3306")
+MYSQL_USER = os.environ.get("MYSQL_USER", "root")
+
+def mysql_base_args() -> list[str]:
+    args = [MYSQL]
+    if MYSQL_HOST:
+        args += ["-h", MYSQL_HOST, "-P", MYSQL_PORT]
+    args += ["-u", MYSQL_USER]
+    return args
+
 def query(sql: str) -> list[dict]:
     result = subprocess.run(
-        [MYSQL, "-u", "root", "--batch", "--raw", "--skip-column-names", "-e", sql],
+        mysql_base_args() + ["--batch", "--raw", "--skip-column-names", "-e", sql],
         check=True, text=True, capture_output=True
     )
     rows = []
