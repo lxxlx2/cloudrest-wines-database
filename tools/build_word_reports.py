@@ -91,7 +91,7 @@ def add_title_page(doc):
     set_font(p.add_run('CLOUDREST WINES'),size=28,bold=True,color=BLUE)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; set_font(p.add_run('MySQL Database System Design and Implementation'),size=17,bold=True,color=DARK)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after=Pt(38); set_font(p.add_run('Human Resources, Workforce Planning and Wellbeing Perspective'),size=13,italic=True,color=MUTED)
-    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Mia | Zora | Rianna | Jason'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','[STUDENT TO COMPLETE]')]:
+    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Zixuan Shen | Feiyue Ma | Xinzhu Wang | Chengye Jiang'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','[STUDENT TO COMPLETE]')]:
         p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER
         set_font(p.add_run(label+': '),size=12,bold=True); set_font(p.add_run(value),size=12)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before=Pt(50)
@@ -166,9 +166,9 @@ def prose_from_md(doc,body):
 def build_main():
     doc=Document(); configure(doc); add_title_page(doc)
     doc.add_heading('Document status and required student completion',level=1)
-    add_note(doc,'Important','This report contains all work currently possible from the supplied PDFs and validated local database. The official A2 workbook, Week 11 scenario, final Workbench screenshots, genuine group contribution dates, video and RiPPlE peer reviews are not available and are explicitly marked rather than fabricated.')
+    add_note(doc,'Important','The official A2 v4 workbook has been received, profiled and documented. Remaining external evidence includes the final Workbench model/screenshots, resolution of ambiguous repeated order/product rows, Week 11 scenario if not yet supplied, genuine group contribution dates, video and RiPPlE peer reviews. These remain explicit rather than fabricated.')
     doc.add_heading('AI use declaration',level=2)
-    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Framework/test data; official workbook analysis pending.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
+    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Official A2 v4 profiling/cleaning SQL and defect analysis; genuine Workbench evidence still required.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
     add_table(doc,['Task','AI used for','Human validation / limitation'],ai_rows,[600,2200,6560],9)
 
     # Task 1 landscape
@@ -180,13 +180,26 @@ def build_main():
       ('Design decisions','Mia / Zora','Mia','10','Week 8','Pending','Four cited decision records','Weak trade-offs','Trace each to ER','Draft/critique'),
       ('Schema and rules','Jason / Zora','Jason','32','Week 10','Pending','Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
       ('Data dictionary','Zora / Jason','Zora','16','Week 10','Pending','Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
-      ('Official cleaning','Jason / Mia','Jason','23','After workbook','Pending','Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
+      ('Official cleaning','Jason / Mia','Jason','23','Week 10–11','In progress','v4 audit/staging/reconciliation','Ambiguous duplicate order/product rows','Preserve raw rows; quarantine ambiguity','Profiling/consistency checks'),
       ('Test data and integrity','Jason / Rianna','Jason','20','Week 10','Pending','Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
       ('Six analytical queries','Rianna / Jason','Rianna','28','Week 11','Pending','Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
       ('Reflection','All','Rianna','10','Week 12','Pending','Genuine RiPPlE evidence','Fabrication risk','Save real iterations','Reflection subject'),
       ('Video','All','Rianna','12','Week 12','Pending','Five-minute demonstration','Over time','Timed rehearsal','Structure/timing'),
       ('Final integration and QA','Mia / All','Mia','10','Week 12','Pending','Submission package/audit','Cross-file mismatch','Automated and human QA','Consistency checking')]
     add_table(doc,['Task Description','Responsible Team Member(s)','Final Deliverable Owner','Estimated Hours','Target Completion Date','Actual Completion Date','Expected Output / Evidence','Risk or Challenge','Mitigation Strategy','AI Used / How Used'],plan_rows,[1100,850,750,500,650,650,1400,1050,1300,1110],6.2)
+    add_note(doc,'Responsibility-name mapping','The signed Team Charter names are Zixuan Shen, Feiyue Ma, Xinzhu Wang and Chengye Jiang. The earlier planning draft uses Mia, Zora, Rianna and Jason as responsibility aliases. Their one-to-one mapping must be confirmed by the team before final submission and is not guessed here.')
+    doc.add_heading('Expanded risk register',level=2)
+    risk_rows=[
+      ('Schema drift after tutor feedback','PK/FK changes affect ERD, dictionary, SQL and video','Tasks 3–7','High','High','Treat schema SQL as source of truth; rebuild and regress','Freeze changes, rerun tests, regenerate all dependent artifacts','Zora / Jason'),
+      ('Ambiguous v4 duplicate order/product rows','Repeated pairs differ in quantity, price, refund or status','Task 6','High','High','Preserve raw staging rows and source row numbers','Quarantine and obtain tutor/business confirmation before aggregation','Jason / Mia'),
+      ('Reset historical start dates','Workbook states some current-customer start dates were reset on export','Task 6','Medium','Medium','Record source limitation and preserve raw value','Do not invent lost dates; disclose limitation','Jason / Mia'),
+      ('Multiple simultaneous current history rows','Dated associations can accidentally create duplicate current facts','Tasks 3–5','Medium','High','Non-overlap triggers and one-current-primary-phone controls','Reject conflicting writes and correct staging periods','Jason / Zora'),
+      ('Wine composition below/above 100%','Total is a cross-row business rule','Tasks 3–5','Medium','High','Validate total before active product release and lock released recipe','Deactivate product, correct composition, rerun validation','Jason / Zora'),
+      ('Labour-hour inconsistency','Manual hour totals can disagree with shift times','Tasks 3 and 7','Medium','High','Store actual assignment times/breaks and derive hours','Correct source times and rerun workforce metrics','Jason / Rianna'),
+      ('Task 7 results become stale','Late schema/data changes alter query outputs or EXPLAIN','Task 7/video','High','High','Execute all six queries against the frozen build','Recapture outputs and update interpretations together','Rianna / Jason'),
+      ('Evidence from wrong build','Screenshots/video may not match submitted SQL','Tasks 3,6,7/video','Medium','High','Rebuild portable SQL immediately before evidence capture','Recapture evidence from the frozen build','All / Mia')
+    ]
+    add_table(doc,['Risk','Why it may occur','Affected task','Likelihood','Impact','Prevention','Contingency / response','Owner'],risk_rows,[1200,1900,850,650,550,1900,1900,850],6.2)
     doc.add_heading('Checkpoint sequence',level=2)
     cp=[('Week 3','Team confirmed; contacts shared'),('Week 4','Case understanding, HR perspective, functionality plan'),('Week 7','Draft ER model and decisions'),('Week 8 Fri','Iteration Tasks 1–7'),('Week 10','Normalisation, cleaning plan, business rules'),('Week 11','Draft queries and assigned scenario'),('Week 12','Report, SQL and video'),('Week 13+1','Buddycheck')]
     add_table(doc,['Milestone','Evidence'],cp,[1500,7860],9)
