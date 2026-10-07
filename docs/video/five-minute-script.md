@@ -30,3 +30,15 @@ The team should speak naturally and rehearse to 4:40–4:55. Do not read the rep
 ## Final speaker-name gate
 
 Mia, Zora, Rianna and Jason are responsibility aliases retained from the earlier planning draft. Before recording, replace each alias with the correct signed Team Charter member after the group confirms the one-to-one mapping. Do not infer the mapping from name order.
+
+## Current finalisation run sheet (prospective)
+
+Chengye Jiang coordinates the final demonstration sequence. This assigns work for this round and does not replace or retrospectively identify the earlier alias speakers. NEEDS HUMAN CONFIRMATION: alias → real-name mapping.
+
+1. Zixuan Shen: opening, integrated requirements, Risk Register, tutor-feedback traceability and outstanding inputs.
+2. Feiyue Ma: revised full UML model and domain views; demonstrate the planting key, refund product, membership dates and actual shift attributes.
+3. Xinzhu Wang: raw v4 source counts, deterministic clean projections, exceptions and integrity tests. Explain that 166 candidates are not approved production imports.
+4. Chengye Jiang: demonstrate the six query outputs, 30/90-day procedure calls and the actual final EXPLAIN.
+5. Zixuan Shen: close with package QA and explicit remaining human items.
+
+Use the frozen 2026-10-07 results and local Workbench evidence. HR figures are synthetic assessment results, not real winery performance. Query 6 final EXPLAIN uses incident ALL, correctiveaction ref and two eq_ref lookups after ANALYZE TABLE. Record a genuine four-person video and confirm timing in rehearsal; no recording is claimed here.

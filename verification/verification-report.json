@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-09-11T13:34:22",
+  "generatedAt": "2026-10-07T20:43:51",
   "mode": "DEVELOPMENT",
   "mysqlVersion": "8.4.11",
   "schemaMetrics": {
     "baseTables": 55,
     "views": 1,
-    "columns": 282,
+    "columns": 286,
     "foreignKeys": 72,
-    "checkConstraints": 49,
-    "triggers": 15,
-    "routines": 1
+    "checkConstraints": 50,
+    "triggers": 30,
+    "routines": 3
   },
-  "totalChecks": 64,
-  "passed": 64,
+  "totalChecks": 73,
+  "passed": 73,
   "failed": 0,
   "status": "PASS",
   "checks": [
@@ -26,7 +26,7 @@
       "check": "Schema statistics collected dynamically",
       "passed": true,
       "severity": "required",
-      "evidence": "{'baseTables': 55, 'views': 1, 'columns': 282, 'foreignKeys': 72, 'checkConstraints': 49, 'triggers': 15, 'routines': 1}"
+      "evidence": "{'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3}"
     },
     {
       "check": "supplieraddress exists",
@@ -143,6 +143,24 @@
       "evidence": "violations=0"
     },
     {
+      "check": "Vineyard supports multiple varieties in one vintage",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "All test-data wine compositions total 100",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
+      "check": "No duplicate current customer address purpose",
+      "passed": true,
+      "severity": "required",
+      "evidence": "violations=0"
+    },
+    {
       "check": "Query executes: 01_trainingcoverage.sql",
       "passed": true,
       "severity": "required",
@@ -164,7 +182,7 @@
       "check": "Query executes: 04_overtimerisk.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exit=0, chars=1115, "
+      "evidence": "exit=0, chars=1117, "
     },
     {
       "check": "Query executes: 05_expiringqualification.sql",
@@ -207,6 +225,42 @@
       "passed": true,
       "severity": "required",
       "evidence": "exit=1; expected=already has a supervisor; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period"
+    },
+    {
+      "check": "Assessed integrity test: t06_pack_rejoin.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=0; expected=PASS: picker can rejoin; testResult\nPASS: picker can rejoin the same pack after leaving"
+    },
+    {
+      "check": "Assessed integrity test: t07_employee_current_address_overlap.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=Employee address period overlaps; ERROR 1644 (45000) at line 3: Employee address period overlaps an existing address of the same kind"
+    },
+    {
+      "check": "Assessed integrity test: t08_customer_primary_phone_overlap.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=Customer may have only one current primary phone; ERROR 1644 (45000) at line 3: Customer may have only one current primary phone"
+    },
+    {
+      "check": "Assessed integrity test: t09_incomplete_wine_composition.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=Wine composition must contain at least one variety and total exactly 100 percent; ERROR 1644 (45000) at line 8: Wine composition must contain at least one variety and total exactly 100 percent"
+    },
+    {
+      "check": "Assessed integrity test: t10_harvest_requires_variety_planting.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=foreign key constraint fails; ERROR 1452 (23000) at line 3: Cannot add or update a child row: a foreign key constraint fails (`cloudrestwines`.`harvest`, CONSTRAINT `fk_harvest_planting` FOREIGN KEY (`vineyardId`, `vintageYear`, `grapeVarietyId`) REFERENCES `vineyardplanting` (`vineyardId`, `vintageYear`, `grapeVar"
+    },
+    {
+      "check": "Assessed integrity test: t11_refund_requires_order_product.sql",
+      "passed": true,
+      "severity": "required",
+      "evidence": "exit=1; expected=foreign key constraint fails; ERROR 1452 (23000) at line 3: Cannot add or update a child row: a foreign key constraint fails (`cloudrestwines`.`refund`, CONSTRAINT `fk_refund_orderline` FOREIGN KEY (`customerOrderId`, `productId`) REFERENCES `orderline` (`customerOrderId`, `productId`) ON DELETE RESTRICT ON UPDATE"
     },
     {
       "check": "Assessed business rule: Rule 1 role dates",
@@ -338,7 +392,7 @@
       "check": "Full ER image meets resolution requirement",
       "passed": true,
       "severity": "required",
-      "evidence": "resolution=(1586, 2551)"
+      "evidence": "resolution=(3327, 2245)"
     },
     {
       "check": "Final report contains Task 1",
@@ -395,17 +449,17 @@
       "evidence": "dependency notices"
     },
     {
-      "check": "Development mode honestly retains placeholders",
+      "check": "Development mode discloses remaining human inputs",
       "passed": true,
       "severity": "required",
-      "evidence": "FINAL_MODE=0"
+      "evidence": "FINAL_MODE=0; unresolved human inputs disclosed"
     }
   ],
   "externalDependencies": [
-    "Official A2 workbook and actual cleaning evidence.",
-    "Week 11 assigned business scenario.",
-    "Genuine student Workbench screenshots.",
+    "Final resolution of ambiguous repeated Order Id + Product Id rows in the official A2 v4 workbook.",
+    "Submitting students review genuine local Workbench staging/cleaning and integrity screenshots; recapture if course policy requires their own account.",
+    "Week 11 assigned business scenario if not yet supplied.",
     "Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.",
-    "Replacement of member 1 and submission date."
+    "Mapping of the Mia/Zora/Rianna/Jason draft aliases to the four signed Team Charter members, plus final submission date."
   ]
 }

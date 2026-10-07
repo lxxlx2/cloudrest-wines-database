@@ -1,5 +1,7 @@
 # Genuine Student MySQL Workbench Screenshot Checklist
 
+Finalisation update (2026-10-07): genuine local Workbench captures now exist in `docs/evidence/final-workbench/` for all listed integrity tests, six queries/EXPLAIN and v4 cleaning/exception classes. This checklist remains for student review or own-account recapture if required by course policy. Final production accepted/rejected reconciliation remains unresolved; no approved disposition is invented.
+
 The generated CLI images are internal QA only. Capture the following in the submitting student's MySQL Workbench with readable SQL, result/action output and the `cloudrestwines` schema visible where practical.
 
 ## Task 3b — five assessed rule violations

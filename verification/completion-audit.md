@@ -1,27 +1,21 @@
-# Cloudrest Wines HD Revision Completion Audit
+# Cloudrest Wines Finalisation Completion Audit
 
-## Verified development state
+Updated 2026-10-08. Current evidence supersedes the earlier development audit.
 
 - MySQL 8.4.11 empty-database rebuild: PASS.
-- Development-mode verification: 64/64 checks passed.
-- Final-mode gate: deliberately FAILS while genuine names, dates, screenshots and course inputs are missing.
-- Schema: 55 base tables, 1 view, 282 columns, 72 foreign keys, 48 CHECK constraints, 15 triggers and 1 stored procedure.
-- Six query scripts, 30/90-day procedure calls and EXPLAIN execute successfully.
-- Five assessed integrity tests behave as expected; additional controls remain separate.
-- Native Workbench model, complete ER and six domain views were regenerated from the revised schema.
-- Word report render: 50 pages; no observed clipping, overlap, broken ordering or blank pages in the reviewed page images.
+- Development-mode repository verifier: PASS, 73/73 checks, zero required failures. This is not final course acceptance.
+- Schema: 55 base tables, 1 view, 286 columns, 72 foreign keys, 50 CHECK constraints, 30 triggers, 3 routines.
+- T01–T11 and five assessed business rules: expected outcomes verified. Clean rebuild removes standalone test setup rows before frozen query capture.
+- Official v4 workbook: SHA-verified; 182 orders, 102 starting addresses, 53 history business rows imported into private staging. Workbook and raw exports are not published.
+- Deterministic fixes: six IDs, 24 wine encoding values, nine address encoding values, three company whitespace values, one exact copy excluded from clean projection.
+- Staging accounting: 182 = 1 exact copy + 15 ambiguous rows held in seven pairs + 166 other candidates. Candidates are not approved production records; production accepted/rejected reconciliation remains UNRESOLVED.
+- Genuine Workbench captures and frozen six-query TSV outputs include final Query 6 EXPLAIN. Synthetic HR results do not describe real winery performance.
+- Native revised UML model: 55 tables / 276 base attributes / 72 relationships / seven diagrams; the view adds ten dictionary attributes for 286 total. All submission copies match source bytes.
+- Main Word report: 100 rendered pages; verification report: five. Every page visually inspected, no observed clipping or blank pages. Embedded images match current sources. Full ER overview is supplemented by six enlarged domain views.
+- Package hashes: final-package-sha256.txt. Model audit: workbench-model-audit.json. Word QA: word-render-qa.json.
 
-## Major HD revisions
+## Human items
 
-Supplier address/phone history now uses dated associations and shared contact entities. Employment status separates work time, permanent/casual type and ongoing/seasonal pattern. Unsupported vineyard-size and severity/lost-hour over-constraints were removed. Every employee has one current physical address and exactly one current primary phone, with meaningful contact/role/supervisor histories. Task 1 has all ten required columns; Task 2 has four cited alternatives; Task 3 includes stakeholder analysis and the five case-supported assessed rules; Task 6 has exactly five assessed tests; query submissions are self-contained; and the dictionary has explicit domains and semantic definitions.
+Tutor/business disposition of ambiguous pairs, mixed statuses, address canonicalisation and shared phones; final production reconciliation; missing Week 11 scenario; alias-to-real-name mapping; genuine contribution dates/hours and submission date; student evidence review and recapture if course policy requires; genuine four-person video, RiPPlE prompt progression and peer reviews/Buddycheck.
 
-## Genuine external dependencies
-
-1. Official A2 workbook findings and screenshots.
-2. Week 11 assigned business scenario.
-3. Genuine student MySQL Workbench screenshots listed in `docs/evidence/student-screenshot-checklist.md`.
-4. Four-person video and genuine contribution statements.
-5. RiPPlE prompt progression and peer feedback.
-6. Replacement of member `1`, student details, actual completion dates and submission date.
-
-The project is therefore a verified development submission package, not yet a truthful final submission.
+The technical package passes development checks. Full submission readiness remains NO until mandatory human items are completed. The named responsibilities are prospective current-round work, not historical contribution claims.

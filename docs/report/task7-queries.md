@@ -2,7 +2,7 @@
 
 The assessment materials are inconsistent about five versus six queries, so the project retains all six demonstrated queries. The official A2 v4 workbook contains customer, order and address data but no HR training, qualification, shift, incident or wellbeing records. Therefore the six HR-perspective decision queries are executed against the final validated synthetic HR dataset, while the official workbook is used for Task 6 cleaning/migration evidence.
 
-For each query the report explains how it runs, who uses it, the decision supported and the actual result from the revised fixture. The figures below are tied to the revised SQL/test data and must be recaptured in the submitting student's Workbench after the final portable build.
+For each query the report explains how it runs, who uses it, the decision supported and the actual result from the revised fixture. The figures below are tied to the revised SQL/test data and were captured in local Workbench on 2026-10-07; submitting students must review them and recapture if course policy requires their own account.
 
 ## Query 1 — Annual safety and sustainability training coverage
 
@@ -16,7 +16,7 @@ The final query joins `operationalarea` to the active workforce and left-joins t
 
 The HR Manager, Safety Officer and operational-area supervisors use the percentage to identify workforce preparation gaps. An area below target should receive additional training sessions rather than treating completion of only one category as adequate sustainability coverage.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 - **Vineyard:** 6 active employees, 3 completed both required categories, **50.0% coverage**.
 - **Cellar:** 4 active employees, 0 completed both categories, **0.0% coverage**.
@@ -36,7 +36,7 @@ The revised shift design no longer stores independent regular/overtime hour tota
 
 Raw incident counts can make a busy area look less safe simply because more hours are worked. The exposure-adjusted rate lets the Safety Officer and management compare operational areas on a consistent basis. High-rate areas can be targeted for investigation, training, equipment changes or corrective actions.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 - **Vineyard:** 88.00 actual labour hours, 2 incidents, 2 lost hours, **22.73 incidents per 1,000 hours**.
 - **Cellar:** 54.00 actual labour hours, 1 incident, 16 lost hours, **18.52 incidents per 1,000 hours**.
@@ -55,7 +55,7 @@ The result joins employees to `incidentemployee` only where `involvementRole='AF
 
 HR and the Safety Officer can use this as an association check when reviewing whether safety training coincides with improved outcomes. It is not a causal experiment. If incidents remain high after training, management should inspect course content, work practices and corrective actions rather than claiming training failed solely from this query.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 Five employees have completed Safety training in the fixture. **EMP0008 has 1 affected incident before training and 0 after training** within the matched window; the other trained employees have 0 before and 0 after. The sample is too small to claim causality, but it demonstrates how future real records could support a more meaningful before/after review.
 
@@ -71,7 +71,7 @@ All three result sets are left-joined to the active workforce, so employees with
 
 Supervisors and HR use the query as a prioritisation list, not a medical or disciplinary score. The underlying columns show why somebody appears. Management can adjust rosters, check fatigue controls, follow up an incident or schedule a wellbeing conversation.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 Five employees are flagged for review:
 
@@ -95,7 +95,7 @@ The demonstration calls the same procedure with 30 and 90 days, proving that the
 
 HR and supervisors use the short horizon for urgent renewal booking and the longer horizon for planning budgets, rosters and course capacity.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 - `CALL getExpiringQualifications(30)` returns **EMP0002 / First Aid Certificate / 25 days**.
 - `CALL getExpiringQualifications(90)` returns the same record plus **EMP0003 / Chemical Handling Permit / 80 days**.
@@ -114,7 +114,7 @@ The management query reads the view and orders overdue rows first, then severity
 
 The Safety Officer and managers use this list to prevent corrective actions from disappearing after an incident is recorded. Overdue actions should be escalated; high-severity actions approaching their target date should be resourced before they become overdue.
 
-### Revised result
+### Actual result — frozen MySQL 8.4.11 build, 2026-10-07
 
 Two actions remain open:
 
@@ -125,7 +125,20 @@ The ordering places ACTN0001 first because it is already overdue. ACTN0002 still
 
 ### EXPLAIN interpretation
 
-The revised standalone Query 6 was executed under MySQL 8.4.11 in CI. In that execution, `correctiveaction` used `range` access through `idx_action_status_date` with index-condition filtering; `incident`, `operationalarea` and `employee` then used `eq_ref` primary-key lookups. The calculated priority ordering required a temporary result and filesort. An earlier execution during the same small-fixture build selected a different but valid join order, which confirms that the final report must describe the EXPLAIN plan shown in the final Workbench screenshot rather than treating one optimiser plan as a permanent guarantee.
+The final Workbench and matching CLI EXPLAIN on 2026-10-07 starts with `incident` (`i`): `ALL`, estimated 3 rows, using temporary/filesort. `correctiveaction` (`ca`) uses `ref` on `fk_action_incident`, estimated 1 row and 66.67% filtered, using where. `operationalarea` and `employee` use `eq_ref` primary-key lookups, estimated 1 row. This observed plan differs from the initial post-rebuild range plan after ANALYZE TABLE refreshes the four underlying tables' statistics. It does not establish production performance. Final screenshots and `verification/final-query-results/06_openactions.tsv` show the same plan.
+
+## Risks and limitations by query
+
+| Query | Risk / limitation |
+|---|---|
+| 1 | Current workforce membership differs from historical membership; both categories must be completed in the current calendar year. |
+| 2 | Very small exposure denominators make rates unstable; missing assignments or incidents bias the metric. |
+| 3 | Equal windows reduce exposure imbalance but do not control work mix or confounding; no causal claim is supported. |
+| 4 | Eight hours per assignment is the demonstration rule, not an asserted payroll entitlement; flags require supervisor context. |
+| 5 | Expiry is only as reliable as recorded qualification dates; book renewals and verify validity with the issuer. |
+| 6 | Open actions depend on timely status updates; the small-fixture EXPLAIN does not establish production performance. |
+
+All six outputs use synthetic assessment HR records and cannot describe actual winery performance.
 
 ## Final evidence rule
 

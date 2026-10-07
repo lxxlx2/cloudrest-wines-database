@@ -45,3 +45,16 @@ This section expands the short Risk / Challenge and Mitigation cells above in re
 | Labour-hour inconsistency | Storing shift start/end plus manually entered regular/overtime totals creates two facts that can disagree | Tasks 3, 7 | Medium | High | Store actual assignment start/end/break and derive labour/overtime in queries | Reject invalid time ranges; recompute all workforce metrics after correction | Jason / Rianna |
 | Query interpretation diverges from final schema/data | Late schema/data changes can make Task 7 results or explanations stale | Task 7, report, video | High | High | Run all six queries only against the final clean build; reconcile key totals manually | Replace screenshots/result text, document changed numbers, and repeat EXPLAIN on the final build | Rianna / Jason |
 | Final evidence cannot be reproduced | Screenshots or video may come from a different database build than submitted SQL | Tasks 3, 6, 7 and video | Medium | High | Rebuild from the final portable SQL immediately before evidence capture | Recapture evidence from the final build; never reuse stale screenshots | All / Mia |
+
+## This round: finalisation responsibilities (2026-10-07)
+
+These are prospective responsibilities for the current finalisation round. They do not claim prior contributions or infer the identity of earlier aliases.
+
+| Member | Finalisation responsibility |
+|---|---|
+| Zixuan Shen | Final integration, Task 1 Risk Register, report consistency, tutor-feedback traceability, Word report, AI declaration and final submission QA. |
+| Feiyue Ma | Workbench Data Model, latest .mwb, full UML ER, six domain ER views, Task 4, Task 5 schema/dictionary consistency and ER screenshots. |
+| Xinzhu Wang | SQL integrity, T01–T11, official v4 staging/import/cleaning, Task 6 before/after evidence, exceptions and reconciliation. |
+| Chengye Jiang | Six Task 7 queries, result screenshots, Query 6 EXPLAIN, actual-number interpretation, video run sheet and demonstration order. |
+
+NEEDS HUMAN CONFIRMATION: alias → real-name mapping. The earlier Mia / Zora / Rianna / Jason labels remain unchanged until the team confirms the mapping. Genuine completion dates and hours remain for the team to supply.

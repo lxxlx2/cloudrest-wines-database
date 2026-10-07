@@ -15,4 +15,4 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 
 ## Revised build verification
 
-The tutor-feedback revision was rebuilt successfully from an empty database under MySQL 8.4.11. The verified live schema contains **55 base tables, 1 view, 30 triggers and 3 stored routines**. The detailed generated dictionary must be regenerated from this revised live schema before the final Word appendix is frozen, because the previous dictionary predates the new `grapeVarietyId`, `productId`, `addressPurpose` and shift-assignment attributes.
+The final tutor-feedback build was verified under MySQL 8.4.11 on 2026-10-07: **55 base tables, 1 view, 286 columns, 72 foreign keys, 50 CHECK constraints, 30 triggers and 3 routines**. The 286-row dictionary was regenerated from that live schema. The Workbench model contains 276 base-table attributes; the reporting view contributes the remaining 10 dictionary attributes. All modeled column names and primary keys match the regenerated dictionary.

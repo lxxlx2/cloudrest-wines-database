@@ -95,6 +95,9 @@ jobs:
           MYSQL_PWD: root
         run: python3 tools/verify_project.py
 
+      - name: Verify revised Workbench model and submission copies
+        run: python3 tools/verify_workbench_model.py
+
       - name: Schema smoke checks
         run: |
           mysql -N -h127.0.0.1 -uroot -proot -e "

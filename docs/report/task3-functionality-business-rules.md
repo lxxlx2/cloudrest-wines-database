@@ -6,7 +6,7 @@ Cloudrest Wines needs a transactional database because spreadsheet and document 
 
 The design targets 3NF and OLTP use. Repeating phones and addresses are separate entities; temporal association tables preserve employee, customer and supplier contact history. Course definitions, delivered sessions and individual attendance are separated. Many-to-many facts use associative tables, including wine composition, incident involvement and training attendance. Role, supervisor, address, phone and price histories retain effective dates rather than overwriting facts.
 
-Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, non-cancelled, current, physical shipment addresses with shipment dates on or after order receipt. Assessed negative tests are run in isolated transactions and rolled back after evidence capture so setup rows do not contaminate the clean baseline. Employee/customer contact histories are stored with effective dates; the test data follows sensible current-contact patterns, while the current schema does not claim an exactly-one-current rule for every employee/customer phone or address association.
+Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, non-cancelled, current, physical shipment addresses with shipment dates on or after order receipt. The submitted rule script uses transactions and rollback. Standalone screenshot tests were followed by a clean verifier rebuild before final query capture, removing all setup rows. Employee/customer contact histories are stored with effective dates; the test data follows sensible current-contact patterns, while the current schema does not claim an exactly-one-current rule for every employee/customer phone or address association.
 
 Privacy is handled in the submitted build through data minimisation: routine decision-support output uses IDs or aggregates and excludes confidential wellbeing notes. The SQL submission does not define production MySQL users/roles or application authorisation policies, so the report does not claim database-level access control that is absent from the code. A production deployment would add least-privilege database roles and application-level access control for TFNs, dates of birth, contact data, incident participation and wellbeing details.
 
@@ -53,7 +53,7 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Mechanism:** `chk_employeerole_dates` CHECK.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` creates a temporary test employee inside a transaction and inserts an end in May before a June start.
 - **Expected result:** MySQL Error 3819 naming `chk_employeerole_dates`.
-- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 1]`
+- **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
 ### Rule 2 — Bottle reorder explanation
 
@@ -62,7 +62,7 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Mechanism:** `chk_bottletype_reorder` CHECK.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` supplies NULL inside an isolated transaction.
 - **Expected result:** MySQL Error 3819 naming `chk_bottletype_reorder`.
-- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 2]`
+- **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
 ### Rule 3 — Current physical shipment address
 
@@ -71,7 +71,7 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Mechanism:** shipment insert/update triggers inspect `address` and current `customeraddress` rows.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` uses current PO Box `ADDR0004`.
 - **Expected result:** MySQL Error 1644 with the physical-address message.
-- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 3]`
+- **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
 ### Rule 4 — Paid before shipment
 
@@ -80,7 +80,7 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Mechanism:** shipment insert/update triggers read `customerorder.paidFlag`.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` creates an unpaid order inside a transaction and attempts shipment.
 - **Expected result:** MySQL Error 1644: `Order must be paid before shipment`.
-- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 4]`
+- **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
 ### Rule 5 — One supervisor at a point in time
 
@@ -89,6 +89,6 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Mechanism:** supervision insert/update overlap triggers.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` inserts a second current supervisor for `EMP0008` inside an isolated transaction.
 - **Expected result:** MySQL Error 1644 with the overlapping-supervision message.
-- **Genuine Workbench evidence:** `[PENDING STUDENT WORKBENCH SCREENSHOT — RULE 5]`
+- **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
-After each screenshot the transaction is rolled back. Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age, postal-address completeness, cancelled-shipment and shipment-date validation remain additional controls rather than assessed Task 3b rules.
+The submitted rule script rolls back its transactions; standalone screenshot setup rows were removed by the final clean rebuild. Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age, postal-address completeness, cancelled-shipment and shipment-date validation remain additional controls rather than assessed Task 3b rules.

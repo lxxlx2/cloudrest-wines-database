@@ -1,5 +1,7 @@
 # Codex Finalisation Handoff
 
+Historical handoff checklist. Finalisation execution on 2026-10-07 is recorded in `verification/finalization-report-20261007.md`; completed model, local Workbench captures and source import are superseded by that report. Remaining business/student inputs are still required.
+
 This handoff contains only work that requires the student's local MySQL Workbench environment, genuine course/team input, or a tutor decision. Do not redesign the schema unless a new course requirement contradicts the current revision.
 
 ## Authoritative Git state

@@ -1,0 +1,8 @@
+correctiveActionId	incidentId	incidentDateTime	severity	areaName	actionDescription	responsibleEmployee	targetDate	daysOverdue	actionStatus
+ACTN0001	INCD0001	2026-09-17 20:43:51	LOW	Vineyard	Install anti-slip surface and revise harvest briefing	Ethan Brown	2026-10-02	5	INPROGRESS
+ACTN0002	INCD0002	2026-09-27 20:43:51	HIGH	Cellar	Introduce mechanical lifting aid and refresher training	Ethan Brown	2026-10-21	0	OPEN
+id	select_type	table	partitions	type	possible_keys	key	key_len	ref	rows	filtered	Extra
+1	SIMPLE	i	NULL	ALL	PRIMARY,fk_incident_area	NULL	NULL	NULL	3	100.00	Using temporary; Using filesort
+1	SIMPLE	ca	NULL	ref	fk_action_incident,fk_action_employee,idx_action_status_date	fk_action_incident	32	cloudrestwines.i.incidentId	1	66.67	Using where
+1	SIMPLE	oa	NULL	eq_ref	PRIMARY	PRIMARY	24	cloudrestwines.i.operationalAreaId	1	100.00	NULL
+1	SIMPLE	e	NULL	eq_ref	PRIMARY	PRIMARY	28	cloudrestwines.ca.responsibleEmployeeId	1	100.00	NULL

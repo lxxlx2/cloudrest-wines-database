@@ -139,3 +139,48 @@ WHERE companyNameRaw REGEXP '[[:space:]]{2,}';
 
 -- The source note states that some current-customer start dates were reset during
 -- export. Those dates are a source limitation. Do not invent the lost dates.
+
+-- 13. Deterministic clean projections. Raw rows remain immutable; there is no
+-- production import or automatic business disposition of ambiguous groups.
+CREATE OR REPLACE VIEW v4_order_ranked AS
+SELECT o.*,
+       ROW_NUMBER() OVER (
+         PARTITION BY orderIdRaw,customerIdRaw,orderDateRaw,productIdRaw,wineNameRaw,
+                      casesOrderedRaw,pricePerCaseRaw,totalPaidRaw,casesDamagedRaw,
+                      refundAmountRaw,shipmentStatusRaw,paymentStatusRaw
+         ORDER BY sourceRowNumber
+       ) AS exactCopyNumber
+FROM stg_v4_orders o;
+
+CREATE OR REPLACE VIEW v4_clean_orders AS
+SELECT sourceRowNumber, orderIdRaw AS orderId,
+       UPPER(REPLACE(TRIM(customerIdRaw),' ','')) AS customerId,
+       orderDateRaw AS orderDate, productIdRaw AS productId,
+       REPLACE(wineNameRaw,'RosÃ©','Rosé') AS wineName,
+       casesOrderedRaw,pricePerCaseRaw,totalPaidRaw,casesDamagedRaw,
+       refundAmountRaw,shipmentStatusRaw,paymentStatusRaw
+FROM v4_order_ranked WHERE exactCopyNumber=1;
+
+CREATE OR REPLACE VIEW v4_clean_addresses AS
+SELECT sourceRowNumber,addressIdRaw,unitTypeNumberRaw,levelTypeNumberRaw,
+       buildingPropertyNameRaw,placeNameRaw,
+       REPLACE(fullAddressRaw,'â€“','–') AS fullAddress
+FROM stg_v4_starting_address;
+
+CREATE OR REPLACE VIEW v4_clean_history AS
+SELECT h.*, REGEXP_REPLACE(TRIM(companyNameRaw),'[[:space:]]+',' ') AS companyNameClean
+FROM stg_v4_customer_address_history h;
+
+CREATE OR REPLACE VIEW v4_ambiguous_order_pairs AS
+SELECT orderId,productId,COUNT(*) AS distinctSourceRows
+FROM v4_clean_orders
+GROUP BY orderId,productId HAVING COUNT(*)>1;
+
+-- These are staging accounting buckets, NOT accepted/rejected production totals.
+SELECT (SELECT COUNT(*) FROM stg_v4_orders) AS sourceRows,
+       (SELECT COUNT(*) FROM v4_order_ranked WHERE exactCopyNumber>1) AS exactCopiesExcluded,
+       (SELECT COUNT(*) FROM v4_clean_orders c JOIN v4_ambiguous_order_pairs a
+         ON a.orderId=c.orderId AND a.productId=c.productId) AS ambiguousRowsHeld,
+       (SELECT COUNT(*) FROM v4_clean_orders c LEFT JOIN v4_ambiguous_order_pairs a
+         ON a.orderId=c.orderId AND a.productId=c.productId WHERE a.orderId IS NULL) AS otherCandidateRows,
+       'UNRESOLVED: no production acceptance/rejection disposition' AS reconciliationStatus;

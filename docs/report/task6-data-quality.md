@@ -2,7 +2,7 @@
 
 ## 6a. Official A2 v4 source and controlled migration
 
-The official workbook is now available as `BISM2207 A2 Sem 2 2026 Data v4(1).xlsx` (SHA-256 `88362589a519b6f9aeae031fe806bcf85f0d8b513c12b11f6a4e619ee855c4ac`). The workbook is preserved unchanged. Cleaning follows a raw-to-staging-to-production process so source errors remain reproducible and no ambiguous value is silently invented.
+The official workbook `BISM2207 A2 Sem 2 2026 Data v4(1).xlsx` was independently SHA-verified and re-imported from the supplied local file on 2026-10-07. SHA-256: `88362589a519b6f9aeae031fe806bcf85f0d8b513c12b11f6a4e619ee855c4ac`. Raw CSV/SQL exports remain in the ignored private `database/local/v4` directory. The unchanged workbook is not included in the public repository. Cleaning follows a raw-to-staging-to-production process so source errors remain reproducible and no ambiguous value is silently invented.
 
 The three worksheets contain 182 order rows, 102 starting-address rows and 53 business rows of customer/address history. The history worksheet also contains two blank rows and one source note. Raw staging tables preserve an original Excel row number. Deterministic changes are documented separately from records that require manual or tutor confirmation.
 
@@ -56,14 +56,14 @@ The revised test dataset additionally demonstrates:
 
 The assessed five Task 3b rules remain separate from these extra regression controls.
 
-## 6d. Evidence still requiring genuine student execution
+## 6d. Final execution evidence and reconciliation boundary
 
-The repository can provide the source-preserving staging design, verified workbook findings, cleaning SQL and regression tests. The following evidence must still be produced from the submitting students' MySQL Workbench environment:
+Genuine local MySQL Workbench evidence was captured on 2026-10-07 for source counts, Customer ID correction, wine/address encoding repairs, exact duplicates, whitespace, ambiguous pairs, mixed status, duplicate address groups and shared phone groups. The screenshots are in `docs/evidence/final-workbench`; public projections exclude raw contact values. Actual SQL output is in `verification/final-query-results/task6-v4-evidence.tsv`.
 
-1. raw staging import screenshots showing source row counts;
-2. before/after screenshots for selected deterministic defects;
-3. the final accepted/rejected reconciliation after ambiguous rows are resolved;
-4. screenshots of revised integrity-rule failures;
-5. any tutor response that clarifies the grain of repeated Order Id + Product Id rows.
+The staging schema uses binary collation so case-only source defects and exact-row comparisons remain visible. This fixes a demonstrated lowercase-ID false negative in the default case-insensitive staging collation. Production schema is unchanged.
 
-Until the ambiguous source rows are resolved, no fabricated accepted/rejected total is reported.
+Deterministic clean views standardise six Customer ID rows, repair 24 wine names and nine address dashes, collapse whitespace in three company-name rows and exclude source row 160 as the later exact ORD125/PROD001 copy. Raw staging rows remain unchanged. No production customer/order/address migration was performed.
+
+After exact deduplication, seven ambiguous pairs contain 15 retained rows. The staging accounting identity is **182 source rows = 1 exact copy excluded + 15 ambiguous rows held + 166 other candidate rows**. Candidates are not approved/accepted records. Address canonicalisation, mixed status and shared phones also need business disposition. Final production source = accepted + rejected reconciliation remains **UNRESOLVED** until actual tutor/business decisions exist.
+
+The export-reset start dates remain unchanged. No original dates are reconstructed. Submitting students must review the evidence, confirm any course-specific account requirements and supply the genuine decisions, contribution dates and video/RiPPlE work.

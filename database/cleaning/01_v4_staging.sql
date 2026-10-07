@@ -25,7 +25,7 @@ CREATE TABLE stg_v4_orders (
   refundAmountRaw VARCHAR(40) NULL,
   shipmentStatusRaw VARCHAR(80) NULL,
   paymentStatusRaw VARCHAR(80) NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;
 
 DROP TABLE IF EXISTS stg_v4_starting_address;
 CREATE TABLE stg_v4_starting_address (
@@ -36,7 +36,7 @@ CREATE TABLE stg_v4_starting_address (
   buildingPropertyNameRaw VARCHAR(200) NULL,
   placeNameRaw VARCHAR(200) NULL,
   fullAddressRaw VARCHAR(500) NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;
 
 DROP TABLE IF EXISTS stg_v4_customer_address_history;
 CREATE TABLE stg_v4_customer_address_history (
@@ -59,7 +59,7 @@ CREATE TABLE stg_v4_customer_address_history (
   phone1Raw VARCHAR(80) NULL,
   phone2Raw VARCHAR(80) NULL,
   phone3Raw VARCHAR(80) NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;
 
 -- Import commands are intentionally not hard-coded here because local CSV paths
 -- differ by student machine. Preserve sourceRowNumber during import.

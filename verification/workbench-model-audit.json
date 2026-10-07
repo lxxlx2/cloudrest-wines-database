@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "modelSHA256": "f15cbc947d8ded12effa9df1655fa6f6f53d7b83df26ad4e1fd0849d6e580aee",
+  "baseTables": 55,
+  "modeledBaseColumns": 276,
+  "foreignKeys": 72,
+  "schemaColumnsIncludingView": 286,
+  "checks": {
+    "55 base tables": true,
+    "column names match current dictionary": true,
+    "primary keys match current dictionary": true,
+    "vineyardplanting three-column PK": true,
+    "packmember joinedDate in PK": true,
+    "harvest grape variety": true,
+    "refund product": true,
+    "customer address purpose": true,
+    "actual shift start/end/break": true,
+    "obsolete stored hours absent": true,
+    "UML notation": true,
+    "seven diagrams": true,
+    "72 modeled foreign keys": true,
+    "submission model byte-identical": true,
+    "submission ER_HR_Shifts_Safety_Wellbeing.png byte-identical": true,
+    "submission ER_Customers_Orders.png byte-identical": true,
+    "submission ER_HR_Training_Qualifications.png byte-identical": true,
+    "submission ER_Products_Procurement.png byte-identical": true,
+    "submission ER_Personnel_History.png byte-identical": true,
+    "submission ER_Vineyard_Wine_Production.png byte-identical": true,
+    "submission Cloudrest_Wines_ER_Diagram.png byte-identical": true
+  }
+}

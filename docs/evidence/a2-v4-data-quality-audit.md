@@ -62,11 +62,10 @@ The tutor feedback and v4 workbook together require:
 3. Refund identification at product/order-line level.
 4. Staging/exception handling for repeated order/product records instead of silently altering ambiguous source rows.
 
-## Evidence still requiring student Workbench work
+## Finalisation execution — 2026-10-07
 
-The counts above are verified from the workbook, but the assignment still needs genuine student evidence:
+The supplied local workbook was re-verified against the SHA-256 above and imported without editing into private binary-collated staging under MySQL 8.4.11. The row counts and deterministic defect counts above were reproduced. Raw rows and dates remain unchanged; cleaned views hold the corrected projections. Genuine local Workbench captures cover all requested source counts, before/after repairs and exception classes.
 
-* raw staging import screenshots,
-* before/after SQL result screenshots,
-* the final accepted/rejected reconciliation after the team resolves ambiguous rows,
-* any tutor response establishing whether repeated order/product rows should be aggregated, retained with a new line identifier, or rejected.
+After excluding source row 160 as an exact copy, the seven non-exact repeated pairs contain 15 retained rows. Staging accounting is 182 = 1 exact copy + 15 ambiguous rows + 166 other candidates. No production accepted/rejected reconciliation or ambiguous business disposition is claimed.
+
+See `verification/v4-final-audit.json`, `verification/final-query-results/task6-v4-evidence.tsv` and `docs/evidence/final-workbench/README.md`. Tutor/business decisions, student review and any course-specific own-account evidence requirements remain outstanding. The raw workbook and raw CSV/SQL exports are not included in the public repository.
