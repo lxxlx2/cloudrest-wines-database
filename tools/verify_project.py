@@ -1,11 +1,11 @@
 """Reproducibility, assessment-content and development/final-mode audit."""
 from __future__ import annotations
-import json, os, re, subprocess, zipfile
+import json, os, re, shutil, subprocess, zipfile
 from datetime import datetime
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-MYSQL="/opt/homebrew/opt/mysql@8.4/bin/mysql"
+MYSQL=os.getenv("MYSQL") or shutil.which("mysql") or "/opt/homebrew/opt/mysql@8.4/bin/mysql"
 FINAL_SQL=ROOT/"deliverables/final-submission/Cloudrest_Wines_Database.sql"
 QUERY_SQL=ROOT/"deliverables/final-submission/Cloudrest_Wines_Queries.sql"
 OUT=ROOT/"verification"; OUT.mkdir(exist_ok=True)
@@ -63,6 +63,9 @@ invariants={
  "No multiple current supervisors":"SELECT COUNT(*) FROM (SELECT employeeId FROM cloudrestwines.supervision WHERE endDateTime IS NULL GROUP BY employeeId HAVING COUNT(*)>1)x",
  "No invalid shipment address":"SELECT COUNT(*) FROM cloudrestwines.shipment s JOIN cloudrestwines.address a ON a.addressId=s.addressId WHERE a.addressKind<>'PHYSICAL' OR a.postalType IN ('POBOX','PRIVATEBAG')",
  "No shipped unpaid order":"SELECT COUNT(*) FROM cloudrestwines.customerorder WHERE orderStatus='SHIPPED' AND paidFlag=FALSE",
+ "Vineyard supports multiple varieties in one vintage":"SELECT IF(COUNT(*)>=2,0,1) FROM cloudrestwines.vineyardplanting WHERE vineyardId='VINE001' AND vintageYear=YEAR(CURRENT_DATE)",
+ "All test-data wine compositions total 100":"SELECT COUNT(*) FROM (SELECT w.wineId FROM cloudrestwines.wine w LEFT JOIN cloudrestwines.winecomposition wc ON wc.wineId=w.wineId GROUP BY w.wineId HAVING COUNT(wc.grapeVarietyId)=0 OR ABS(COALESCE(SUM(wc.proportionPercent),0)-100.00)>0.001)x",
+ "No duplicate current customer address purpose":"SELECT COUNT(*) FROM (SELECT customerId,addressPurpose FROM cloudrestwines.customeraddress WHERE endDateTime IS NULL GROUP BY customerId,addressPurpose HAVING COUNT(*)>1)x",
 }
 for name,sql in invariants.items():
     n=int(scalar(sql)); record(name,n==0,f"violations={n}")
@@ -74,6 +77,12 @@ expectations={
  "t01_validtraining.sql":(0,"PASS"),"t02_invalidroledate.sql":(1,"chk_employeerole_dates"),
  "t03_missingreordercomment.sql":(1,"chk_bottletype_reorder"),"t04_unpaidshipment.sql":(1,"Order must be paid before shipment"),
  "t05_overlappingsupervision.sql":(1,"already has a supervisor"),
+ "t06_pack_rejoin.sql":(0,"PASS: picker can rejoin"),
+ "t07_employee_current_address_overlap.sql":(1,"Employee address period overlaps"),
+ "t08_customer_primary_phone_overlap.sql":(1,"Customer may have only one current primary phone"),
+ "t09_incomplete_wine_composition.sql":(1,"Wine composition must contain at least one variety and total exactly 100 percent"),
+ "t10_harvest_requires_variety_planting.sql":(1,"foreign key constraint fails"),
+ "t11_refund_requires_order_product.sql":(1,"foreign key constraint fails"),
 }
 for filename,(code,needle) in expectations.items():
     run_file(FINAL_SQL); result=run_file(ROOT/"database/tests"/filename); output=result.stdout+result.stderr
@@ -128,7 +137,7 @@ else:
     record("Development mode honestly retains placeholders",any(x.lower() in report_text.lower() for x in forbidden),"FINAL_MODE=0")
 
 required_failures=[c for c in checks if c["severity"]=="required" and not c["passed"]]
-summary={"generatedAt":datetime.now().isoformat(timespec="seconds"),"mode":"FINAL" if FINAL_MODE else "DEVELOPMENT","mysqlVersion":scalar("SELECT VERSION()"),"schemaMetrics":metrics,"totalChecks":len(checks),"passed":sum(c["passed"] for c in checks),"failed":len(required_failures),"status":"PASS" if not required_failures else "FAIL","checks":checks,"externalDependencies":["Official A2 workbook and actual cleaning evidence.","Week 11 assigned business scenario.","Genuine student Workbench screenshots.","Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.","Replacement of member 1 and submission date."]}
+summary={"generatedAt":datetime.now().isoformat(timespec="seconds"),"mode":"FINAL" if FINAL_MODE else "DEVELOPMENT","mysqlVersion":scalar("SELECT VERSION()"),"schemaMetrics":metrics,"totalChecks":len(checks),"passed":sum(c["passed"] for c in checks),"failed":len(required_failures),"status":"PASS" if not required_failures else "FAIL","checks":checks,"externalDependencies":["Final resolution of ambiguous repeated Order Id + Product Id rows in the official A2 v4 workbook.","Genuine student Workbench staging/cleaning and integrity screenshots.","Final regenerated Workbench .mwb/ER exports for the revised schema.","Week 11 assigned business scenario if not yet supplied.","Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.","Mapping of the Mia/Zora/Rianna/Jason draft aliases to the four signed Team Charter members, plus final submission date."]}
 (OUT/"verification-report.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
 lines=["# Cloudrest Wines Independent Verification Report","",f"- Status: **{summary['status']}**",f"- Mode: **{summary['mode']}**",f"- MySQL: `{summary['mysqlVersion']}`",f"- Checks: {summary['passed']}/{summary['totalChecks']} passed",f"- Schema: `{metrics}`","","## Check results","","| Result | Check | Evidence |","|:---:|---|---|"]
 for c in checks: lines.append(f"| {'PASS' if c['passed'] else 'FAIL'} | {c['check']} | {c['evidence'].replace('|','/').replace(chr(10),' ')[:500]} |")
