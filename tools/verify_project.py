@@ -126,10 +126,17 @@ record("Query 3 filters AFFECTED involvement",contains(ROOT/"database/queries/03
 record("Data Dictionary has explicit domains","See schema constraints" not in dictionary,"generic domain absent")
 record("Data Dictionary has semantic descriptions","Business attribute" not in dictionary,"generic description absent")
 er=ROOT/"diagrams/Cloudrest_Wines_ER_Diagram.png"
-try:
-    from PIL import Image
-    wh=Image.open(er).size
-except Exception: wh=(0,0)
+def png_dimensions(path):
+    try:
+        with open(path,"rb") as fh:
+            header=fh.read(24)
+        if len(header)>=24 and header[:8]==b"\\x89PNG\\r\\n\\x1a\\n" and header[12:16]==b"IHDR":
+            import struct
+            return struct.unpack(">II",header[16:24])
+    except Exception:
+        pass
+    return (0,0)
+wh=png_dimensions(er)
 record("Full ER image meets resolution requirement",wh[0]>=1500 and wh[1]>=2000,f"resolution={wh}")
 
 report_path=ROOT/"deliverables/final-submission/Cloudrest_Wines_Report.docx"
