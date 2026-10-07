@@ -13,7 +13,7 @@ The team should speak naturally and rehearse to 4:40–4:55. Do not read the rep
 | 2:55–3:20 | Zora | Run Query 4; explain privacy-aware workload triage. |
 | 3:20–3:50 | Jason | Call `getExpiringQualifications(30)` and `(90)` and compare results. |
 | 3:50–4:20 | Rianna | Run Query 6 and show the open-action priority output. |
-| 4:20–4:40 | Rianna | Briefly show the current EXPLAIN: full scan of the 3-row incident fixture, `ref` access to correctiveaction, `eq_ref` PK joins for area/employee, and temporary/filesort for priority ordering. |
+| 4:20–4:40 | Rianna | Briefly show the final Workbench EXPLAIN. In the latest standalone CI execution, `correctiveaction` used the status/date index with `range` access, the remaining joins used `eq_ref` primary-key lookups, and the priority ordering used temporary/filesort. |
 | 4:40–4:58 | All | Each member states their genuine contribution in one short sentence; close with management/public-value benefit. |
 
 ## Workbench preparation checklist
