@@ -218,7 +218,7 @@ BEGIN
   ) THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing address of the same kind';
   END IF;
-END$
+END$$
 
 CREATE TRIGGER trg_supplieraddress_nooverlap_update
 BEFORE UPDATE ON supplieraddress
@@ -238,7 +238,7 @@ BEGIN
   ) THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing address of the same kind';
   END IF;
-END$
+END$$
 
 CREATE TRIGGER trg_supplierphone_nooverlap_insert
 BEFORE INSERT ON supplierphone
