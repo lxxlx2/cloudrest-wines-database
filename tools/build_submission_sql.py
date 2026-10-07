@@ -9,16 +9,19 @@ parts = [
     ROOT / "database/schema/01_tables.sql",
     ROOT / "database/schema/02_triggers.sql",
     ROOT / "database/schema/03_reporting.sql",
+    ROOT / "database/schema/04_integrity_controls.sql",
     ROOT / "database/data/01_testdata.sql",
+    ROOT / "database/data/02_cleaned_v4_data.sql",
 ]
 query_parts = [ROOT / f"database/queries/0{i}_{name}.sql" for i, name in [
     (1,"trainingcoverage"),(2,"incidentrate"),(3,"trainingimpact"),
     (4,"overtimerisk"),(5,"expiringqualification"),(6,"openactions")]]
 header = """-- Cloudrest Wines Database — portable MySQL 8.x build
--- Team: Mia, Zora, Rianna, Jason
+-- Team: Zixuan Shen, Feiyue Ma, Xinzhu Wang, Chengye Jiang
 -- Perspective: Human Resources, Workforce Planning and Wellbeing
 -- Open this file in MySQL Workbench and execute the full script.
--- All data is fictitious and intended only for assessment/testing.
+-- Includes cleaned official A2 v4 supplied records and additional synthetic test data.
+-- Supplemental mandatory wine/product attributes are explicitly marked as test data.
 
 """
 body = [header]

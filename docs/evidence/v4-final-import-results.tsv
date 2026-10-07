@@ -1,0 +1,17 @@
+table	imported_expected	imported_actual	verification
+customer	50	50	PASS
+individualcustomer	25	25	PASS
+businesscustomer	25	25	PASS
+address	102	102	PASS
+customeraddress	53	53	PASS
+phone	66	66	PASS
+customerphone	66	66	PASS
+winecategory	1	1	PASS
+wine	10	10	PASS
+winecomposition	10	10	PASS
+wineproduct	10	10	PASS
+customerorder	79	79	PASS
+orderline	132	132	PASS
+accepted_orderline_and_header_source_readback	132	132	PASS: exact quantity/price/customer/date/payment/status match
+source_dispositions	182	182	PASS: one disposition per source row
+reconciliation	182	182	132 imported + 1 exact copy + 15 ambiguous + 34 other quarantined

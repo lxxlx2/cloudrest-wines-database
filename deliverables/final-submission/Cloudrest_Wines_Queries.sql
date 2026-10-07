@@ -77,14 +77,21 @@ ORDER BY coveragePercent, oa.areaName;
 
 -- ===== QUERY 02: incidentrate =====
 USE cloudrestwines;
--- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
--- Operational area is the driver so an area with incidents but no recorded hours is still visible.
-WITH hoursbyarea AS (
-  SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
+-- Sustainability measure: incidents per 1,000 actual labour hours during the last 12 months.
+-- Labour hours are derived from assignment start/end times so they cannot disagree with stored hour totals.
+WITH assignmenthours AS (
+  SELECT s.operationalAreaId,
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS labourHours
   FROM shift s
   JOIN shiftassignment sa ON sa.shiftId = s.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
-  GROUP BY s.operationalAreaId
+), hoursbyarea AS (
+  SELECT operationalAreaId, SUM(labourHours) AS labourHours
+  FROM assignmenthours
+  GROUP BY operationalAreaId
 ), incidentloss AS (
   SELECT i.incidentId,
          i.operationalAreaId,
@@ -101,7 +108,7 @@ WITH hoursbyarea AS (
   GROUP BY operationalAreaId
 )
 SELECT oa.areaName,
-       COALESCE(h.labourHours, 0) AS labourHours,
+       ROUND(COALESCE(h.labourHours, 0), 2) AS labourHours,
        COALESCE(i.incidentCount, 0) AS incidentCount,
        COALESCE(i.lostHours, 0) AS lostHours,
        CASE
@@ -152,6 +159,7 @@ ORDER BY incidentsBefore DESC, incidentsAfter DESC;
 -- ===== QUERY 04: overtimerisk =====
 USE cloudrestwines;
 -- Workforce review query: surface recent workload/safety/wellbeing indicators without exposing confidential notes.
+-- Worked hours are calculated from actual assignment times. Overtime is the portion above 8 hours per assignment.
 WITH activeworkforce AS (
   SELECT e.employeeId,
          e.firstName,
@@ -165,14 +173,21 @@ WITH activeworkforce AS (
     AND (e.employmentEndDate IS NULL OR e.employmentEndDate >= CURRENT_DATE)
     AND er.startDateTime <= NOW()
     AND (er.endDateTime IS NULL OR er.endDateTime >= NOW())
-), workload AS (
+), assignmenthours AS (
   SELECT sa.employeeId,
-         SUM(sa.regularHours) AS regularHours,
-         SUM(sa.overtimeHours) AS overtimeHours
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS workedHours
   FROM shiftassignment sa
   JOIN shift s ON s.shiftId = sa.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
-  GROUP BY sa.employeeId
+), workload AS (
+  SELECT employeeId,
+         ROUND(SUM(LEAST(workedHours, 8.0)), 2) AS regularHours,
+         ROUND(SUM(GREATEST(workedHours - 8.0, 0)), 2) AS overtimeHours
+  FROM assignmenthours
+  GROUP BY employeeId
 ), recentincident AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
   FROM incidentemployee ie

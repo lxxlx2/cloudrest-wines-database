@@ -1,29 +1,41 @@
 # Cloudrest Wines — Delivery Instructions
 
-## Final submission components
+TECHNICAL / DOCUMENT DELIVERABLES READY — 2026-10-08.
 
-1. `Cloudrest_Wines_Report.docx` — upload through the Turnitin report point.
-2. `Cloudrest_Wines_Database.sql` — complete portable MySQL build and fictitious data.
-3. `Cloudrest_Wines_Video.mp4` — the team must record this after importing the database.
-4. GenAI Reflection — submit separately through RiPPlE using genuine team prompt logs and peer reviews.
+## Files for the team
 
-## Import into the student's MySQL Workbench
+- Cloudrest_Wines_Report.docx — final Task 1–7 report, complete dictionary and ER views.
+- Cloudrest_Wines_Database.sql — portable MySQL schema, cleaned supplied data and additional test data.
+- Cloudrest_Wines_Queries.sql — six Task 7 queries.
+- Cloudrest_Wines_Rule_Violations.sql — assessed rule demonstrations.
+- Cloudrest_Wines_Model.mwb — editable Workbench model.
+- Cloudrest_Wines_ER_Diagram.png and six domain PNGs — UML diagrams.
 
-1. Open the student's `Local instance 3306` connection using their own MySQL account.
-2. Choose **File → Open SQL Script** and open `Cloudrest_Wines_Database.sql`.
-3. Execute the complete script using the lightning icon.
-4. Refresh **SCHEMAS** and expand `cloudrestwines`.
-5. Confirm the final summary reports 55 base tables, 1 view, 15 triggers and 1 routine.
-6. Open `Cloudrest_Wines_Queries.sql` and execute each numbered query separately.
-7. Run the procedure with both `30` and `90` parameters during the video.
+## Import and demonstration
 
-The database script intentionally drops and rebuilds `cloudrestwines`. Do not run it against a database containing irreplaceable work.
+Open Cloudrest_Wines_Database.sql in the student's MySQL Workbench connection and execute the complete script. It drops and rebuilds cloudrestwines, so use a disposable coursework database. Refresh SCHEMAS, then open Cloudrest_Wines_Queries.sql and execute each numbered query separately. Demonstrate getExpiringQualifications with both 30 and 90 days.
 
-## Items requiring the students/course inputs
+MySQL 8.4.11 empty-database build passes. Schema remains 55 base tables / 1 view / 286 columns / 72 foreign keys / 50 CHECKs / 30 triggers / 3 routines. Existing verifier passes 73/73. Model and dictionary remain consistent with this schema.
 
-- Confirm the enrolled team names: Mia, Zora, Rianna and Jason.
-- Fill actual completion dates and confirm genuine contribution allocation.
-- Add official A2 spreadsheet error analysis, cleaning SQL and before/after screenshots.
-- Complete the Week 11 assigned business scenario.
-- Review the included genuine local Workbench/MySQL screenshots and recapture only if the teaching team requires evidence under the submitting student's account.
-- Record the four-person video and submit genuine RiPPlE peer reviews.
+## Task 6 final import
+
+182 supplied order rows = 132 imported + 1 exact duplicate rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Imported rows form 79 complete orders. Final database also contains 50 supplied customers, 102 addresses, 53 address histories, 66 unshared phones/associations and 10 source product IDs/wine names. Shared phones (seven associations) and 72 absent shipment-detail facts are quarantined. Export-reset dates remain unchanged. Required missing product attributes are explicitly supplemental test data; see Task 6 for all assumptions and table verification.
+
+Original before/after evidence is preserved. Final combined-database query/import screenshots are in docs/evidence/combined-database. Raw workbook and raw CSV/contact exports are excluded from the public repository. Earlier finalisation/hash/QA snapshots describe earlier packages and are historical, not the acceptance record for this revision.
+
+## Final work package allocation
+
+These are prospective responsibilities, not historical contribution hours.
+
+- Zixuan Shen: final report integration; Project Plan / Risk; tutor-feedback consistency; submission QA.
+- Feiyue Ma: Workbench model; ER Diagram; Data Dictionary / model consistency.
+- Xinzhu Wang: SQL / constraints; official v4 cleaning/import; Task 6; integrity tests.
+- Chengye Jiang: six Task 7 queries; EXPLAIN; query results; personal video demonstration to be completed later.
+
+Earlier Mia/Zora/Rianna/Jason aliases have no confirmed mapping. No mapping, actual completion date, submission date or historical contribution is invented.
+
+## STUDENT-ONLY ITEMS REMAIN
+
+Video; RiPPlE; Buddycheck; final personal contribution confirmation. Students should review and understand the supplied evidence, and recapture under their own account if course policy requires it.
+
+WAITING FOR COURSE MATERIAL: Week 11 assigned business scenario (Task 8). Add the tutor's actual scenario when supplied. These student/course items do not block delivery of the current report, SQL and model package.

@@ -3,15 +3,28 @@ from __future__ import annotations
 import csv
 import json
 import re
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MYSQL = "/opt/homebrew/opt/mysql@8.4/bin/mysql"
+MYSQL = os.environ.get("MYSQL") or shutil.which("mysql") or "/opt/homebrew/opt/mysql@8.4/bin/mysql"
+
+MYSQL_HOST = os.environ.get("MYSQL_HOST")
+MYSQL_PORT = os.environ.get("MYSQL_PORT", "3306")
+MYSQL_USER = os.environ.get("MYSQL_USER", "root")
+
+def mysql_base_args() -> list[str]:
+    args = [MYSQL]
+    if MYSQL_HOST:
+        args += ["-h", MYSQL_HOST, "-P", MYSQL_PORT]
+    args += ["-u", MYSQL_USER]
+    return args
 
 def query(sql: str) -> list[dict]:
     result = subprocess.run(
-        [MYSQL, "-u", "root", "--batch", "--raw", "--skip-column-names", "-e", sql],
+        mysql_base_args() + ["--batch", "--raw", "--skip-column-names", "-e", sql],
         check=True, text=True, capture_output=True
     )
     rows = []
@@ -63,8 +76,10 @@ special = {
     "paidFlag": "Indicates accounting confirmation that shipment may proceed.",
     "reorderFlag": "Indicates whether this bottle type may be reordered.",
     "reorderComment": "Required explanation when a bottle type will not be reordered.",
-    "regularHours": "Regular labour hours worked on the assigned shift.",
-    "overtimeHours": "Overtime hours used in workload and safety analysis.",
+    "actualStartTime": "Actual employee start time for this shift assignment.",
+    "actualEndTime": "Actual employee end time for this shift assignment.",
+    "breakMinutes": "Unpaid break minutes deducted when deriving labour hours.",
+    "addressPurpose": "Business purpose of the customer address history row: primary, delivery, billing or correspondence.",
     "totalLostHours": "Non-negative total labour hours lost because of an incident; may be zero for a serious near miss.",
     "employmentType": "Legal engagement category: permanent or casual.",
     "employmentPattern": "Indicates ongoing or seasonal work pattern independently of employment type.",
@@ -116,7 +131,7 @@ def domain(row: dict) -> str:
     if name == "australianBusinessNumber": return "Exactly 11 numeric digits."
     if name == "postcode": return "Exactly 4 numeric digits."
     if "Percent" in name or name == "alcoholPercent": return "Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented."
-    if name in {"regularHours","overtimeHours","totalLostHours","usualUnitCost","quotedUnitPrice","actualUnitPrice","refundAmount"}: return "Non-negative numeric value."
+    if name in {"breakMinutes","totalLostHours","usualUnitCost","quotedUnitPrice","actualUnitPrice","refundAmount"}: return "Non-negative numeric value."
     if name in {"weightKg","casePrice"} or "Quantity" in name: return "Positive numeric value."
     if name == "areaHectares": return "Positive decimal hectares."
     if name == "latitude": return "Decimal latitude from -90 to 90."

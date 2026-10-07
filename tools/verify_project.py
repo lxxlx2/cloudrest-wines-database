@@ -1,11 +1,11 @@
 """Reproducibility, assessment-content and development/final-mode audit."""
 from __future__ import annotations
-import json, os, re, subprocess, zipfile
+import json, os, re, shutil, subprocess, zipfile
 from datetime import datetime
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-MYSQL="/opt/homebrew/opt/mysql@8.4/bin/mysql"
+MYSQL=os.getenv("MYSQL") or shutil.which("mysql") or "/opt/homebrew/opt/mysql@8.4/bin/mysql"
 FINAL_SQL=ROOT/"deliverables/final-submission/Cloudrest_Wines_Database.sql"
 QUERY_SQL=ROOT/"deliverables/final-submission/Cloudrest_Wines_Queries.sql"
 OUT=ROOT/"verification"; OUT.mkdir(exist_ok=True)
@@ -14,10 +14,21 @@ checks=[]
 
 def record(name,passed,evidence,severity="required"):
     checks.append({"check":name,"passed":bool(passed),"severity":severity,"evidence":str(evidence)})
+MYSQL_HOST=os.getenv("MYSQL_HOST")
+MYSQL_PORT=os.getenv("MYSQL_PORT","3306")
+MYSQL_USER=os.getenv("MYSQL_USER","root")
+
+def mysql_base_args():
+    args=[MYSQL]
+    if MYSQL_HOST:
+        args += ["-h",MYSQL_HOST,"-P",MYSQL_PORT]
+    args += ["-u",MYSQL_USER]
+    return args
+
 def run_file(path):
-    return subprocess.run([MYSQL,"-u","root"],input=Path(path).read_text(encoding="utf-8"),text=True,capture_output=True)
+    return subprocess.run(mysql_base_args(),input=Path(path).read_text(encoding="utf-8"),text=True,capture_output=True)
 def scalar(sql):
-    r=subprocess.run([MYSQL,"-u","root","--batch","--skip-column-names","-e",sql],text=True,capture_output=True)
+    r=subprocess.run(mysql_base_args()+["--batch","--skip-column-names","-e",sql],text=True,capture_output=True)
     if r.returncode: raise RuntimeError(r.stderr)
     return r.stdout.strip()
 def contains(path,*needles):
@@ -63,6 +74,9 @@ invariants={
  "No multiple current supervisors":"SELECT COUNT(*) FROM (SELECT employeeId FROM cloudrestwines.supervision WHERE endDateTime IS NULL GROUP BY employeeId HAVING COUNT(*)>1)x",
  "No invalid shipment address":"SELECT COUNT(*) FROM cloudrestwines.shipment s JOIN cloudrestwines.address a ON a.addressId=s.addressId WHERE a.addressKind<>'PHYSICAL' OR a.postalType IN ('POBOX','PRIVATEBAG')",
  "No shipped unpaid order":"SELECT COUNT(*) FROM cloudrestwines.customerorder WHERE orderStatus='SHIPPED' AND paidFlag=FALSE",
+ "Vineyard supports multiple varieties in one vintage":"SELECT IF(COUNT(*)>=2,0,1) FROM cloudrestwines.vineyardplanting WHERE vineyardId='VINE001' AND vintageYear=YEAR(CURRENT_DATE)",
+ "All test-data wine compositions total 100":"SELECT COUNT(*) FROM (SELECT w.wineId FROM cloudrestwines.wine w LEFT JOIN cloudrestwines.winecomposition wc ON wc.wineId=w.wineId GROUP BY w.wineId HAVING COUNT(wc.grapeVarietyId)=0 OR ABS(COALESCE(SUM(wc.proportionPercent),0)-100.00)>0.001)x",
+ "No duplicate current customer address purpose":"SELECT COUNT(*) FROM (SELECT customerId,addressPurpose FROM cloudrestwines.customeraddress WHERE endDateTime IS NULL GROUP BY customerId,addressPurpose HAVING COUNT(*)>1)x",
 }
 for name,sql in invariants.items():
     n=int(scalar(sql)); record(name,n==0,f"violations={n}")
@@ -74,6 +88,12 @@ expectations={
  "t01_validtraining.sql":(0,"PASS"),"t02_invalidroledate.sql":(1,"chk_employeerole_dates"),
  "t03_missingreordercomment.sql":(1,"chk_bottletype_reorder"),"t04_unpaidshipment.sql":(1,"Order must be paid before shipment"),
  "t05_overlappingsupervision.sql":(1,"already has a supervisor"),
+ "t06_pack_rejoin.sql":(0,"PASS: picker can rejoin"),
+ "t07_employee_current_address_overlap.sql":(1,"Employee address period overlaps"),
+ "t08_customer_primary_phone_overlap.sql":(1,"Customer may have only one current primary phone"),
+ "t09_incomplete_wine_composition.sql":(1,"Wine composition must contain at least one variety and total exactly 100 percent"),
+ "t10_harvest_requires_variety_planting.sql":(1,"foreign key constraint fails"),
+ "t11_refund_requires_order_product.sql":(1,"foreign key constraint fails"),
 }
 for filename,(code,needle) in expectations.items():
     run_file(FINAL_SQL); result=run_file(ROOT/"database/tests"/filename); output=result.stdout+result.stderr
@@ -106,10 +126,17 @@ record("Query 3 filters AFFECTED involvement",contains(ROOT/"database/queries/03
 record("Data Dictionary has explicit domains","See schema constraints" not in dictionary,"generic domain absent")
 record("Data Dictionary has semantic descriptions","Business attribute" not in dictionary,"generic description absent")
 er=ROOT/"diagrams/Cloudrest_Wines_ER_Diagram.png"
-try:
-    from PIL import Image
-    wh=Image.open(er).size
-except Exception: wh=(0,0)
+def png_dimensions(path):
+    try:
+        with open(path,"rb") as fh:
+            header=fh.read(24)
+        if len(header)>=24 and header[:8]==bytes.fromhex("89504e470d0a1a0a") and header[12:16]==b"IHDR":
+            import struct
+            return struct.unpack(">II",header[16:24])
+    except Exception:
+        pass
+    return (0,0)
+wh=png_dimensions(er)
 record("Full ER image meets resolution requirement",wh[0]>=1500 and wh[1]>=2000,f"resolution={wh}")
 
 report_path=ROOT/"deliverables/final-submission/Cloudrest_Wines_Report.docx"
@@ -125,14 +152,16 @@ if FINAL_MODE:
     record("FINAL_MODE contains no placeholders",not hits,hits)
     record("FINAL_MODE member name completed",">1<" not in report_text and "Rianna | 1" not in report_text,"member 1 absent")
 else:
-    record("Development mode honestly retains placeholders",any(x.lower() in report_text.lower() for x in forbidden),"FINAL_MODE=0")
+    record("Development mode discloses remaining human inputs",any(x in report_text for x in ["HUMAN CONFIRMATION","Team confirmation required","outstanding course inputs"]),"FINAL_MODE=0; unresolved human inputs disclosed")
 
 required_failures=[c for c in checks if c["severity"]=="required" and not c["passed"]]
-summary={"generatedAt":datetime.now().isoformat(timespec="seconds"),"mode":"FINAL" if FINAL_MODE else "DEVELOPMENT","mysqlVersion":scalar("SELECT VERSION()"),"schemaMetrics":metrics,"totalChecks":len(checks),"passed":sum(c["passed"] for c in checks),"failed":len(required_failures),"status":"PASS" if not required_failures else "FAIL","checks":checks,"externalDependencies":["Official A2 workbook and actual cleaning evidence.","Week 11 assigned business scenario.","Genuine student Workbench screenshots.","Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.","Replacement of member 1 and submission date."]}
+summary={"generatedAt":datetime.now().isoformat(timespec="seconds"),"mode":"FINAL" if FINAL_MODE else "DEVELOPMENT","mysqlVersion":scalar("SELECT VERSION()"),"schemaMetrics":metrics,"totalChecks":len(checks),"passed":sum(c["passed"] for c in checks),"failed":len(required_failures),"status":"PASS" if not required_failures else "FAIL","checks":checks,"externalDependencies":["Final resolution of ambiguous repeated Order Id + Product Id rows in the official A2 v4 workbook.","Submitting students review genuine local Workbench staging/cleaning and integrity screenshots; recapture if course policy requires their own account.","Week 11 assigned business scenario if not yet supplied.","Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.","Mapping of the Mia/Zora/Rianna/Jason draft aliases to the four signed Team Charter members, plus final submission date."]}
 (OUT/"verification-report.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
 lines=["# Cloudrest Wines Independent Verification Report","",f"- Status: **{summary['status']}**",f"- Mode: **{summary['mode']}**",f"- MySQL: `{summary['mysqlVersion']}`",f"- Checks: {summary['passed']}/{summary['totalChecks']} passed",f"- Schema: `{metrics}`","","## Check results","","| Result | Check | Evidence |","|:---:|---|---|"]
 for c in checks: lines.append(f"| {'PASS' if c['passed'] else 'FAIL'} | {c['check']} | {c['evidence'].replace('|','/').replace(chr(10),' ')[:500]} |")
 lines += ["","## Genuine external dependencies",""]+[f"- {x}" for x in summary["externalDependencies"]]
 (OUT/"verification-report.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
-print(json.dumps({k:summary[k] for k in ["status","mode","totalChecks","passed","failed","mysqlVersion","schemaMetrics"]},indent=2))
+console_summary={k:summary[k] for k in ["status","mode","totalChecks","passed","failed","mysqlVersion","schemaMetrics"]}
+console_summary["failedChecks"]=[{"check":c["check"],"evidence":c["evidence"]} for c in required_failures]
+print(json.dumps(console_summary,indent=2))
 raise SystemExit(0 if not required_failures else 1)

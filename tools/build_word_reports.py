@@ -75,27 +75,31 @@ def configure(doc):
     header=sec.header.paragraphs[0]; header.alignment=WD_ALIGN_PARAGRAPH.RIGHT
     set_font(header.add_run('Cloudrest Wines | BISM2207 System Development'),size=9,color=MUTED)
     footer=sec.footer.paragraphs[0]; footer.alignment=WD_ALIGN_PARAGRAPH.CENTER
-    set_font(footer.add_run('Cloudrest Wines — Confidential assessment draft | '),size=9,color=MUTED)
+    set_font(footer.add_run('Cloudrest Wines | '),size=9,color=MUTED)
     run=footer.add_run(); fld=OxmlElement('w:fldSimple'); fld.set(qn('w:instr'),'PAGE'); run._r.addnext(fld)
 
 def new_landscape(doc):
-    doc.add_page_break()
-    return doc.sections[-1]
+    sec=doc.add_section(WD_SECTION.NEW_PAGE)
+    sec.orientation=WD_ORIENT.LANDSCAPE
+    sec.page_width=Inches(11.7); sec.page_height=Inches(8.3)
+    return sec
 
 def new_portrait(doc):
-    doc.add_page_break()
-    return doc.sections[-1]
+    sec=doc.add_section(WD_SECTION.NEW_PAGE)
+    sec.orientation=WD_ORIENT.PORTRAIT
+    sec.page_width=Inches(8.3); sec.page_height=Inches(11.7)
+    return sec
 
 def add_title_page(doc):
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before=Pt(95); p.paragraph_format.space_after=Pt(12)
     set_font(p.add_run('CLOUDREST WINES'),size=28,bold=True,color=BLUE)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; set_font(p.add_run('MySQL Database System Design and Implementation'),size=17,bold=True,color=DARK)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_after=Pt(38); set_font(p.add_run('Human Resources, Workforce Planning and Wellbeing Perspective'),size=13,italic=True,color=MUTED)
-    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Mia | Zora | Rianna | Jason'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','[STUDENT TO COMPLETE]')]:
+    for label,value in [('Course','BISM2207 System Development'),('Team / company','Cloudrest Wines'),('Contributors','Zixuan Shen | Feiyue Ma | Xinzhu Wang | Chengye Jiang'),('Database','MySQL 8.4.x / MySQL Workbench'),('Submission date','Team confirmation required')]:
         p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER
         set_font(p.add_run(label+': '),size=12,bold=True); set_font(p.add_run(value),size=12)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before=Pt(50)
-    set_font(p.add_run('Assessment draft — replace all bracketed course-dependent items before submission'),size=10,italic=True,color='9B1C1C')
+    set_font(p.add_run('Finalisation package — outstanding course inputs are listed explicitly'),size=10,italic=True,color='9B1C1C')
     doc.add_page_break()
 
 def add_para(doc,text,bold_prefix=None,italic=False):
@@ -112,6 +116,8 @@ def add_note(doc,label,text):
     doc.add_paragraph().paragraph_format.space_after=Pt(0)
 
 def add_table(doc,headers,rows,widths,font_size=9):
+    available=int((doc.sections[-1].page_width-doc.sections[-1].left_margin-doc.sections[-1].right_margin)/635)
+    widths=[int(w*available/sum(widths)) for w in widths]
     table=doc.add_table(rows=1,cols=len(headers)); table.style='Table Grid'; set_table_geometry(table,widths); set_repeat_header(table.rows[0])
     for i,h in enumerate(headers):
         c=table.rows[0].cells[i]; shade(c,LIGHT); c.vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER; set_cell_margin(c)
@@ -122,6 +128,12 @@ def add_table(doc,headers,rows,widths,font_size=9):
             c=cells[i]; c.vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER; set_cell_margin(c)
             p=c.paragraphs[0]; p.paragraph_format.space_after=Pt(0); set_font(p.add_run(str(v)),size=font_size)
     set_table_geometry(table,widths)
+    for index,row in enumerate(table.rows):
+        props=row._tr.get_or_add_trPr()
+        cant=OxmlElement('w:cantSplit'); props.append(cant)
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.keep_with_next=(index==0 or (len(rows)<=8 and index<len(table.rows)-1))
     doc.add_paragraph().paragraph_format.space_after=Pt(0)
     return table
 
@@ -134,6 +146,9 @@ def add_code(doc,text,caption=None):
         set_font(p.add_run(block),name='Menlo',size=7.5,color='111827')
 
 def add_image(doc,path,caption,width=6.2,max_height=7.2):
+    sec=doc.sections[-1]
+    width=min(width,float(sec.page_width-sec.left_margin-sec.right_margin)/914400)
+    max_height=min(max_height,float(sec.page_height-sec.top_margin-sec.bottom_margin)/914400-0.8)
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.keep_with_next=True
     with PILImage.open(path) as im:
         pixel_w,pixel_h=im.size
@@ -159,16 +174,29 @@ def md_sections(path):
 def prose_from_md(doc,body):
     for para in re.split(r'\n\s*\n',body):
         para=para.strip()
-        if not para or para.startswith('|') or para.startswith('- '): continue
-        para=re.sub(r'\*\*(.*?)\*\*',r'\1',para); para=re.sub(r'`([^`]+)`',r'\1',para)
-        add_para(doc,para)
+        if not para: continue
+        if para.startswith('|'):
+            cells=[[re.sub(r'`([^`]+)`',r'\1',x.strip()) for x in line.strip().strip('|').split('|')] for line in para.splitlines()]
+            cells=[row for row in cells if not all(re.fullmatch(r':?-+:?',x) for x in row)]
+            widths=[1800,1100,6460] if len(cells[0])==3 else [9360//len(cells[0])]*len(cells[0])
+            add_table(doc,cells[0],cells[1:],widths,8)
+            continue
+        para=re.sub(r'\*\*(.*?)\*\*',r'\1',para)
+        para=re.sub(r'`([^`]+)`',r'\1',para)
+        if para.startswith('## '):
+            doc.add_heading(para[3:],level=2)
+        elif para.startswith('### '):
+            doc.add_heading(para[4:],level=3)
+        elif para.startswith('- ') or re.match(r'\d+\. ',para):
+            for line in para.splitlines(): add_para(doc,line)
+        else: add_para(doc,para)
 
 def build_main():
     doc=Document(); configure(doc); add_title_page(doc)
     doc.add_heading('Document status and required student completion',level=1)
-    add_note(doc,'Important','This report contains all work currently possible from the supplied PDFs and validated local database. The official A2 workbook, Week 11 scenario, final Workbench screenshots, genuine group contribution dates, video and RiPPlE peer reviews are not available and are explicitly marked rather than fabricated.')
+    add_note(doc,'Finalisation status','REPORT + CODE PACKAGE READY. The final database contains accepted cleaned supplied data and additional test data. Order reconciliation is 182 = 132 imported + 1 exact copy rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Student-only video, RiPPlE, Buddycheck and genuine contribution confirmation remain. Task 8 is WAITING FOR COURSE MATERIAL: Week 11 assigned business scenario. No submission date or alias mapping is invented.')
     doc.add_heading('AI use declaration',level=2)
-    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Framework/test data; official workbook analysis pending.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
+    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Bounded cleaned supplied-data import executed; assumptions and quarantines disclosed, reconciliation complete.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
     add_table(doc,['Task','AI used for','Human validation / limitation'],ai_rows,[600,2200,6560],9)
 
     # Task 1 landscape
@@ -180,13 +208,29 @@ def build_main():
       ('Design decisions','Mia / Zora','Mia','10','Week 8','Pending','Four cited decision records','Weak trade-offs','Trace each to ER','Draft/critique'),
       ('Schema and rules','Jason / Zora','Jason','32','Week 10','Pending','Clean SQL and five rules','Build failure','Empty-database tests','SQL review'),
       ('Data dictionary','Zora / Jason','Zora','16','Week 10','Pending','Complete Word tables','Schema drift','Automated consistency check','Mechanical QA'),
-      ('Official cleaning','Jason / Mia','Jason','23','After workbook','Pending','Audit and reconciliation','Source missing','Keep framework blocked','Profiling support'),
+      ('Official cleaning','Jason / Mia','Jason','23','Week 10–11','In progress','v4 audit/staging/reconciliation','Ambiguous duplicate order/product rows','Preserve raw rows; quarantine ambiguity','Profiling/consistency checks'),
       ('Test data and integrity','Jason / Rianna','Jason','20','Week 10','Pending','Five tests and histories','Trivial coverage','Scenario-based data','Coverage critique'),
       ('Six analytical queries','Rianna / Jason','Rianna','28','Week 11','Pending','Queries/view/procedure/EXPLAIN','Join inflation','Manual reconciliation','SQL alternatives'),
       ('Reflection','All','Rianna','10','Week 12','Pending','Genuine RiPPlE evidence','Fabrication risk','Save real iterations','Reflection subject'),
       ('Video','All','Rianna','12','Week 12','Pending','Five-minute demonstration','Over time','Timed rehearsal','Structure/timing'),
       ('Final integration and QA','Mia / All','Mia','10','Week 12','Pending','Submission package/audit','Cross-file mismatch','Automated and human QA','Consistency checking')]
-    add_table(doc,['Task Description','Responsible Team Member(s)','Final Deliverable Owner','Estimated Hours','Target Completion Date','Actual Completion Date','Expected Output / Evidence','Risk or Challenge','Mitigation Strategy','AI Used / How Used'],plan_rows,[1100,850,750,500,650,650,1400,1050,1300,1110],6.2)
+    add_table(doc,['Task Description','Responsible Team Member(s)','Final Deliverable Owner','Estimated Hours','Target Completion Date','Actual Completion Date','Expected Output / Evidence','Risk or Challenge','Mitigation Strategy','AI Used / How Used'],plan_rows,[1100,850,750,500,650,650,1400,1050,1300,1110],8)
+    add_note(doc,'Responsibility-name mapping','The signed Team Charter names are Zixuan Shen, Feiyue Ma, Xinzhu Wang and Chengye Jiang. The earlier planning draft uses Mia, Zora, Rianna and Jason as responsibility aliases. Their one-to-one mapping must be confirmed by the team before final submission and is not guessed here.')
+    doc.add_heading('Expanded risk register',level=2)
+    risk_rows=[
+      ('Schema drift after tutor feedback','PK/FK changes affect ERD, dictionary, SQL and video','Tasks 3–7','High','High','Treat schema SQL as source of truth; rebuild and regress','Freeze changes, rerun tests, regenerate all dependent artifacts','Zora / Jason'),
+      ('Ambiguous v4 duplicate order/product rows','Repeated pairs differ in quantity, price, refund or status','Task 6','High','High','Preserve raw staging rows and source row numbers','Quarantine whole affected orders; document reasons without aggregation','Jason / Mia'),
+      ('Reset historical start dates','Workbook states some current-customer start dates were reset on export','Task 6','Medium','Medium','Record source limitation and preserve raw value','Do not invent lost dates; disclose limitation','Jason / Mia'),
+      ('Multiple simultaneous current history rows','Dated associations can accidentally create duplicate current facts','Tasks 3–5','Medium','High','Non-overlap triggers and one-current-primary-phone controls','Reject conflicting writes and correct staging periods','Jason / Zora'),
+      ('Wine composition below/above 100%','Total is a cross-row business rule','Tasks 3–5','Medium','High','Validate total before active product release and lock released recipe','Deactivate product, correct composition, rerun validation','Jason / Zora'),
+      ('Labour-hour inconsistency','Manual hour totals can disagree with shift times','Tasks 3 and 7','Medium','High','Store actual assignment times/breaks and derive hours','Correct source times and rerun workforce metrics','Jason / Rianna'),
+      ('Task 7 results become stale','Late schema/data changes alter query outputs or EXPLAIN','Task 7/video','High','High','Execute all six queries against the frozen build','Recapture outputs and update interpretations together','Rianna / Jason'),
+      ('Evidence from wrong build','Screenshots/video may not match submitted SQL','Tasks 3,6,7/video','Medium','High','Rebuild portable SQL immediately before evidence capture','Recapture evidence from the frozen build','All / Mia')
+    ]
+    add_table(doc,['Risk','Why it may occur','Affected task','Likelihood','Impact','Prevention','Contingency / response','Owner'],risk_rows,[1200,1900,850,650,550,1900,1900,850],8)
+    doc.add_heading('This round: finalisation responsibilities',level=2)
+    add_para(doc,'These are prospective responsibilities for the current finalisation round and do not claim historical contributions. NEEDS HUMAN CONFIRMATION: alias → real-name mapping.')
+    add_table(doc,['Member','Finalisation responsibility'],[('Zixuan Shen', 'Final integration, Task 1 Risk Register, consistency, tutor-feedback traceability, Word report, AI declaration and submission QA.'), ('Feiyue Ma', 'Workbench model, latest .mwb, full UML ER and six domain views, Task 4, Task 5 schema/dictionary consistency and ER screenshots.'), ('Xinzhu Wang', 'SQL integrity, T01–T11, official v4 staging/import/cleaning, Task 6 before/after evidence, exceptions and reconciliation.'), ('Chengye Jiang', 'Six Task 7 queries, result screenshots, Query 6 EXPLAIN, actual-number interpretation, personal video demonstration to be completed by the student later.')],[1800,7560],9)
     doc.add_heading('Checkpoint sequence',level=2)
     cp=[('Week 3','Team confirmed; contacts shared'),('Week 4','Case understanding, HR perspective, functionality plan'),('Week 7','Draft ER model and decisions'),('Week 8 Fri','Iteration Tasks 1–7'),('Week 10','Normalisation, cleaning plan, business rules'),('Week 11','Draft queries and assigned scenario'),('Week 12','Report, SQL and video'),('Week 13+1','Buddycheck')]
     add_table(doc,['Milestone','Evidence'],cp,[1500,7860],9)
@@ -217,7 +261,8 @@ def build_main():
             end=len(task3b_sql)
         block=task3b_sql[start:end].strip()
         add_code(doc,block,'Readable SQL submitted for Turnitin')
-        add_note(doc,'Genuine evidence required',f'[PENDING STUDENT WORKBENCH SCREENSHOT — RULE {rule_no}] Capture readable SQL and the expected MySQL result under the submitting student account.')
+        filenames={1:'t02_invalidroledate',2:'t03_missingreordercomment',3:'additional_postalshipment',4:'t04_unpaidshipment',5:'t05_overlappingsupervision'}
+        add_image(doc,ROOT/'docs/evidence/final-workbench'/f'{filenames[rule_no]}.png',f'Rule {rule_no}: genuine local MySQL Workbench execution, 2026-10-07',6.2)
     for line in (ROOT/'docs/report/task3-functionality-business-rules.md').read_text(encoding='utf-8').splitlines()[1:]:
         if line.startswith('## '):
             flush_task3()
@@ -237,7 +282,7 @@ def build_main():
     new_landscape(doc)
     doc.add_heading('Task 4 — ER Diagram with Annotated Alternatives',level=1)
     add_para(doc,'The editable MySQL Workbench model contains one complete diagram and six domain views. The full view demonstrates scope; the domain figures preserve readable attributes, keys and UML cardinalities. Assumptions are stated explicitly and do not contradict the case.')
-    add_image(doc,ROOT/'diagrams/Cloudrest_Wines_ER_Diagram.png','Figure — Complete Cloudrest Wines EER model generated in MySQL Workbench',7.2)
+    add_image(doc,ROOT/'diagrams/Cloudrest_Wines_ER_Diagram.png','Figure — Complete UML Workbench model. Read individual attributes in the enlarged domain views and original PNG.',9.6,4.7)
     doc.add_heading('Assumptions',level=2)
     assumptions=[]
     for line in (ROOT/'docs/requirements/assumptions.md').read_text(encoding='utf-8').splitlines():
@@ -253,7 +298,7 @@ def build_main():
     doc.add_heading('Task 5 — Data Dictionary and Database Build',level=1)
     prose_from_md(doc,(ROOT/'docs/report/task5-data-dictionary.md').read_text(encoding='utf-8').split('\n',1)[1])
     metrics=json.loads((ROOT/'verification/verification-report.json').read_text())['schemaMetrics']
-    add_para(doc,f"Build verification: {metrics['baseTables']} base tables, {metrics['views']} view, {metrics['columns']} columns, {metrics['foreignKeys']} foreign keys, {metrics['checkConstraints']} CHECK constraints, {metrics['triggers']} triggers and {metrics['routines']} stored procedure under MySQL 8.4.11. Statistics are read from the verified live schema, not hard-coded.")
+    add_para(doc,f"Build verification: {metrics['baseTables']} base tables, {metrics['views']} view, {metrics['columns']} columns, {metrics['foreignKeys']} foreign keys, {metrics['checkConstraints']} CHECK constraints, {metrics['triggers']} triggers and {metrics['routines']} routines under MySQL 8.4.11. Statistics are read from the verified live schema, not hard-coded.")
 
     # Task 6
     doc.add_heading('Task 6 — Data Quality Strategy and Validation',level=1)
@@ -269,20 +314,47 @@ def build_main():
     for test,scenario,name,expected,explanation in integrity:
         doc.add_heading(f'{test} — {scenario}',level=3)
         add_code(doc,(ROOT/'database/tests'/f'{name}.sql').read_text(encoding='utf-8'),f'{test} readable SQL')
-        add_note(doc,'Genuine evidence required',f'[PENDING STUDENT WORKBENCH SCREENSHOT — {test}] Expected: {expected}. {explanation}')
+        add_image(doc,ROOT/'docs/evidence/final-workbench'/f'{name}.png',f'{test}: genuine local Workbench execution. {expected}',6.2)
+
+    doc.add_heading('Official v4: genuine local Workbench evidence',level=2)
+    add_para(doc,'Original before/after staging evidence below is preserved as profiling evidence, including its earlier 166-row candidate projection. Final accepted import is narrower: 132 rows in 79 complete orders. The final import screenshot and ID-only ledger show 182 = 132 imported + 1 exact copy rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Raw rows and dates remain unchanged.')
+    for path in sorted((ROOT/'docs/evidence/final-workbench').glob('task6-e*.png')):
+        add_image(doc,path,f'Official v4 evidence: {path.stem}, actual Workbench output 2026-10-07',6.2)
+
+    add_image(doc,ROOT/'docs/evidence/combined-database/task6-production-import.png','Final combined database: supplied import and retained synthetic HR, 2026-10-08',6.2)
 
     # Task 7 each query source+image
+    new_landscape(doc)
     doc.add_heading('Task 7 — Decision-Support SQL Queries',level=1)
     qsections=md_sections(ROOT/'docs/report/task7-queries.md')
     for idx,(title,body) in enumerate(qsections,1):
         doc.add_heading(title,level=2); prose_from_md(doc,body)
         if title.startswith('Query '):
+            risks={1:'Current workforce differs from historical workforce; the calendar-year measure requires both categories.',2:'Small exposure denominators make rates unstable; missing assignments or incidents bias results.',3:'Equal observation windows do not control confounding or work mix; the fixture cannot support causality.',4:'Eight hours per assignment is a demonstration rule, not an asserted payroll entitlement; review flags in context.',5:'Expiry records require issuer validation; plan and confirm renewals before roster decisions.',6:'Open-action status needs timely updates; small-fixture EXPLAIN does not establish production performance.'}
+            add_note(doc,'Risk / limitation',risks[int(title.split()[1])])
             qnum=int(title.split()[1]); qpath=next((ROOT/'database/queries').glob(f'{qnum:02d}_*.sql'))
             add_code(doc,qpath.read_text(encoding='utf-8'),f'Query {qnum} SQL')
-            add_note(doc,'Genuine query evidence',f'[PENDING STUDENT WORKBENCH SCREENSHOT — QUERY {qnum}] Capture the required output(s) listed in docs/evidence/student-screenshot-checklist.md.')
+            output_path=ROOT/'verification/final-query-results'/f'{qpath.stem}.tsv'
+            if output_path.exists():
+                add_para(doc,f'Query {qnum}: actual MySQL 8.4.11 output, 2026-10-08. Combined supplied + test database; HR results use synthetic assessment records.')
+                lines=list(csv.reader(output_path.read_text(encoding='utf-8').splitlines(),delimiter='\t'))
+                groups=[]; headers=None; rows=[]
+                for row in lines:
+                    if not row: continue
+                    if headers is None or row==headers or (row[0]=='id' and row[1]=='select_type'):
+                        if headers is not None: groups.append((headers,rows))
+                        headers=row; rows=[]
+                    else: rows.append(row)
+                if headers is not None: groups.append((headers,rows))
+                for headers,rows in groups:
+                    weights=[min(45,max(len(h),max((len(row[i]) for row in rows),default=0))) for i,h in enumerate(headers)]
+                    add_table(doc,headers,rows,weights,8)
+            screenshots={1:['query01'],2:['query02'],3:['query03'],4:['query04-left'],5:['query05-30days','query05-90days'],6:['query06-results','query06-results-right','query06-explain-left','query06-explain-right']}
+            for name in screenshots[qnum]:
+                add_image(doc,ROOT/'docs/evidence/combined-database'/f'{name}.png',f'Query {qnum}: genuine Workbench {name}, combined supplied + test database, 2026-10-08',8.5,5.4)
 
     doc.add_heading('Conclusion',level=1)
-    add_para(doc,'Cloudrest Wines now has a reproducible 3NF MySQL OLTP design covering the complete base case and a connected HR/workforce sustainability extension. Database constraints preserve critical history and transactional integrity, while six tested queries convert operational records into training, exposure, workload, renewal and corrective-action decisions. Remaining work depends on course inputs or genuine student participation and is listed transparently rather than simulated.')
+    add_para(doc,'Cloudrest Wines now has a reproducible 3NF MySQL OLTP design covering the complete base case and a connected HR/workforce sustainability extension. Database constraints preserve critical history and transactional integrity, while six tested queries convert operational records into training, exposure, workload, renewal and corrective-action decisions. The current report, SQL and model package is ready for delivery. Video, RiPPlE, Buddycheck and personal contribution confirmation belong to the students. Task 8 awaits the tutor-supplied Week 11 scenario.')
     doc.add_heading('References',level=1)
     refs=[
       'BISM2207 teaching team. (2026a). Wine company case [Course case study]. The University of Queensland.',
@@ -294,10 +366,13 @@ def build_main():
     for ref in refs: add_para(doc,ref)
 
     # Appendix A domain diagrams
+    new_portrait(doc)
     doc.add_heading('Appendix A — Workbench Domain EER Views',level=1)
     domain_files=['ER_Personnel_History.png','ER_HR_Training_Qualifications.png','ER_HR_Shifts_Safety_Wellbeing.png','ER_Vineyard_Wine_Production.png','ER_Products_Procurement.png','ER_Customers_Orders.png']
-    for f in domain_files:
-        add_image(doc,ROOT/'diagrams'/f,f.replace('ER_','').replace('.png','').replace('_',' '),5.8)
+    for index,f in enumerate(domain_files):
+        if index: doc.add_page_break()
+        doc.add_heading(f.replace('ER_','').replace('.png','').replace('_',' '),level=2)
+        add_image(doc,ROOT/'diagrams'/f,'UML domain view — authoritative revised schema, 2026-10-07',6.2,8.2)
 
     # Appendix B data dictionary landscape
     new_landscape(doc); doc.add_heading('Appendix B — Complete Data Dictionary',level=1)
@@ -313,7 +388,7 @@ def build_main():
 
     # Appendix C handoff
     new_portrait(doc); doc.add_heading('Appendix C — Submission and Handoff Checklist',level=1)
-    checklist=[('Portable database SQL','Completed and clean-build verified'),('Six query script','Completed and executed'),('Five Task 3b violation blocks','Completed and rejected as expected'),('Workbench model / EER views','Completed'),('Official workbook cleaning','Pending source workbook'),('Week 11 scenario','Pending tutor allocation'),('Final Workbench screenshots','Student capture required'),('Four-person video','Student recording required'),('RiPPlE prompt logs / peer review','Genuine student activity required'),('Placeholder member name and dates','Student must replace')]
+    checklist=[('Portable database SQL','Completed and clean-build verified'),('Six query script','Completed and executed'),('Five Task 3b violation blocks','Completed and rejected as expected'),('Workbench model / EER views','Regenerated from revised schema in Workbench; UML notation'),('Official workbook cleaning','132 accepted order lines / 79 orders; 50 customers / 102 addresses / 53 histories imported; 182-row reconciliation complete with disclosed quarantines'),('Task 8 — Week 11 scenario','WAITING FOR COURSE MATERIAL; students add the actual tutor scenario when supplied'),('Final Workbench screenshots','Local capture complete; submitting students review evidence and recapture if course policy requires'),('Four-person video','Student recording required'),('RiPPlE prompt logs / peer review','Genuine student activity required'),('Buddycheck / contribution confirmation','Student activity required; no historical hours or completion dates invented'),('Draft alias mapping','Not supplied; no alias-to-real-name mapping guessed')]
     add_table(doc,['Item','Status'],checklist,[3600,5760],9)
     path=OUT/'Cloudrest_Wines_Report.docx'; doc.save(path); return path
 

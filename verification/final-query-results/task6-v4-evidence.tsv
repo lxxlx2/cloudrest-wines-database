@@ -1,0 +1,61 @@
+sourceSheet	stagingRows
+orders	182
+starting address set	102
+customer/address history	53
+beforeValue	afterValue	changedRows
+cust018	CUST018	2
+CUST 019	CUST019	3
+cust015	CUST015	1
+beforeValue	afterValue	changedRows
+Rosewood Trail RosÃ©	Rosewood Trail Rosé	24
+beforeMarker	afterMarker	changedAddressRows
+â€“	–	9
+sourceRowNumber	orderIdRaw	productIdRaw	exactCopyNumber
+160	ORD125	PROD001	2
+beforeValue	afterValue	changedRows
+Vino Vibes  Wine Exporters	Vino Vibes Wine Exporters	3
+orderId	productId	distinctSourceRows
+ORD042	PROD003	2
+ORD046	PROD010	2
+ORD054	PROD008	3
+ORD056	PROD008	2
+ORD066	PROD005	2
+ORD110	PROD005	2
+ORD143	PROD003	2
+orderId	shipmentVariants	paymentVariants
+ORD024	2	1
+ORD025	2	1
+ORD033	2	1
+ORD045	2	1
+ORD048	2	1
+ORD056	2	2
+ORD081	2	1
+ORD092	2	1
+ORD104	2	1
+ORD113	2	1
+duplicateGroup	addressIdCount	structuralVariants
+1	3	1
+2	2	1
+3	2	1
+4	2	1
+5	3	1
+6	2	2
+7	3	1
+8	2	1
+9	2	1
+10	2	2
+11	4	1
+12	3	1
+13	2	1
+14	5	1
+15	3	1
+16	3	1
+17	7	1
+18	2	1
+19	2	1
+sharedPhoneGroup	customerCount
+1	2
+2	2
+3	3
+sourceRows	exactCopiesExcluded	ambiguousRowsHeld	otherCandidateRows
+182	1	15	166

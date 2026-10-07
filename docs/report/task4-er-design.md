@@ -21,3 +21,19 @@ The complete list of assumptions is maintained in `docs/requirements/assumptions
 - Derived indicators such as coverage rate, incident rate and days overdue are calculated by queries/views, not redundantly stored.
 - Historical facts are appended with effective dates rather than overwritten.
 - Foreign keys use explicit delete/update behaviour and prevent orphaned operational history.
+
+
+## Tutor-feedback ERD refresh
+
+The editable Workbench model must be regenerated from the revised schema before final submission. The final diagram must visibly show:
+
+- `vineyardplanting` PK `(vineyardId, vintageYear, grapeVarietyId)`;
+- `harvest.grapeVarietyId` and the three-column FK to `vineyardplanting`;
+- `refund.productId` and its order-line relationship;
+- `packmember` PK including `joinedDate`;
+- `customeraddress.addressPurpose`;
+- revised `shiftassignment(actualStartTime, actualEndTime, breakMinutes)` with the old regular/overtime attributes removed;
+- the unchanged one-active-role temporal design;
+- the two measurable sustainability reporting paths: training coverage and incidents per 1,000 labour hours.
+
+The existing PNG and `.mwb` in the repository predate these changes and must not be presented as the final ER evidence until they are regenerated in MySQL Workbench.

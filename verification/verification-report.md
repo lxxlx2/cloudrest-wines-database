@@ -3,15 +3,15 @@
 - Status: **PASS**
 - Mode: **DEVELOPMENT**
 - MySQL: `8.4.11`
-- Checks: 64/64 passed
-- Schema: `{'baseTables': 55, 'views': 1, 'columns': 282, 'foreignKeys': 72, 'checkConstraints': 48, 'triggers': 15, 'routines': 1}`
+- Checks: 73/73 passed
+- Schema: `{'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3}`
 
 ## Check results
 
 | Result | Check | Evidence |
 |:---:|---|---|
 | PASS | Portable SQL rebuilds from empty database | exitCode=0 |
-| PASS | Schema statistics collected dynamically | {'baseTables': 55, 'views': 1, 'columns': 282, 'foreignKeys': 72, 'checkConstraints': 48, 'triggers': 15, 'routines': 1} |
+| PASS | Schema statistics collected dynamically | {'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3} |
 | PASS | supplieraddress exists | ['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund' |
 | PASS | supplierphone exists | ['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund' |
 | PASS | Supplier direct redundant contact columns removed | supplier.addressId/phoneNumber absent |
@@ -31,17 +31,26 @@
 | PASS | No multiple current supervisors | violations=0 |
 | PASS | No invalid shipment address | violations=0 |
 | PASS | No shipped unpaid order | violations=0 |
+| PASS | Vineyard supports multiple varieties in one vintage | violations=0 |
+| PASS | All test-data wine compositions total 100 | violations=0 |
+| PASS | No duplicate current customer address purpose | violations=0 |
 | PASS | Query executes: 01_trainingcoverage.sql | exit=0, chars=114,  |
 | PASS | Query executes: 02_incidentrate.sql | exit=0, chars=122,  |
-| PASS | Query executes: 03_trainingimpact.sql | exit=0, chars=239,  |
-| PASS | Query executes: 04_overtimerisk.sql | exit=0, chars=422,  |
+| PASS | Query executes: 03_trainingimpact.sql | exit=0, chars=273,  |
+| PASS | Query executes: 04_overtimerisk.sql | exit=0, chars=1117,  |
 | PASS | Query executes: 05_expiringqualification.sql | exit=0, chars=347,  |
-| PASS | Query executes: 06_openactions.sql | exit=0, chars=971,  |
+| PASS | Query executes: 06_openactions.sql | exit=0, chars=944,  |
 | PASS | Assessed integrity test: t01_validtraining.sql | exit=0; expected=PASS; testResult PASS: valid completed training was accepted |
 | PASS | Assessed integrity test: t02_invalidroledate.sql | exit=1; expected=chk_employeerole_dates; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated. |
 | PASS | Assessed integrity test: t03_missingreordercomment.sql | exit=1; expected=chk_bottletype_reorder; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated. |
 | PASS | Assessed integrity test: t04_unpaidshipment.sql | exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 4: Order must be paid before shipment |
 | PASS | Assessed integrity test: t05_overlappingsupervision.sql | exit=1; expected=already has a supervisor; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period |
+| PASS | Assessed integrity test: t06_pack_rejoin.sql | exit=0; expected=PASS: picker can rejoin; testResult PASS: picker can rejoin the same pack after leaving |
+| PASS | Assessed integrity test: t07_employee_current_address_overlap.sql | exit=1; expected=Employee address period overlaps; ERROR 1644 (45000) at line 3: Employee address period overlaps an existing address of the same kind |
+| PASS | Assessed integrity test: t08_customer_primary_phone_overlap.sql | exit=1; expected=Customer may have only one current primary phone; ERROR 1644 (45000) at line 3: Customer may have only one current primary phone |
+| PASS | Assessed integrity test: t09_incomplete_wine_composition.sql | exit=1; expected=Wine composition must contain at least one variety and total exactly 100 percent; ERROR 1644 (45000) at line 8: Wine composition must contain at least one variety and total exactly 100 percent |
+| PASS | Assessed integrity test: t10_harvest_requires_variety_planting.sql | exit=1; expected=foreign key constraint fails; ERROR 1452 (23000) at line 3: Cannot add or update a child row: a foreign key constraint fails (`cloudrestwines`.`harvest`, CONSTRAINT `fk_harvest_planting` FOREIGN KEY (`vineyardId`, `vintageYear`, `grapeVarietyId`) REFERENCES `vineyardplanting` (`vineyardId`, `vintageYear`, `grapeVar |
+| PASS | Assessed integrity test: t11_refund_requires_order_product.sql | exit=1; expected=foreign key constraint fails; ERROR 1452 (23000) at line 3: Cannot add or update a child row: a foreign key constraint fails (`cloudrestwines`.`refund`, CONSTRAINT `fk_refund_orderline` FOREIGN KEY (`customerOrderId`, `productId`) REFERENCES `orderline` (`customerOrderId`, `productId`) ON DELETE RESTRICT ON UPDATE |
 | PASS | Assessed business rule: Rule 1 role dates | t02_invalidroledate.sql; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated. |
 | PASS | Assessed business rule: Rule 2 reorder comment | t03_missingreordercomment.sql; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated. |
 | PASS | Assessed business rule: Rule 3 current physical address | additional_postalshipment.sql; ERROR 1644 (45000) at line 3: Shipment address must be a physical address, not PO Box or Private Bag |
@@ -63,7 +72,7 @@
 | PASS | Query 3 filters AFFECTED involvement | filter present |
 | PASS | Data Dictionary has explicit domains | generic domain absent |
 | PASS | Data Dictionary has semantic descriptions | generic description absent |
-| PASS | Full ER image meets resolution requirement | resolution=(1586, 2551) |
+| PASS | Full ER image meets resolution requirement | resolution=(3327, 2245) |
 | PASS | Final report contains Task 1 | Task 1 |
 | PASS | Final report contains Task 2 | Task 2 |
 | PASS | Final report contains Task 3 | Task 3 |
@@ -73,12 +82,12 @@
 | PASS | Final report contains Task 7 | Task 7 |
 | PASS | Final report contains AI use declaration | AI use declaration |
 | PASS | Development report retains honest dependencies | dependency notices |
-| PASS | Development mode honestly retains placeholders | FINAL_MODE=0 |
+| PASS | Development mode discloses remaining human inputs | FINAL_MODE=0; unresolved human inputs disclosed |
 
 ## Genuine external dependencies
 
-- Official A2 workbook and actual cleaning evidence.
-- Week 11 assigned business scenario.
-- Genuine student Workbench screenshots.
+- Final resolution of ambiguous repeated Order Id + Product Id rows in the official A2 v4 workbook.
+- Submitting students review genuine local Workbench staging/cleaning and integrity screenshots; recapture if course policy requires their own account.
+- Week 11 assigned business scenario if not yet supplied.
 - Four-person video, genuine contribution data, RiPPlE prompt history and peer reviews.
-- Replacement of member 1 and submission date.
+- Mapping of the Mia/Zora/Rianna/Jason draft aliases to the four signed Team Charter members, plus final submission date.

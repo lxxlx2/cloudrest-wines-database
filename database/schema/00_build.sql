@@ -2,4 +2,5 @@
 SOURCE database/schema/01_tables.sql;
 SOURCE database/schema/02_triggers.sql;
 SOURCE database/schema/03_reporting.sql;
+SOURCE database/schema/04_integrity_controls.sql;
 

@@ -1,5 +1,6 @@
 -- Cloudrest Wines supplied-data cleaning framework.
--- Do not invent source columns: create staging tables only after the official A2 workbook is received.
+-- Official A2 workbook v4 has now been received and profiled.
+-- Source-specific staging and checks are in 01_v4_staging.sql and 02_v4_profile_and_clean.sql.
 CREATE DATABASE IF NOT EXISTS cloudreststaging CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- Required workflow for each supplied worksheet:
