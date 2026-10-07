@@ -43,6 +43,7 @@ customer,emailAddress,varchar(254),Text up to the implemented varchar(254) size.
 customer,isActive,tinyint(1),TRUE/FALSE; default 1.,NO,N,N,,TRUE/FALSE indicator for is active on the customer record.
 customeraddress,customerId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,customer.customerId,Identifies the related customer record.
 customeraddress,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,address.addressId,Identifies the related address record.
+customeraddress,addressPurpose,"enum('PRIMARY','DELIVERY','BILLING','CORRESPONDENCE')","Permitted values: primary, delivery, billing, correspondence; default primary.",NO,N,N,,Business purpose used to distinguish concurrent customer address histories.
 customeraddress,startDateTime,datetime,Valid MySQL datetime value.,NO,Y,Y,,Inclusive start date/time of the customeraddress history period.
 customeraddress,endDateTime,datetime,"NULL for current, otherwise not earlier than startDateTime.",YES,N,N,,Optional end date/time of the customeraddress history period; NULL identifies the current row.
 customerorder,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a customerorder record.
@@ -91,6 +92,7 @@ grapevariety,agingDays,smallint unsigned,Numeric value within the implemented My
 harvest,harvestId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a harvest record.
 harvest,vineyardId,char(7),Text up to the implemented char(7) size.,NO,N,N,vineyardplanting.vineyardId,Identifies the related vineyardplanting record.
 harvest,vintageYear,year,Valid MySQL year value.,NO,N,N,vineyardplanting.vintageYear,Records the vintage year of the harvest.
+harvest,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,N,N,vineyardplanting.grapeVarietyId,Identifies the harvested grape variety and completes the FK to the exact vineyard planting.
 harvest,harvestedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the harvest record or validity period.
 harvest,weightKg,"decimal(12,2)",Positive numeric value.,NO,N,N,,Records the weight kg of the harvest.
 harvest,ripenessSugarPercent,"decimal(5,2)","Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented.",NO,N,N,,Harvest ripeness expressed as percentage sugar.
@@ -134,7 +136,7 @@ orderline,caseQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity rec
 orderline,agreedCasePrice,"decimal(10,2)",Numeric value within the implemented MySQL type.,NO,N,N,,Monetary value recorded for the orderline fact in Australian dollars.
 packmember,pickerPackId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,pickerpack.pickerPackId,Identifies the related pickerpack record.
 packmember,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-packmember,joinedDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the packmember record or validity period.
+packmember,joinedDate,date,Valid MySQL date value.,NO,Y,Y,,Date the employee joined this picking pack membership period.
 packmember,leftDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the packmember record or validity period.
 phone,phoneId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a phone record.
 phone,countryCode,varchar(4),Text up to the implemented varchar(4) size; default +61.,NO,Y,N,,Records the country code of the phone.
@@ -169,7 +171,8 @@ receiptline,bottleTypeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y
 receiptline,receivedQuantity,int unsigned,Positive numeric value.,NO,N,N,,Quantity recorded for the receiptline transaction or inventory fact.
 receiptline,actualUnitPrice,"decimal(8,2)",Non-negative numeric value.,NO,N,N,,Monetary value recorded for the receiptline fact in Australian dollars.
 refund,refundId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a refund record.
-refund,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,N,N,customerorder.customerOrderId,Identifies the related customerorder record.
+refund,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,N,N,orderline.customerOrderId,Identifies the order component of the refunded order line.
+refund,productId,char(7),Text up to the implemented char(7) size.,NO,N,N,orderline.productId,Identifies the product component of the refunded order line.
 refund,refundDate,date,Valid MySQL date value.,NO,N,N,,Date associated with the refund record or validity period.
 refund,refundReason,"enum('SHORTSUPPLY','TRANSITDAMAGE')","Permitted values: shortsupply, transitdamage.",NO,N,N,,Records the refund reason of the refund.
 refund,verifiedFlag,tinyint(1),TRUE/FALSE.,NO,N,N,,TRUE/FALSE indicator for verified flag on the refund record.
@@ -192,8 +195,9 @@ shift,taskCategoryId,char(6),Text up to the implemented char(6) size.,NO,N,N,tas
 shift,supervisorId,char(7),Text up to the implemented char(7) size.,NO,N,N,employee.employeeId,Identifies the related employee record.
 shiftassignment,shiftId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,shift.shiftId,Identifies the related shift record.
 shiftassignment,employeeId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,employee.employeeId,Identifies the related employee record.
-shiftassignment,regularHours,"decimal(4,2)",Non-negative numeric value.,NO,N,N,,Regular labour hours worked on the assigned shift.
-shiftassignment,overtimeHours,"decimal(4,2)",Non-negative numeric value.,NO,N,N,,Overtime hours used in workload and safety analysis.
+shiftassignment,actualStartTime,time,Valid MySQL time value.,NO,N,N,,Actual employee start time for this shift assignment.
+shiftassignment,actualEndTime,time,Valid MySQL time value later than actualStartTime.,NO,N,N,,Actual employee end time for this shift assignment.
+shiftassignment,breakMinutes,smallint unsigned,Non-negative break minutes shorter than the assignment duration; default 0.,NO,N,N,,Unpaid break minutes deducted when deriving labour hours.
 shipment,shipmentId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a shipment record.
 shipment,customerOrderId,char(8),Text up to the implemented char(8) size.,NO,Y,N,customerorder.customerOrderId,Identifies the related customerorder record.
 shipment,addressId,char(8),Text up to the implemented char(8) size.,NO,N,N,address.addressId,Identifies the related address record.
@@ -249,7 +253,7 @@ vineyard,managerId,char(7),Text up to the implemented char(7) size.,NO,Y,N,emplo
 vineyard,addressId,char(8),Text up to the implemented char(8) size.,NO,Y,N,address.addressId,Identifies the related address record.
 vineyardplanting,vineyardId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,vineyard.vineyardId,Identifies the related vineyard record.
 vineyardplanting,vintageYear,year,Valid MySQL year value.,NO,Y,Y,,Records the vintage year of the vineyardplanting.
-vineyardplanting,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,N,N,grapevariety.grapeVarietyId,Identifies the related grapevariety record.
+vineyardplanting,grapeVarietyId,char(7),Text up to the implemented char(7) size.,NO,Y,Y,grapevariety.grapeVarietyId,Identifies the grape variety planted in this vineyard and vintage.
 vineyardplanting,plantedDate,date,Valid MySQL date value.,YES,N,N,,Date associated with the vineyardplanting record or validity period.
 wellbeingaction,wellbeingActionId,char(8),Text up to the implemented char(8) size.,NO,Y,Y,,Stable identifier for a wellbeingaction record.
 wellbeingaction,wellbeingCheckinId,char(8),Text up to the implemented char(8) size.,NO,N,N,wellbeingcheckin.wellbeingCheckinId,Identifies the related wellbeingcheckin record.
