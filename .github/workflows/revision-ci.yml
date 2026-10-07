@@ -1,0 +1,89 @@
+name: Tutor feedback revision CI
+
+on:
+  push:
+    branches:
+      - revision/tutor-feedback-v4-20261007
+  pull_request:
+
+jobs:
+  mysql84:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
+
+      - name: Build portable SQL
+        run: python3 tools/build_submission_sql.py
+
+      - name: Rebuild database from empty state
+        run: mysql -h127.0.0.1 -uroot -proot < deliverables/final-submission/Cloudrest_Wines_Database.sql
+
+      - name: Validate revised cross-row controls
+        run: |
+          mysql -h127.0.0.1 -uroot -proot -e "CALL cloudrestwines.validateAllWineComposition();"
+          mysql -h127.0.0.1 -uroot -proot < database/tests/t06_pack_rejoin.sql
+
+      - name: Run expected-failure regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          expect_fail () {
+            local file="$1"
+            local needle="$2"
+            set +e
+            output=$(mysql -h127.0.0.1 -uroot -proot < "$file" 2>&1)
+            code=$?
+            set -e
+            echo "$output"
+            if [ "$code" -eq 0 ]; then
+              echo "Expected failure but command succeeded: $file"
+              exit 1
+            fi
+            echo "$output" | grep -F "$needle"
+          }
+
+          expect_fail database/tests/t02_invalidroledate.sql "chk_employeerole_dates"
+          expect_fail database/tests/t03_missingreordercomment.sql "chk_bottletype_reorder"
+          expect_fail database/tests/t04_unpaidshipment.sql "Order must be paid before shipment"
+          expect_fail database/tests/t05_overlappingsupervision.sql "already has a supervisor"
+          expect_fail database/tests/t07_employee_current_address_overlap.sql "Employee address period overlaps"
+          expect_fail database/tests/t08_customer_primary_phone_overlap.sql "Customer may have only one current primary phone"
+          expect_fail database/tests/t09_incomplete_wine_composition.sql "Wine composition must contain at least one variety and total exactly 100 percent"
+          expect_fail database/tests/t10_harvest_requires_variety_planting.sql "foreign key constraint fails"
+          expect_fail database/tests/t11_refund_requires_order_product.sql "foreign key constraint fails"
+
+      - name: Execute six decision-support queries
+        run: |
+          for q in database/queries/0*.sql; do
+            echo "Running $q"
+            mysql -h127.0.0.1 -uroot -proot < "$q"
+          done
+
+      - name: Schema smoke checks
+        run: |
+          mysql -N -h127.0.0.1 -uroot -proot -e "
+            SELECT COUNT(*) FROM information_schema.tables
+              WHERE table_schema='cloudrestwines' AND table_type='BASE TABLE';
+            SELECT COUNT(*) FROM information_schema.triggers
+              WHERE trigger_schema='cloudrestwines';
+            SELECT COUNT(*) FROM information_schema.routines
+              WHERE routine_schema='cloudrestwines';
+          "
