@@ -1,12 +1,19 @@
 USE cloudrestwines;
--- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
--- Operational area is the driver so an area with incidents but no recorded hours is still visible.
-WITH hoursbyarea AS (
-  SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
+-- Sustainability measure: incidents per 1,000 actual labour hours during the last 12 months.
+-- Labour hours are derived from assignment start/end times so they cannot disagree with stored hour totals.
+WITH assignmenthours AS (
+  SELECT s.operationalAreaId,
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS labourHours
   FROM shift s
   JOIN shiftassignment sa ON sa.shiftId = s.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
-  GROUP BY s.operationalAreaId
+), hoursbyarea AS (
+  SELECT operationalAreaId, SUM(labourHours) AS labourHours
+  FROM assignmenthours
+  GROUP BY operationalAreaId
 ), incidentloss AS (
   SELECT i.incidentId,
          i.operationalAreaId,
@@ -23,7 +30,7 @@ WITH hoursbyarea AS (
   GROUP BY operationalAreaId
 )
 SELECT oa.areaName,
-       COALESCE(h.labourHours, 0) AS labourHours,
+       ROUND(COALESCE(h.labourHours, 0), 2) AS labourHours,
        COALESCE(i.incidentCount, 0) AS incidentCount,
        COALESCE(i.lostHours, 0) AS lostHours,
        CASE
