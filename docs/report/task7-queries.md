@@ -125,7 +125,7 @@ The ordering places ACTN0001 first because it is already overdue. ACTN0002 still
 
 ### EXPLAIN interpretation
 
-On the previously verified MySQL 8.4 build, `correctiveaction` used the status/date index and the joins to incident, operational area and employee used primary-key lookups; the calculated ordering required a temporary result/filesort. Optimiser choices may change after schema/data revisions. The final report must use the EXPLAIN output captured from the same final Workbench build rather than copying an older screenshot.
+The revised build was executed under MySQL 8.4.11 in CI. For the current small fixture, the optimiser starts with `incident` using a full scan of 3 rows and reports `Using temporary; Using filesort` for the calculated priority ordering. `correctiveaction` is reached with `ref` access through `fk_action_incident`, while `operationalarea` and `employee` use `eq_ref` primary-key lookups. This is the actual plan for the revised fixture; the final Workbench screenshot must still be recaptured from the final frozen build because optimiser choices can change with statistics and data volume.
 
 ## Final evidence rule
 
