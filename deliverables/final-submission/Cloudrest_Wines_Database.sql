@@ -1,5 +1,5 @@
 -- Cloudrest Wines Database — portable MySQL 8.x build
--- Team: Mia, Zora, Rianna, Jason
+-- Team: Zixuan Shen, Feiyue Ma, Xinzhu Wang, Chengye Jiang
 -- Perspective: Human Resources, Workforce Planning and Wellbeing
 -- Open this file in MySQL Workbench and execute the full script.
 -- All data is fictitious and intended only for assessment/testing.
@@ -126,7 +126,7 @@ CREATE TABLE packmember (
   employeeId CHAR(7) NOT NULL,
   joinedDate DATE NOT NULL,
   leftDate DATE NULL,
-  PRIMARY KEY (pickerPackId, employeeId),
+  PRIMARY KEY (pickerPackId, employeeId, joinedDate),
   CONSTRAINT fk_packmember_pack FOREIGN KEY (pickerPackId) REFERENCES pickerpack(pickerPackId) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_packmember_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_packmember_dates CHECK (leftDate IS NULL OR leftDate >= joinedDate)
@@ -174,7 +174,7 @@ CREATE TABLE vineyardplanting (
   vintageYear YEAR NOT NULL,
   grapeVarietyId CHAR(7) NOT NULL,
   plantedDate DATE NULL,
-  PRIMARY KEY (vineyardId, vintageYear),
+  PRIMARY KEY (vineyardId, vintageYear, grapeVarietyId),
   CONSTRAINT fk_planting_vineyard FOREIGN KEY (vineyardId) REFERENCES vineyard(vineyardId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_planting_variety FOREIGN KEY (grapeVarietyId) REFERENCES grapevariety(grapeVarietyId) ON UPDATE CASCADE ON DELETE RESTRICT
 );
@@ -183,10 +183,13 @@ CREATE TABLE harvest (
   harvestId CHAR(8) PRIMARY KEY,
   vineyardId CHAR(7) NOT NULL,
   vintageYear YEAR NOT NULL,
+  grapeVarietyId CHAR(7) NOT NULL,
   harvestedDate DATE NOT NULL,
   weightKg DECIMAL(12,2) NOT NULL,
   ripenessSugarPercent DECIMAL(5,2) NOT NULL,
-  CONSTRAINT fk_harvest_planting FOREIGN KEY (vineyardId, vintageYear) REFERENCES vineyardplanting(vineyardId, vintageYear) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_harvest_planting FOREIGN KEY (vineyardId, vintageYear, grapeVarietyId)
+    REFERENCES vineyardplanting(vineyardId, vintageYear, grapeVarietyId)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_harvest_weight CHECK (weightKg > 0),
   CONSTRAINT chk_harvest_ripeness CHECK (ripenessSugarPercent BETWEEN 0 AND 100)
 );
@@ -390,6 +393,7 @@ CREATE TABLE customerphone (
 CREATE TABLE customeraddress (
   customerId CHAR(7) NOT NULL,
   addressId CHAR(8) NOT NULL,
+  addressPurpose ENUM('PRIMARY','DELIVERY','BILLING','CORRESPONDENCE') NOT NULL DEFAULT 'PRIMARY',
   startDateTime DATETIME NOT NULL,
   endDateTime DATETIME NULL,
   PRIMARY KEY (customerId, addressId, startDateTime),
@@ -431,11 +435,14 @@ CREATE TABLE shipment (
 CREATE TABLE refund (
   refundId CHAR(8) PRIMARY KEY,
   customerOrderId CHAR(8) NOT NULL,
+  productId CHAR(7) NOT NULL,
   refundDate DATE NOT NULL,
   refundReason ENUM('SHORTSUPPLY','TRANSITDAMAGE') NOT NULL,
   verifiedFlag BOOLEAN NOT NULL,
   refundAmount DECIMAL(10,2) NOT NULL,
-  CONSTRAINT fk_refund_order FOREIGN KEY (customerOrderId) REFERENCES customerorder(customerOrderId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_refund_orderline FOREIGN KEY (customerOrderId, productId)
+    REFERENCES orderline(customerOrderId, productId)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_refund_amount CHECK (refundAmount > 0),
   CONSTRAINT chk_refund_verified CHECK (refundReason <> 'TRANSITDAMAGE' OR verifiedFlag = TRUE)
 );
@@ -520,12 +527,17 @@ CREATE TABLE shift (
 CREATE TABLE shiftassignment (
   shiftId CHAR(8) NOT NULL,
   employeeId CHAR(7) NOT NULL,
-  regularHours DECIMAL(4,2) NOT NULL,
-  overtimeHours DECIMAL(4,2) NOT NULL DEFAULT 0,
+  actualStartTime TIME NOT NULL,
+  actualEndTime TIME NOT NULL,
+  breakMinutes SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (shiftId, employeeId),
   CONSTRAINT fk_shiftassignment_shift FOREIGN KEY (shiftId) REFERENCES shift(shiftId) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_shiftassignment_employee FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_shiftassignment_hours CHECK (regularHours > 0 AND regularHours <= 16 AND overtimeHours >= 0 AND regularHours + overtimeHours <= 18)
+  CONSTRAINT chk_shiftassignment_time CHECK (actualEndTime > actualStartTime),
+  CONSTRAINT chk_shiftassignment_break CHECK (
+    breakMinutes < TIMESTAMPDIFF(MINUTE, actualStartTime, actualEndTime)
+    AND TIMESTAMPDIFF(MINUTE, actualStartTime, actualEndTime) - breakMinutes <= 1080
+  )
 );
 
 CREATE TABLE incident (
@@ -708,7 +720,10 @@ BEGIN
 
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY')
+    AND endDateTime IS NULL;
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -749,7 +764,10 @@ BEGIN
 
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer AND addressId = NEW.addressId AND endDateTime IS NULL;
+  WHERE customerId = vCustomer
+    AND addressId = NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY')
+    AND endDateTime IS NULL;
 
   IF vPaid = FALSE THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
@@ -815,11 +833,18 @@ CREATE TRIGGER trg_supplieraddress_nooverlap_insert
 BEFORE INSERT ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId=sa.addressId
     WHERE sa.supplierId = NEW.supplierId
+      AND a.addressKind = vAddressKind
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Supplier address period overlaps an existing address of the same kind';
   END IF;
 END$$
 
@@ -827,12 +852,19 @@ CREATE TRIGGER trg_supplieraddress_nooverlap_update
 BEFORE UPDATE ON supplieraddress
 FOR EACH ROW
 BEGIN
-  IF EXISTS (SELECT 1 FROM supplieraddress sa
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM supplieraddress sa
+    JOIN address a ON a.addressId=sa.addressId
     WHERE sa.supplierId = NEW.supplierId
+      AND a.addressKind = vAddressKind
       AND NOT (sa.supplierId=OLD.supplierId AND sa.addressId=OLD.addressId AND sa.startDateTime=OLD.startDateTime)
       AND NEW.startDateTime <= COALESCE(sa.endDateTime,'9999-12-31 23:59:59')
-      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime) THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing period';
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= sa.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updated supplier address period overlaps an existing address of the same kind';
   END IF;
 END$$
 
@@ -920,6 +952,300 @@ BEGIN
 END$$
 DELIMITER ;
 -- ===== END database/schema/03_reporting.sql =====
+
+-- ===== BEGIN database/schema/04_integrity_controls.sql =====
+USE cloudrestwines;
+DELIMITER $$
+
+-- Tutor feedback: historical address rows must not produce two simultaneous
+-- current rows for the same business meaning.
+CREATE TRIGGER trg_employeeaddress_samekind_insert
+BEFORE INSERT ON employeeaddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM employeeaddress ea
+    JOIN address a ON a.addressId=ea.addressId
+    WHERE ea.employeeId=NEW.employeeId
+      AND a.addressKind=vAddressKind
+      AND NEW.startDateTime <= COALESCE(ea.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ea.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Employee address period overlaps an existing address of the same kind';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_employeeaddress_samekind_update
+BEFORE UPDATE ON employeeaddress
+FOR EACH ROW
+BEGIN
+  DECLARE vAddressKind VARCHAR(10);
+  SELECT addressKind INTO vAddressKind FROM address WHERE addressId=NEW.addressId;
+  IF EXISTS (
+    SELECT 1
+    FROM employeeaddress ea
+    JOIN address a ON a.addressId=ea.addressId
+    WHERE ea.employeeId=NEW.employeeId
+      AND a.addressKind=vAddressKind
+      AND NOT (
+        ea.employeeId=OLD.employeeId
+        AND ea.addressId=OLD.addressId
+        AND ea.startDateTime=OLD.startDateTime
+      )
+      AND NEW.startDateTime <= COALESCE(ea.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ea.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Updated employee address period overlaps an existing address of the same kind';
+  END IF;
+END$$
+
+-- Customer addresses may legitimately have concurrent Delivery and Billing rows
+-- in the supplied v4 workbook. The non-overlap rule is therefore per purpose.
+CREATE TRIGGER trg_customeraddress_purpose_insert
+BEFORE INSERT ON customeraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM customeraddress ca
+    WHERE ca.customerId=NEW.customerId
+      AND ca.addressPurpose=NEW.addressPurpose
+      AND NEW.startDateTime <= COALESCE(ca.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ca.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Customer address period overlaps an existing address with the same purpose';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customeraddress_purpose_update
+BEFORE UPDATE ON customeraddress
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM customeraddress ca
+    WHERE ca.customerId=NEW.customerId
+      AND ca.addressPurpose=NEW.addressPurpose
+      AND NOT (
+        ca.customerId=OLD.customerId
+        AND ca.addressId=OLD.addressId
+        AND ca.startDateTime=OLD.startDateTime
+      )
+      AND NEW.startDateTime <= COALESCE(ca.endDateTime,'9999-12-31 23:59:59')
+      AND COALESCE(NEW.endDateTime,'9999-12-31 23:59:59') >= ca.startDateTime
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Updated customer address period overlaps an existing address with the same purpose';
+  END IF;
+END$$
+
+-- Multiple phone numbers may be retained, but only one current primary number
+-- may exist for an employee/customer at a time.
+CREATE TRIGGER trg_employeephone_primary_insert
+BEFORE INSERT ON employeephone
+FOR EACH ROW
+BEGIN
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM employeephone ep
+    WHERE ep.employeeId=NEW.employeeId
+      AND ep.endDateTime IS NULL
+      AND ep.isPrimary
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Employee may have only one current primary phone';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_employeephone_primary_update
+BEFORE UPDATE ON employeephone
+FOR EACH ROW
+BEGIN
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM employeephone ep
+    WHERE ep.employeeId=NEW.employeeId
+      AND ep.endDateTime IS NULL
+      AND ep.isPrimary
+      AND NOT (
+        ep.employeeId=OLD.employeeId
+        AND ep.phoneId=OLD.phoneId
+        AND ep.startDateTime=OLD.startDateTime
+      )
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Employee may have only one current primary phone';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerphone_primary_insert
+BEFORE INSERT ON customerphone
+FOR EACH ROW
+BEGIN
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM customerphone cp
+    WHERE cp.customerId=NEW.customerId
+      AND cp.endDateTime IS NULL
+      AND cp.isPrimary
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Customer may have only one current primary phone';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_customerphone_primary_update
+BEFORE UPDATE ON customerphone
+FOR EACH ROW
+BEGIN
+  IF NEW.endDateTime IS NULL AND NEW.isPrimary AND EXISTS (
+    SELECT 1 FROM customerphone cp
+    WHERE cp.customerId=NEW.customerId
+      AND cp.endDateTime IS NULL
+      AND cp.isPrimary
+      AND NOT (
+        cp.customerId=OLD.customerId
+        AND cp.phoneId=OLD.phoneId
+        AND cp.startDateTime=OLD.startDateTime
+      )
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Customer may have only one current primary phone';
+  END IF;
+END$$
+
+-- joinedDate is part of the PK so a picker can leave and later rejoin the same
+-- pack. Membership periods for one picker still cannot overlap.
+CREATE TRIGGER trg_packmember_nooverlap_insert
+BEFORE INSERT ON packmember
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM packmember pm
+    WHERE pm.employeeId=NEW.employeeId
+      AND NEW.joinedDate <= COALESCE(pm.leftDate,'9999-12-31')
+      AND COALESCE(NEW.leftDate,'9999-12-31') >= pm.joinedDate
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Picker membership period overlaps an existing pack membership';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_packmember_nooverlap_update
+BEFORE UPDATE ON packmember
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM packmember pm
+    WHERE pm.employeeId=NEW.employeeId
+      AND NOT (
+        pm.pickerPackId=OLD.pickerPackId
+        AND pm.employeeId=OLD.employeeId
+        AND pm.joinedDate=OLD.joinedDate
+      )
+      AND NEW.joinedDate <= COALESCE(pm.leftDate,'9999-12-31')
+      AND COALESCE(NEW.leftDate,'9999-12-31') >= pm.joinedDate
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Updated picker membership period overlaps an existing pack membership';
+  END IF;
+END$$
+
+-- MySQL has no deferred cross-row CHECK. Composition is therefore validated at
+-- the release boundary. An active product cannot exist unless its wine recipe
+-- has at least one row and totals exactly 100 percent.
+CREATE PROCEDURE validateWineComposition(IN pWineId CHAR(7))
+BEGIN
+  DECLARE vRows INT DEFAULT 0;
+  DECLARE vTotal DECIMAL(8,2) DEFAULT 0;
+  SELECT COUNT(*), COALESCE(SUM(proportionPercent),0)
+    INTO vRows, vTotal
+  FROM winecomposition
+  WHERE wineId=pWineId;
+
+  IF vRows=0 OR ABS(vTotal-100.00) > 0.001 THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Wine composition must contain at least one variety and total exactly 100 percent';
+  END IF;
+END$$
+
+CREATE PROCEDURE validateAllWineComposition()
+BEGIN
+  IF EXISTS (
+    SELECT w.wineId
+    FROM wine w
+    LEFT JOIN winecomposition wc ON wc.wineId=w.wineId
+    GROUP BY w.wineId
+    HAVING COUNT(wc.grapeVarietyId)=0
+       OR ABS(COALESCE(SUM(wc.proportionPercent),0)-100.00) > 0.001
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='At least one wine has an incomplete composition total';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_wineproduct_composition_insert
+BEFORE INSERT ON wineproduct
+FOR EACH ROW
+BEGIN
+  IF NEW.isActive THEN
+    CALL validateWineComposition(NEW.wineId);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_wineproduct_composition_update
+BEFORE UPDATE ON wineproduct
+FOR EACH ROW
+BEGIN
+  IF NEW.isActive THEN
+    CALL validateWineComposition(NEW.wineId);
+  END IF;
+END$$
+
+CREATE TRIGGER trg_winecomposition_locked_insert
+BEFORE INSERT ON winecomposition
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM wineproduct wp
+    WHERE wp.wineId=NEW.wineId AND wp.isActive
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Deactivate wine products before changing a released wine composition';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_winecomposition_locked_update
+BEFORE UPDATE ON winecomposition
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM wineproduct wp
+    WHERE wp.wineId IN (OLD.wineId,NEW.wineId) AND wp.isActive
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Deactivate wine products before changing a released wine composition';
+  END IF;
+END$$
+
+CREATE TRIGGER trg_winecomposition_locked_delete
+BEFORE DELETE ON winecomposition
+FOR EACH ROW
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM wineproduct wp
+    WHERE wp.wineId=OLD.wineId AND wp.isActive
+  ) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT='Deactivate wine products before changing a released wine composition';
+  END IF;
+END$$
+
+DELIMITER ;
+-- ===== END database/schema/04_integrity_controls.sql =====
 
 -- ===== BEGIN database/data/01_testdata.sql =====
 USE cloudrestwines;
@@ -1054,8 +1380,12 @@ INSERT INTO seasonalrating VALUES
 INSERT INTO vineyard VALUES ('VINE001','Misty View',18.50,-37.650100,145.374200,'EMP0003','ADDR0002');
 INSERT INTO grapevariety VALUES
 ('GRAPE01','Pinot Noir',72.50,'OAKBARREL',270),('GRAPE02','Chardonnay',74.00,'STAINLESSSTEEL',180);
-INSERT INTO vineyardplanting VALUES ('VINE001',YEAR(CURRENT_DATE),'GRAPE01',MAKEDATE(YEAR(CURRENT_DATE),1));
-INSERT INTO harvest VALUES ('HARV0001','VINE001',YEAR(CURRENT_DATE),DATE_SUB(CURRENT_DATE,INTERVAL 120 DAY),14500.00,23.50);
+INSERT INTO vineyardplanting VALUES
+('VINE001',YEAR(CURRENT_DATE),'GRAPE01',MAKEDATE(YEAR(CURRENT_DATE),1)),
+('VINE001',YEAR(CURRENT_DATE),'GRAPE02',MAKEDATE(YEAR(CURRENT_DATE),1));
+INSERT INTO harvest VALUES
+('HARV0001','VINE001',YEAR(CURRENT_DATE),'GRAPE01',DATE_SUB(CURRENT_DATE,INTERVAL 120 DAY),14500.00,23.50),
+('HARV0002','VINE001',YEAR(CURRENT_DATE),'GRAPE02',DATE_SUB(CURRENT_DATE,INTERVAL 118 DAY),9200.00,22.10);
 INSERT INTO winecategory VALUES ('CAT01','Dry Red'),('CAT02','Dry White');
 INSERT INTO wine VALUES ('WINE001','Cloudrest Pinot',YEAR(CURRENT_DATE),'CAT01',13.50,'EMP0004');
 INSERT INTO winecomposition VALUES ('WINE001','GRAPE01',100.00);
@@ -1064,6 +1394,7 @@ INSERT INTO bottletype VALUES
 ('BOTL001',750,'Burgundy','GLASS','Green',5000,1.20,TRUE,NULL),
 ('BOTL002',750,'Bordeaux','GLASS','Clear',200,1.10,FALSE,'Supplier quality inconsistency documented');
 INSERT INTO wineproduct VALUES ('PROD001','WINE001','BOTL001',12,TRUE);
+CALL validateAllWineComposition();
 INSERT INTO productprice VALUES ('PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 180 DAY),NULL,360.00);
 INSERT INTO supplier VALUES ('SUPP001','Valley Glass Supply','Sam','Lee','sam@valleyglass.example');
 INSERT INTO supplieraddress VALUES
@@ -1082,14 +1413,19 @@ INSERT INTO customer VALUES
 ('CUST001','INDIVIDUAL','alex@example.test',TRUE),('CUST002','BUSINESS','orders@restaurant.example',TRUE);
 INSERT INTO individualcustomer VALUES ('CUST001','Alex','Green','1990-06-01');
 INSERT INTO businesscustomer VALUES ('CUST002','Yarra Table Pty Ltd','12345678901','Grace','King','RESTAURANT');
-INSERT INTO customeraddress VALUES
-('CUST001','ADDR0003','2025-01-01 00:00:00',NULL),('CUST001','ADDR0004','2025-01-01 00:00:00',NULL),
-('CUST002','ADDR0001','2025-01-01 00:00:00',NULL);
+INSERT INTO customeraddress
+(customerId,addressId,addressPurpose,startDateTime,endDateTime) VALUES
+('CUST001','ADDR0003','PRIMARY','2025-01-01 00:00:00',NULL),
+('CUST001','ADDR0004','CORRESPONDENCE','2025-01-01 00:00:00',NULL),
+('CUST002','ADDR0001','PRIMARY','2025-01-01 00:00:00',NULL);
 INSERT INTO customerphone VALUES
 ('CUST001','PHON0003','2025-01-01 00:00:00',NULL,TRUE);
 INSERT INTO customerorder VALUES ('CORD0001','CUST001',DATE_SUB(CURRENT_DATE,INTERVAL 10 DAY),TRUE,'PENDING');
 INSERT INTO orderline VALUES ('CORD0001','PROD001',2,360.00);
 INSERT INTO shipment VALUES ('SHIP0001','CORD0001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY));
+INSERT INTO refund
+(refundId,customerOrderId,productId,refundDate,refundReason,verifiedFlag,refundAmount)
+VALUES ('RFND0001','CORD0001','PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY),'SHORTSUPPLY',FALSE,360.00);
 
 INSERT INTO qualification VALUES
 ('QUAL001','First Aid Certificate','Australian Red Cross',36,TRUE),
@@ -1130,14 +1466,24 @@ INSERT INTO shift VALUES
 ('SHFT0003',DATE_SUB(CURRENT_DATE,INTERVAL 12 DAY),'07:00:00','15:00:00','AREA02','TASK02','EMP0004'),
 ('SHFT0004',DATE_SUB(CURRENT_DATE,INTERVAL 5 DAY),'07:00:00','15:00:00','AREA02','TASK03','EMP0004'),
 ('SHFT0005',DATE_SUB(CURRENT_DATE,INTERVAL 200 DAY),'06:00:00','14:00:00','AREA01','TASK01','EMP0002');
-INSERT INTO shiftassignment VALUES
-('SHFT0001','EMP0008',8,2),('SHFT0001','EMP0009',8,3),('SHFT0001','EMP0010',6,1),
-('SHFT0001','EMP0013',8,1),
-('SHFT0002','EMP0008',8,1),('SHFT0002','EMP0009',8,4),('SHFT0002','EMP0010',6,0),
-('SHFT0002','EMP0013',8,0),
-('SHFT0003','EMP0005',8,2),('SHFT0003','EMP0011',8,3),('SHFT0003','EMP0012',6,0),
-('SHFT0004','EMP0005',8,1),('SHFT0004','EMP0011',8,4),('SHFT0004','EMP0012',6,0),
-('SHFT0005','EMP0008',8,0),('SHFT0005','EMP0009',8,0);
+INSERT INTO shiftassignment
+(shiftId,employeeId,actualStartTime,actualEndTime,breakMinutes) VALUES
+('SHFT0001','EMP0008','06:00:00','16:00:00',0),
+('SHFT0001','EMP0009','06:00:00','17:00:00',0),
+('SHFT0001','EMP0010','06:00:00','13:00:00',0),
+('SHFT0001','EMP0013','06:00:00','15:00:00',0),
+('SHFT0002','EMP0008','06:00:00','15:00:00',0),
+('SHFT0002','EMP0009','06:00:00','18:00:00',0),
+('SHFT0002','EMP0010','06:00:00','12:00:00',0),
+('SHFT0002','EMP0013','06:00:00','14:00:00',0),
+('SHFT0003','EMP0005','07:00:00','17:00:00',0),
+('SHFT0003','EMP0011','07:00:00','18:00:00',0),
+('SHFT0003','EMP0012','07:00:00','13:00:00',0),
+('SHFT0004','EMP0005','07:00:00','16:00:00',0),
+('SHFT0004','EMP0011','07:00:00','19:00:00',0),
+('SHFT0004','EMP0012','07:00:00','13:00:00',0),
+('SHFT0005','EMP0008','06:00:00','14:00:00',0),
+('SHFT0005','EMP0009','06:00:00','14:00:00',0);
 
 INSERT INTO incident VALUES
 ('INCD0001',DATE_SUB(NOW(),INTERVAL 20 DAY),'AREA01','NEARMISS','LOW','Slip hazard identified during harvest',0,FALSE),
@@ -1161,6 +1507,7 @@ INSERT INTO wellbeingaction VALUES
 -- ===== END database/data/01_testdata.sql =====
 
 -- ===== SIX DECISION-SUPPORT QUERIES =====
+-- ===== QUERY 01: trainingcoverage =====
 USE cloudrestwines;
 -- Management question: Which operational areas have gaps in annual mandatory safety/sustainability training?
 WITH activeworkforce AS (
@@ -1189,15 +1536,24 @@ JOIN operationalarea oa ON oa.operationalAreaId = aw.operationalAreaId
 LEFT JOIN completion c ON c.employeeId = aw.employeeId
 GROUP BY oa.operationalAreaId, oa.areaName
 ORDER BY coveragePercent, oa.areaName;
+
+-- ===== QUERY 02: incidentrate =====
 USE cloudrestwines;
--- Sustainability measure: incidents per 1,000 labour hours during the last 12 months.
--- Operational area is the driver so an area with incidents but no recorded hours is still visible.
-WITH hoursbyarea AS (
-  SELECT s.operationalAreaId, SUM(sa.regularHours + sa.overtimeHours) AS labourHours
+-- Sustainability measure: incidents per 1,000 actual labour hours during the last 12 months.
+-- Labour hours are derived from assignment start/end times so they cannot disagree with stored hour totals.
+WITH assignmenthours AS (
+  SELECT s.operationalAreaId,
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS labourHours
   FROM shift s
   JOIN shiftassignment sa ON sa.shiftId = s.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)
-  GROUP BY s.operationalAreaId
+), hoursbyarea AS (
+  SELECT operationalAreaId, SUM(labourHours) AS labourHours
+  FROM assignmenthours
+  GROUP BY operationalAreaId
 ), incidentloss AS (
   SELECT i.incidentId,
          i.operationalAreaId,
@@ -1214,7 +1570,7 @@ WITH hoursbyarea AS (
   GROUP BY operationalAreaId
 )
 SELECT oa.areaName,
-       COALESCE(h.labourHours, 0) AS labourHours,
+       ROUND(COALESCE(h.labourHours, 0), 2) AS labourHours,
        COALESCE(i.incidentCount, 0) AS incidentCount,
        COALESCE(i.lostHours, 0) AS lostHours,
        CASE
@@ -1226,6 +1582,8 @@ LEFT JOIN hoursbyarea h ON h.operationalAreaId = oa.operationalAreaId
 LEFT JOIN incidentsbyarea i ON i.operationalAreaId = oa.operationalAreaId
 WHERE h.labourHours IS NOT NULL OR i.incidentCount IS NOT NULL
 ORDER BY (incidentsPer1000Hours IS NULL), incidentsPer1000Hours DESC, oa.areaName;
+
+-- ===== QUERY 03: trainingimpact =====
 USE cloudrestwines;
 -- Compare employee incidents before and after completed annual safety training using
 -- equal observed windows of up to 180 days. This avoids understating post-training
@@ -1259,8 +1617,11 @@ LEFT JOIN incidentemployee ie ON ie.employeeId = o.employeeId AND ie.involvement
 LEFT JOIN incident i ON i.incidentId = ie.incidentId
 GROUP BY o.employeeId, e.firstName, e.lastName, o.completionDate, o.observationDays
 ORDER BY incidentsBefore DESC, incidentsAfter DESC;
+
+-- ===== QUERY 04: overtimerisk =====
 USE cloudrestwines;
 -- Workforce review query: surface recent workload/safety/wellbeing indicators without exposing confidential notes.
+-- Worked hours are calculated from actual assignment times. Overtime is the portion above 8 hours per assignment.
 WITH activeworkforce AS (
   SELECT e.employeeId,
          e.firstName,
@@ -1274,14 +1635,21 @@ WITH activeworkforce AS (
     AND (e.employmentEndDate IS NULL OR e.employmentEndDate >= CURRENT_DATE)
     AND er.startDateTime <= NOW()
     AND (er.endDateTime IS NULL OR er.endDateTime >= NOW())
-), workload AS (
+), assignmenthours AS (
   SELECT sa.employeeId,
-         SUM(sa.regularHours) AS regularHours,
-         SUM(sa.overtimeHours) AS overtimeHours
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS workedHours
   FROM shiftassignment sa
   JOIN shift s ON s.shiftId = sa.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
-  GROUP BY sa.employeeId
+), workload AS (
+  SELECT employeeId,
+         ROUND(SUM(LEAST(workedHours, 8.0)), 2) AS regularHours,
+         ROUND(SUM(GREATEST(workedHours - 8.0, 0)), 2) AS overtimeHours
+  FROM assignmenthours
+  GROUP BY employeeId
 ), recentincident AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
   FROM incidentemployee ie
@@ -1319,10 +1687,14 @@ ORDER BY (COALESCE(ri.incidentCount, 0) > 0) DESC,
          (COALESCE(rc.concernCount, 0) > 0) DESC,
          COALESCE(w.overtimeHours, 0) DESC,
          employeeName;
+
+-- ===== QUERY 05: expiringqualification =====
 USE cloudrestwines;
 -- Video demonstration must call both parameter values.
 CALL getExpiringQualifications(30);
 CALL getExpiringQualifications(90);
+
+-- ===== QUERY 06: openactions =====
 USE cloudrestwines;
 -- View-based management query: prioritise overdue and high-severity corrective actions.
 SELECT correctiveActionId, incidentId, incidentDateTime, severity, areaName,
