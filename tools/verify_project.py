@@ -154,5 +154,7 @@ lines=["# Cloudrest Wines Independent Verification Report","",f"- Status: **{sum
 for c in checks: lines.append(f"| {'PASS' if c['passed'] else 'FAIL'} | {c['check']} | {c['evidence'].replace('|','/').replace(chr(10),' ')[:500]} |")
 lines += ["","## Genuine external dependencies",""]+[f"- {x}" for x in summary["externalDependencies"]]
 (OUT/"verification-report.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
-print(json.dumps({k:summary[k] for k in ["status","mode","totalChecks","passed","failed","mysqlVersion","schemaMetrics"]},indent=2))
+console_summary={k:summary[k] for k in ["status","mode","totalChecks","passed","failed","mysqlVersion","schemaMetrics"]}
+console_summary["failedChecks"]=[{"check":c["check"],"evidence":c["evidence"]} for c in required_failures]
+print(json.dumps(console_summary,indent=2))
 raise SystemExit(0 if not required_failures else 1)
