@@ -77,6 +77,16 @@ jobs:
             mysql -h127.0.0.1 -uroot -proot < "$q"
           done
 
+      - name: Regenerate and verify data dictionary
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: "3306"
+          MYSQL_USER: root
+          MYSQL_PWD: root
+        run: |
+          python3 tools/generate_data_dictionary.py
+          git diff --exit-code -- docs/report/data-dictionary.csv docs/report/data-dictionary.md
+
       - name: Run repository verifier
         env:
           MYSQL_HOST: 127.0.0.1
