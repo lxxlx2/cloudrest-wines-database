@@ -105,9 +105,9 @@ def main():
  parts.append('\nCOMMIT;\n')
  (ROOT/'database/data/02_cleaned_v4_data.sql').write_text(''.join(parts),encoding='utf8')
  with (ROOT/'docs/evidence/v4-import-dispositions.csv').open('w',encoding='utf8',newline='') as f:
-  w=csv.writer(f);w.writerow(['sourceRowNumber','orderId','productId','disposition','reason']);w.writerows(sorted(ledger))
+  w=csv.writer(f,lineterminator="\n");w.writerow(['sourceRowNumber','orderId','productId','disposition','reason']);w.writerows(sorted(ledger))
  with (ROOT/'docs/evidence/v4-dependent-facts-quarantine.csv').open('w',encoding='utf8',newline='') as f:
-  w=csv.writer(f);w.writerow(['sourceId','factOrSlot','reason']);w.writerows(heldfacts+phoneheld)
+  w=csv.writer(f,lineterminator="\n");w.writerow(['sourceId','factOrSlot','reason']);w.writerows(heldfacts+phoneheld)
  counts=Counter(r[3] for r in ledger)
  summary={'sourceOrderRows':len(orders),'acceptedImportedOrderRows':counts['IMPORTED'],'exactDuplicatesRejected':len(exact),'ambiguousPairRowsQuarantined':counts['QUARANTINED_AMBIGUOUS_PAIR'],'otherOrderRowsQuarantined':counts['QUARANTINED_OTHER'],'acceptedOrders':len(heads),'tablesImported':{t:len(v) for t,v in table.items()},'sharedPhoneGroupsQuarantined':len(shared),'phoneAssociationsQuarantined':len(phoneheld),'shipmentDetailsQuarantined':len(heldfacts),'productionImport':'CLEANED SUPPLIED DATA AND SUPPLEMENTAL TEST DATA','reconciliation':'COMPLETE: all 182 source order rows have exactly one disposition; quarantines retained in private staging','reasonOrderCounts':dict(Counter(reason for rows in byorder.values() for reason in ([('AMBIGUOUS_PAIR')] if any((r[1],r[4]) in ambiguous for r in rows) else [])))}
  assert sum(counts.values())==182
