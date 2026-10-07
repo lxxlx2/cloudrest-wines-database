@@ -130,7 +130,7 @@ def png_dimensions(path):
     try:
         with open(path,"rb") as fh:
             header=fh.read(24)
-        if len(header)>=24 and header[:8]==b"\\x89PNG\\r\\n\\x1a\\n" and header[12:16]==b"IHDR":
+        if len(header)>=24 and header[:8]==bytes.fromhex("89504e470d0a1a0a") and header[12:16]==b"IHDR":
             import struct
             return struct.unpack(">II",header[16:24])
     except Exception:
