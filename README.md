@@ -4,10 +4,12 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Team
 
-- Mia
-- Zora
-- Rianna
-- Jason
+- Zixuan Shen
+- Feiyue Ma
+- Xinzhu Wang
+- Chengye Jiang
+
+The older report sources use working responsibility aliases Mia, Zora, Rianna and Jason. Their one-to-one mapping to the signed Team Charter members has not been confirmed and must not be guessed.
 
 ## Project direction
 
@@ -34,9 +36,9 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Current status
 
-The HR-focused schema, MySQL implementation, synthetic data, five assessed rule demonstrations, six management queries, Workbench model/ER exports, development report and reproducibility audit are complete. Review-driven fixes for Query 2 coverage, Query 4 workforce coverage, shipment edge cases, qualification procedure NULL validation, negative-test rollback isolation, privacy wording and lost-hours reconciliation have been validated under MySQL 8.4.11.
+The submitted iteration has been superseded by the tutor-feedback revision on `revision/tutor-feedback-v4-20261007`. The revised schema now covers multi-variety vineyard planting/harvest, product-level refunds, picker rejoin history, current contact-history controls, 100% wine-composition release validation, and derived labour/overtime from actual assignment times. The portable database, regression tests and all six decision-support queries have been rebuilt successfully under MySQL 8.4.11.
 
-Official spreadsheet cleaning, the Week 11 business scenario, RiPPlE peer reviews, final contribution records and the four-person video still require course inputs or genuine team activity. These are identified explicitly rather than represented as completed evidence.
+The official A2 v4 workbook has been received and profiled. Deterministic defects and ambiguous records are documented under `database/cleaning/` and `docs/evidence/a2-v4-data-quality-audit.md`. Genuine Workbench screenshots, the regenerated Workbench model/ER export, final Word integration, unresolved source-row decisions, final contribution records, RiPPlE peer reviews and the four-person video remain genuine student/course inputs.
 
 ## Ready-to-review package
 
