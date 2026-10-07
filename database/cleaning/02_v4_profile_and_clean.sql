@@ -183,4 +183,4 @@ SELECT (SELECT COUNT(*) FROM stg_v4_orders) AS sourceRows,
          ON a.orderId=c.orderId AND a.productId=c.productId) AS ambiguousRowsHeld,
        (SELECT COUNT(*) FROM v4_clean_orders c LEFT JOIN v4_ambiguous_order_pairs a
          ON a.orderId=c.orderId AND a.productId=c.productId WHERE a.orderId IS NULL) AS otherCandidateRows,
-       'UNRESOLVED: no production acceptance/rejection disposition' AS reconciliationStatus;
+       'STAGING CANDIDATE COUNTS ONLY: see v4-import-dispositions.csv for final import' AS reconciliationStatus;

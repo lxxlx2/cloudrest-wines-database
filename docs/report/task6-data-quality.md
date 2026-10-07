@@ -56,14 +56,46 @@ The revised test dataset additionally demonstrates:
 
 The assessed five Task 3b rules remain separate from these extra regression controls.
 
-## 6d. Final execution evidence and reconciliation boundary
+## 6d. Final cleaned supplied-data import — 2026-10-08
 
-Genuine local MySQL Workbench evidence was captured on 2026-10-07 for source counts, Customer ID correction, wine/address encoding repairs, exact duplicates, whitespace, ambiguous pairs, mixed status, duplicate address groups and shared phone groups. The screenshots are in `docs/evidence/final-workbench`; public projections exclude raw contact values. Actual SQL output is in `verification/final-query-results/task6-v4-evidence.tsv`.
+The final portable SQL includes `database/data/02_cleaned_v4_data.sql` after the additional test dataset. `tools/build_cleaned_v4_data.py` reads the preserved private staging CSVs and produces accepted INSERTs and ID-only disposition ledgers. Existing before/after Workbench evidence remains unchanged. Final import and six-query captures are in `docs/evidence/combined-database`.
 
-The staging schema uses binary collation so case-only source defects and exact-row comparisons remain visible. This fixes a demonstrated lowercase-ID false negative in the default case-insensitive staging collation. Production schema is unchanged.
+Source IDs map one-to-one into separate namespaces: CUST001 → VCUS001, PROD001 → VPRD001, ORD001 → VORD001 and ADDR001 → VADR0001. This preserves supplied identity without colliding with synthetic fixtures. No production schema or order-line primary key was changed.
 
-Deterministic clean views standardise six Customer ID rows, repair 24 wine names and nine address dashes, collapse whitespace in three company-name rows and exclude source row 160 as the later exact ORD125/PROD001 copy. Raw staging rows remain unchanged. No production customer/order/address migration was performed.
+### Tables imported and verified
 
-After exact deduplication, seven ambiguous pairs contain 15 retained rows. The staging accounting identity is **182 source rows = 1 exact copy excluded + 15 ambiguous rows held + 166 other candidate rows**. Candidates are not approved/accepted records. Address canonicalisation, mixed status and shared phones also need business disposition. Final production source = accepted + rejected reconciliation remains **UNRESOLVED** until actual tutor/business decisions exist.
+| Table | Supplied or supplemental records | Import and verification |
+|---|---:|---|
+| customer | 50 | Standardised IDs; email and source type retained; subtype/FK checks pass. Active state is an import assumption. |
+| individualcustomer | 25 | Source names and birth dates; one subtype row per individual. |
+| businesscustomer | 25 | Source ABN/contact names; whitespace-normalised company; OTHER means subtype unspecified. Unique ABNs pass. |
+| address | 102 | Deterministic physical-address parsing and dash repair; retain every source ID and structured Unit/Level metadata; no canonical merge. |
+| customeraddress | 53 | Source purposes and date/time periods preserved; foreign keys and non-overlap controls pass. |
+| phone | 66 | Unshared source values; OTHER means unspecified type. +61 is an explicit Australian-address country assumption. |
+| customerphone | 66 | Unshared associations only; earliest supplied customer-history start is an explicit effective-start assumption; no primary rank guessed. |
+| winecategory | 1 | Supplemental test category CTV4, explicitly labelled. |
+| wine | 10 | Source wine names; mandatory missing wine attributes are explicitly supplemental test values. |
+| winecomposition | 10 | Supplemental test recipe, validated to 100%; not a factual source recipe. |
+| wineproduct | 10 | Source Product IDs; supplemental bottle, case size and active-state attributes. |
+| customerorder | 79 | Complete accepted orders only; consistent customer/date/header status, all source lines present. |
+| orderline | 132 | Exact source quantities and negotiated prices; no sum, averaging or partial-order import. Live readback matches accepted source rows. |
 
-The export-reset start dates remain unchanged. No original dates are reconstructed. Submitting students must review the evidence, confirm any course-specific account requirements and supply the genuine decisions, contribution dates and video/RiPPlE work.
+All table INSERTs passed MySQL 8.4.11 foreign-key, CHECK and trigger enforcement in an empty-database portable rebuild. Namespace row counts and source quantity/price/header readback are recorded in `docs/evidence/v4-final-import-results.tsv`. Existing verifier passes 73/73; no new verifier checks were added.
+
+### Explicit import assumptions and supplemental test values
+
+The workbook omits attributes required by the stable wine/product schema. Separate supplied-product records therefore use vintage 2026, 13.5% alcohol, synthetic winemaker EMP0004, supplemental category CTV4, a 100% GRAPE01 test recipe, BOTL001 bottles and 12 bottles per case. These are added test attributes, not recovered workbook facts, actual wine recipes or factual packaging specifications. The original synthetic products and HR fixtures remain available for integrity and Task 7 demonstrations. A synthetic business ABN was changed to avoid a collision with a supplied ABN; the supplied ABN is unchanged.
+
+Source shipped/pending values map directly to order status. A blank payment value maps to FALSE as “no confirmed payment”, not a claim of verified non-payment. Shipment dates and order-specific delivery addresses are absent, so 72 accepted shipped-order shipment-detail facts are quarantined; no shipment detail or refund date/verification is invented. Source negotiated prices belong to order lines, not an invented product price history.
+
+### Final reconciliation and quarantine
+
+**182 source order rows = 132 accepted/imported cleaned rows + 1 rejected exact copy + 15 ambiguous-pair rows quarantined + 34 other rows quarantined.** Each original source row has exactly one disposition in `docs/evidence/v4-import-dispositions.csv`. The accepted rows form 79 complete orders; the other 24 source orders are held. Quarantine is a completed import decision, not an unresolved accounting total.
+
+Seven non-exact repeated pairs contain 15 rows. An order containing any ambiguous pair is held as a whole, including its otherwise unique lines, to avoid presenting partial totals. Mixed shipment/payment headers and shipment statuses such as damaged, returned or partially refunded cannot safely map into the stable order enum; affected whole orders are held. The 34 other rows include this order-level closure and unsupported/mixed-status records; reasons may overlap and are listed per row rather than added as independent totals. No ambiguous lines are summed or silently deleted.
+
+All 102 address IDs are retained separately, including the 19 repeated full-address groups; ID-specific structured metadata is preserved, so no canonical identity is guessed. Three shared phone values representing seven customer/phone associations are quarantined. The ID-only dependent-fact ledger is `docs/evidence/v4-dependent-facts-quarantine.csv`.
+
+### Source limitation
+
+Export-reset customer-history starts remain exactly as supplied. Lost original dates are not reconstructed. Student-only video, RiPPlE, Buddycheck and genuine contribution confirmation remain separate from report/code readiness. Task 8 awaits the Week 11 scenario supplied by the tutor.

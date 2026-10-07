@@ -53,6 +53,6 @@ def main():
         run(sql)
     (private/'raw-profile.tsv').write_text(run((ROOT/'database/cleaning/02_v4_profile_and_clean.sql').read_text()),encoding='utf8')
     print(json.dumps({'sha256':digest,'rows':{sheet:len(rows) for sheet,table,rows in imports},
-                      'productionImport':'NONE; ambiguous business dispositions remain unresolved'},indent=2))
+                      'scope':'RAW STAGING ONLY; final bounded import is built by tools/build_cleaned_v4_data.py and included in portable SQL'},indent=2))
 
 if __name__=='__main__': main()

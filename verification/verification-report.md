@@ -39,7 +39,7 @@
 | PASS | Query executes: 03_trainingimpact.sql | exit=0, chars=273,  |
 | PASS | Query executes: 04_overtimerisk.sql | exit=0, chars=1117,  |
 | PASS | Query executes: 05_expiringqualification.sql | exit=0, chars=347,  |
-| PASS | Query executes: 06_openactions.sql | exit=0, chars=971,  |
+| PASS | Query executes: 06_openactions.sql | exit=0, chars=944,  |
 | PASS | Assessed integrity test: t01_validtraining.sql | exit=0; expected=PASS; testResult PASS: valid completed training was accepted |
 | PASS | Assessed integrity test: t02_invalidroledate.sql | exit=1; expected=chk_employeerole_dates; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated. |
 | PASS | Assessed integrity test: t03_missingreordercomment.sql | exit=1; expected=chk_bottletype_reorder; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated. |

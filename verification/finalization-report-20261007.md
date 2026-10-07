@@ -1,3 +1,5 @@
+> Historical snapshot. Current cleaned-data import and package readiness supersede this report; see docs/report/task6-data-quality.md and deliverables/final-submission/README_FIRST.md.
+
 # Cloudrest Wines finalisation report — 20261007 work round
 
 Prepared 2026-10-08 (Asia/Bangkok); database execution and Workbench evidence frozen on 2026-10-07. Dates and fixture outcomes are preserved as captured, not silently refreshed on the later report date.

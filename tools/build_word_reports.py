@@ -174,7 +174,13 @@ def md_sections(path):
 def prose_from_md(doc,body):
     for para in re.split(r'\n\s*\n',body):
         para=para.strip()
-        if not para or para.startswith('|'): continue
+        if not para: continue
+        if para.startswith('|'):
+            cells=[[re.sub(r'`([^`]+)`',r'\1',x.strip()) for x in line.strip().strip('|').split('|')] for line in para.splitlines()]
+            cells=[row for row in cells if not all(re.fullmatch(r':?-+:?',x) for x in row)]
+            widths=[1800,1100,6460] if len(cells[0])==3 else [9360//len(cells[0])]*len(cells[0])
+            add_table(doc,cells[0],cells[1:],widths,8)
+            continue
         para=re.sub(r'\*\*(.*?)\*\*',r'\1',para)
         para=re.sub(r'`([^`]+)`',r'\1',para)
         if para.startswith('## '):
@@ -188,9 +194,9 @@ def prose_from_md(doc,body):
 def build_main():
     doc=Document(); configure(doc); add_title_page(doc)
     doc.add_heading('Document status and required student completion',level=1)
-    add_note(doc,'Finalisation status','The official v4 workbook was SHA-verified and imported into private staging on 2026-10-07. Deterministic before/after and exception evidence, T01–T11 and six queries were captured in local MySQL Workbench. The revised UML model is regenerated. Outstanding human inputs are business disposition of ambiguous rows, alias mapping, any missing Week 11 scenario, genuine contribution dates, video and RiPPlE reviews.')
+    add_note(doc,'Finalisation status','REPORT + CODE PACKAGE READY. The final database contains accepted cleaned supplied data and additional test data. Order reconciliation is 182 = 132 imported + 1 exact copy rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Student-only video, RiPPlE, Buddycheck and genuine contribution confirmation remain. Task 8 is WAITING FOR COURSE MATERIAL: Week 11 assigned business scenario. No submission date or alias mapping is invented.')
     doc.add_heading('AI use declaration',level=2)
-    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Official v4 cleaning executed with local Workbench evidence; tutor/business exception disposition remains outstanding.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
+    ai_rows=[('1','Planning','Sequencing/risk suggestions; team must confirm dates and ownership.'),('2','Design decisions','Alternatives and critique; decisions validated against case and schema.'),('3','Functionality/rules','Drafting and SQL alternatives; rules executed in MySQL.'),('4','ER model','Schema-to-Workbench automation; structure derived from validated SQL.'),('5','Data dictionary','Mechanical consistency checking; semantic wording reviewed.'),('6','Data quality','Bounded cleaned supplied-data import executed; assumptions and quarantines disclosed, reconciliation complete.'),('7','Queries','SQL drafting/critique; all outputs independently executed.'),('Video','Script structure and timing support','Students rehearse, understand, modify and present the material themselves.')]
     add_table(doc,['Task','AI used for','Human validation / limitation'],ai_rows,[600,2200,6560],9)
 
     # Task 1 landscape
@@ -213,7 +219,7 @@ def build_main():
     doc.add_heading('Expanded risk register',level=2)
     risk_rows=[
       ('Schema drift after tutor feedback','PK/FK changes affect ERD, dictionary, SQL and video','Tasks 3–7','High','High','Treat schema SQL as source of truth; rebuild and regress','Freeze changes, rerun tests, regenerate all dependent artifacts','Zora / Jason'),
-      ('Ambiguous v4 duplicate order/product rows','Repeated pairs differ in quantity, price, refund or status','Task 6','High','High','Preserve raw staging rows and source row numbers','Quarantine and obtain tutor/business confirmation before aggregation','Jason / Mia'),
+      ('Ambiguous v4 duplicate order/product rows','Repeated pairs differ in quantity, price, refund or status','Task 6','High','High','Preserve raw staging rows and source row numbers','Quarantine whole affected orders; document reasons without aggregation','Jason / Mia'),
       ('Reset historical start dates','Workbook states some current-customer start dates were reset on export','Task 6','Medium','Medium','Record source limitation and preserve raw value','Do not invent lost dates; disclose limitation','Jason / Mia'),
       ('Multiple simultaneous current history rows','Dated associations can accidentally create duplicate current facts','Tasks 3–5','Medium','High','Non-overlap triggers and one-current-primary-phone controls','Reject conflicting writes and correct staging periods','Jason / Zora'),
       ('Wine composition below/above 100%','Total is a cross-row business rule','Tasks 3–5','Medium','High','Validate total before active product release and lock released recipe','Deactivate product, correct composition, rerun validation','Jason / Zora'),
@@ -224,7 +230,7 @@ def build_main():
     add_table(doc,['Risk','Why it may occur','Affected task','Likelihood','Impact','Prevention','Contingency / response','Owner'],risk_rows,[1200,1900,850,650,550,1900,1900,850],8)
     doc.add_heading('This round: finalisation responsibilities',level=2)
     add_para(doc,'These are prospective responsibilities for the current finalisation round and do not claim historical contributions. NEEDS HUMAN CONFIRMATION: alias → real-name mapping.')
-    add_table(doc,['Member','Finalisation responsibility'],[('Zixuan Shen', 'Final integration, Task 1 Risk Register, consistency, tutor-feedback traceability, Word report, AI declaration and submission QA.'), ('Feiyue Ma', 'Workbench model, latest .mwb, full UML ER and six domain views, Task 4, Task 5 schema/dictionary consistency and ER screenshots.'), ('Xinzhu Wang', 'SQL integrity, T01–T11, official v4 staging/import/cleaning, Task 6 before/after evidence, exceptions and reconciliation.'), ('Chengye Jiang', 'Six Task 7 queries, result screenshots, Query 6 EXPLAIN, actual-number interpretation, video run sheet and demonstration order.')],[1800,7560],9)
+    add_table(doc,['Member','Finalisation responsibility'],[('Zixuan Shen', 'Final integration, Task 1 Risk Register, consistency, tutor-feedback traceability, Word report, AI declaration and submission QA.'), ('Feiyue Ma', 'Workbench model, latest .mwb, full UML ER and six domain views, Task 4, Task 5 schema/dictionary consistency and ER screenshots.'), ('Xinzhu Wang', 'SQL integrity, T01–T11, official v4 staging/import/cleaning, Task 6 before/after evidence, exceptions and reconciliation.'), ('Chengye Jiang', 'Six Task 7 queries, result screenshots, Query 6 EXPLAIN, actual-number interpretation, personal video demonstration to be completed by the student later.')],[1800,7560],9)
     doc.add_heading('Checkpoint sequence',level=2)
     cp=[('Week 3','Team confirmed; contacts shared'),('Week 4','Case understanding, HR perspective, functionality plan'),('Week 7','Draft ER model and decisions'),('Week 8 Fri','Iteration Tasks 1–7'),('Week 10','Normalisation, cleaning plan, business rules'),('Week 11','Draft queries and assigned scenario'),('Week 12','Report, SQL and video'),('Week 13+1','Buddycheck')]
     add_table(doc,['Milestone','Evidence'],cp,[1500,7860],9)
@@ -311,9 +317,11 @@ def build_main():
         add_image(doc,ROOT/'docs/evidence/final-workbench'/f'{name}.png',f'{test}: genuine local Workbench execution. {expected}',6.2)
 
     doc.add_heading('Official v4: genuine local Workbench evidence',level=2)
-    add_para(doc,'Raw staging preserves all source rows and dates. Public figures show aggregate findings and source identifiers without publishing contact values. Clean projections apply deterministic repairs and exclude one exact copy; 15 rows in seven non-exact repeated pairs are held for confirmation. The remaining 166 rows are candidates, not accepted production imports. Production accepted/rejected reconciliation remains unresolved.')
+    add_para(doc,'Original before/after staging evidence below is preserved as profiling evidence, including its earlier 166-row candidate projection. Final accepted import is narrower: 132 rows in 79 complete orders. The final import screenshot and ID-only ledger show 182 = 132 imported + 1 exact copy rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Raw rows and dates remain unchanged.')
     for path in sorted((ROOT/'docs/evidence/final-workbench').glob('task6-e*.png')):
         add_image(doc,path,f'Official v4 evidence: {path.stem}, actual Workbench output 2026-10-07',6.2)
+
+    add_image(doc,ROOT/'docs/evidence/combined-database/task6-production-import.png','Final combined database: supplied import and retained synthetic HR, 2026-10-08',6.2)
 
     # Task 7 each query source+image
     new_landscape(doc)
@@ -328,7 +336,7 @@ def build_main():
             add_code(doc,qpath.read_text(encoding='utf-8'),f'Query {qnum} SQL')
             output_path=ROOT/'verification/final-query-results'/f'{qpath.stem}.tsv'
             if output_path.exists():
-                add_para(doc,f'Query {qnum}: actual MySQL 8.4.11 output, 2026-10-07. Synthetic assessment HR data.')
+                add_para(doc,f'Query {qnum}: actual MySQL 8.4.11 output, 2026-10-08. Combined supplied + test database; HR results use synthetic assessment records.')
                 lines=list(csv.reader(output_path.read_text(encoding='utf-8').splitlines(),delimiter='\t'))
                 groups=[]; headers=None; rows=[]
                 for row in lines:
@@ -343,10 +351,10 @@ def build_main():
                     add_table(doc,headers,rows,weights,8)
             screenshots={1:['query01'],2:['query02'],3:['query03'],4:['query04-left'],5:['query05-30days','query05-90days'],6:['query06-results','query06-results-right','query06-explain-left','query06-explain-right']}
             for name in screenshots[qnum]:
-                add_image(doc,ROOT/'docs/evidence/final-workbench'/f'{name}.png',f'Query {qnum}: genuine Workbench {name}, frozen assessment build, 2026-10-07',8.5,5.4)
+                add_image(doc,ROOT/'docs/evidence/combined-database'/f'{name}.png',f'Query {qnum}: genuine Workbench {name}, combined supplied + test database, 2026-10-08',8.5,5.4)
 
     doc.add_heading('Conclusion',level=1)
-    add_para(doc,'Cloudrest Wines now has a reproducible 3NF MySQL OLTP design covering the complete base case and a connected HR/workforce sustainability extension. Database constraints preserve critical history and transactional integrity, while six tested queries convert operational records into training, exposure, workload, renewal and corrective-action decisions. Remaining work depends on course inputs or genuine student participation and is listed transparently rather than simulated.')
+    add_para(doc,'Cloudrest Wines now has a reproducible 3NF MySQL OLTP design covering the complete base case and a connected HR/workforce sustainability extension. Database constraints preserve critical history and transactional integrity, while six tested queries convert operational records into training, exposure, workload, renewal and corrective-action decisions. The current report, SQL and model package is ready for delivery. Video, RiPPlE, Buddycheck and personal contribution confirmation belong to the students. Task 8 awaits the tutor-supplied Week 11 scenario.')
     doc.add_heading('References',level=1)
     refs=[
       'BISM2207 teaching team. (2026a). Wine company case [Course case study]. The University of Queensland.',
@@ -380,7 +388,7 @@ def build_main():
 
     # Appendix C handoff
     new_portrait(doc); doc.add_heading('Appendix C — Submission and Handoff Checklist',level=1)
-    checklist=[('Portable database SQL','Completed and clean-build verified'),('Six query script','Completed and executed'),('Five Task 3b violation blocks','Completed and rejected as expected'),('Workbench model / EER views','Regenerated from revised schema in Workbench; UML notation'),('Official workbook cleaning','Imported 182/102/53; deterministic clean projections and genuine Workbench evidence captured; ambiguous disposition unresolved'),('Week 11 scenario','Pending tutor allocation'),('Final Workbench screenshots','Local capture complete; submitting students review evidence and recapture if course policy requires'),('Four-person video','Student recording required'),('RiPPlE prompt logs / peer review','Genuine student activity required'),('Alias mapping and genuine completion dates','NEEDS HUMAN CONFIRMATION: alias → real-name mapping')]
+    checklist=[('Portable database SQL','Completed and clean-build verified'),('Six query script','Completed and executed'),('Five Task 3b violation blocks','Completed and rejected as expected'),('Workbench model / EER views','Regenerated from revised schema in Workbench; UML notation'),('Official workbook cleaning','132 accepted order lines / 79 orders; 50 customers / 102 addresses / 53 histories imported; 182-row reconciliation complete with disclosed quarantines'),('Task 8 — Week 11 scenario','WAITING FOR COURSE MATERIAL; students add the actual tutor scenario when supplied'),('Final Workbench screenshots','Local capture complete; submitting students review evidence and recapture if course policy requires'),('Four-person video','Student recording required'),('RiPPlE prompt logs / peer review','Genuine student activity required'),('Buddycheck / contribution confirmation','Student activity required; no historical hours or completion dates invented'),('Draft alias mapping','Not supplied; no alias-to-real-name mapping guessed')]
     add_table(doc,['Item','Status'],checklist,[3600,5760],9)
     path=OUT/'Cloudrest_Wines_Report.docx'; doc.save(path); return path
 

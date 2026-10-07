@@ -162,7 +162,7 @@ INSERT INTO receiptline VALUES ('RECP0001','BOTL001',2000,1.16);
 INSERT INTO customer VALUES
 ('CUST001','INDIVIDUAL','alex@example.test',TRUE),('CUST002','BUSINESS','orders@restaurant.example',TRUE);
 INSERT INTO individualcustomer VALUES ('CUST001','Alex','Green','1990-06-01');
-INSERT INTO businesscustomer VALUES ('CUST002','Yarra Table Pty Ltd','12345678901','Grace','King','RESTAURANT');
+INSERT INTO businesscustomer VALUES ('CUST002','Yarra Table Pty Ltd','90000000001','Grace','King','RESTAURANT');
 INSERT INTO customeraddress
 (customerId,addressId,addressPurpose,startDateTime,endDateTime) VALUES
 ('CUST001','ADDR0003','PRIMARY','2025-01-01 00:00:00',NULL),

@@ -62,10 +62,12 @@ The tutor feedback and v4 workbook together require:
 3. Refund identification at product/order-line level.
 4. Staging/exception handling for repeated order/product records instead of silently altering ambiguous source rows.
 
-## Finalisation execution — 2026-10-07
+## Final cleaned-data import — 2026-10-08
 
-The supplied local workbook was re-verified against the SHA-256 above and imported without editing into private binary-collated staging under MySQL 8.4.11. The row counts and deterministic defect counts above were reproduced. Raw rows and dates remain unchanged; cleaned views hold the corrected projections. Genuine local Workbench captures cover all requested source counts, before/after repairs and exception classes.
+Preserved raw staging and deterministic clean projections now feed the bounded import. Final portable SQL contains cleaned supplied data and additional test data. Live table counts and source readback appear in `v4-final-import-results.tsv`; Workbench captures are in `combined-database`.
 
-After excluding source row 160 as an exact copy, the seven non-exact repeated pairs contain 15 retained rows. Staging accounting is 182 = 1 exact copy + 15 ambiguous rows + 166 other candidates. No production accepted/rejected reconciliation or ambiguous business disposition is claimed.
+182 source order rows = 132 imported + 1 exact copy rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Accepted rows form 79 complete orders. All 24 remaining source orders are held as whole orders; mixed/unrepresentable status and ambiguous-pair closure reasons can overlap. `v4-import-dispositions.csv` assigns exactly one disposition to every source row.
 
-See `verification/v4-final-audit.json`, `verification/final-query-results/task6-v4-evidence.tsv` and `docs/evidence/final-workbench/README.md`. Tutor/business decisions, student review and any course-specific own-account evidence requirements remain outstanding. The raw workbook and raw CSV/SQL exports are not included in the public repository.
+50 customers, 25 individual and 25 business subtypes, 102 separate source addresses, 53 history associations, 66 unshared phones/associations and 10 supplied products/wine names are imported. Three shared phone values (seven associations) and 72 shipment-detail facts are quarantined. Address IDs are retained without canonical merging; export-reset dates remain unchanged.
+
+Mandatory absent product attributes use explicitly supplemental test values, detailed in `docs/report/task6-data-quality.md`, which also states all import assumptions and each table's verification method. Raw workbook and raw contact exports remain private. The import decision and accounting are complete; quarantines are disclosed rather than guessed.

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-07T20:43:51",
+  "generatedAt": "2026-10-08T01:15:05",
   "mode": "DEVELOPMENT",
   "mysqlVersion": "8.4.11",
   "schemaMetrics": {
@@ -194,7 +194,7 @@
       "check": "Query executes: 06_openactions.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exit=0, chars=971, "
+      "evidence": "exit=0, chars=944, "
     },
     {
       "check": "Assessed integrity test: t01_validtraining.sql",
