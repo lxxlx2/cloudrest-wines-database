@@ -1,6 +1,6 @@
 # Cloudrest Wines — GenAI Reflection
 
-### 1. Problem statement
+## 1. Problem statement
 
 Our group designed a MySQL 8.x database for Cloudrest Wines, covering winery operations and a Human Resources sustainability perspective. Two challenging tasks were correcting the relationship between vineyard planting and harvest records, and enforcing the rule that a wine’s grape proportions total 100%. We used iterative prompts to frame candidate designs, challenged them with counterexamples, and evaluated the resulting SQL against relational modelling principles, tutor feedback and executable database tests.
 
