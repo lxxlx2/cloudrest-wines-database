@@ -171,11 +171,27 @@ INSERT INTO customeraddress
 INSERT INTO customerphone VALUES
 ('CUST001','PHON0003','2025-01-01 00:00:00',NULL,TRUE);
 INSERT INTO customerorder VALUES ('CORD0001','CUST001',DATE_SUB(CURRENT_DATE,INTERVAL 10 DAY),TRUE,'PENDING');
-INSERT INTO orderline VALUES ('CORD0001','PROD001',2,360.00);
-INSERT INTO shipment VALUES ('SHIP0001','CORD0001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY));
+INSERT INTO orderline (customerOrderId,productId,caseQuantity,agreedCasePrice)
+VALUES ('CORD0001','PROD001',2,360.00);
+INSERT INTO shipment (shipmentId,customerOrderId,productId,addressId,shippedDate)
+VALUES ('SHIP0001','CORD0001','PROD001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY));
 INSERT INTO refund
 (refundId,customerOrderId,productId,refundDate,refundReason,verifiedFlag,refundAmount)
 VALUES ('RFND0001','CORD0001','PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY),'SHORTSUPPLY',FALSE,360.00);
+
+-- Gift-delivery regression: two products in the same paid order have distinct
+-- recipient/address snapshots and separate shipment destinations. Changing the
+-- customer's current address later cannot rewrite these recorded snapshots.
+INSERT INTO customerorder VALUES
+('CORD0002','CUST001',DATE_SUB(CURRENT_DATE,INTERVAL 5 DAY),TRUE,'PENDING');
+INSERT INTO orderline
+(customerOrderId,productId,caseQuantity,agreedCasePrice,deliveryRecipientName,
+ deliveryStreetAddress,deliveryLocality,deliveryStateCode,deliveryPostcode) VALUES
+('CORD0002','PROD001',1,360.00,'Alex Gift','89 Smith Street','Collingwood','VIC','3066'),
+('CORD0002','PROD002',1,280.00,'Jamie Recipient','22 Bell Street','Yarra Glen','VIC','3775');
+INSERT INTO shipment (shipmentId,customerOrderId,productId,addressId,shippedDate) VALUES
+('SHIP0002','CORD0002','PROD001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 3 DAY)),
+('SHIP0003','CORD0002','PROD002','ADDR0001',DATE_SUB(CURRENT_DATE,INTERVAL 3 DAY));
 
 INSERT INTO qualification VALUES
 ('QUAL001','First Aid Certificate','Australian Red Cross',36,TRUE),
