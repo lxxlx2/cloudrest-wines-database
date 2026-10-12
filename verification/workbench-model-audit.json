@@ -1,10 +1,10 @@
 {
   "status": "PASS",
-  "modelSHA256": "f15cbc947d8ded12effa9df1655fa6f6f53d7b83df26ad4e1fd0849d6e580aee",
+  "modelSHA256": "d54f3e2085d0d7992c8637633fcdba171e96f728f442742151b232669c8f2a37",
   "baseTables": 55,
-  "modeledBaseColumns": 276,
+  "modeledBaseColumns": 282,
   "foreignKeys": 72,
-  "schemaColumnsIncludingView": 286,
+  "schemaColumnsIncludingView": 292,
   "checks": {
     "55 base tables": true,
     "column names match current dictionary": true,
