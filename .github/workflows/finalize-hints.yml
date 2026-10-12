@@ -4,6 +4,7 @@ on:
     branches: [revision/tutor-feedback-v4-20261007]
     paths:
       - .github/workflows/finalize-hints.yml
+      - database/schema/01_tables.sql
   workflow_dispatch:
 
 permissions:
