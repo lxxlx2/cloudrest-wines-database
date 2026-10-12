@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/finalize-hints.yml
       - database/schema/01_tables.sql
+      - tools/build_word_reports.py
   workflow_dispatch:
 
 permissions:
