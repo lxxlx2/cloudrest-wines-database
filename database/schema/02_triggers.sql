@@ -70,6 +70,9 @@ BEGIN
   END IF;
 END$$
 
+-- A shipped product can be addressed to the purchaser or any named recipient.
+-- The orderline's recipient/address snapshot protects delivery history against
+-- later updates to the customer's current contact address.
 CREATE TRIGGER trg_shipment_validate_insert
 BEFORE INSERT ON shipment
 FOR EACH ROW
@@ -80,37 +83,37 @@ BEGIN
   DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
+  DECLARE vHasSnapshot INT DEFAULT 0;
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
   SELECT paidFlag, customerId, receivedDate, orderStatus
     INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
-  FROM customerorder
-  WHERE customerOrderId = NEW.customerOrderId;
-
+  FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
-  FROM address WHERE addressId = NEW.addressId;
-
+  FROM address WHERE addressId=NEW.addressId;
+  SELECT COUNT(*) INTO vHasSnapshot
+  FROM orderline
+  WHERE customerOrderId=NEW.customerOrderId AND productId=NEW.productId
+    AND deliveryRecipientName IS NOT NULL;
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer
-    AND addressId = NEW.addressId
-    AND addressPurpose IN ('PRIMARY','DELIVERY')
-    AND endDateTime IS NULL;
+  WHERE customerId=vCustomer AND addressId=NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY') AND endDateTime IS NULL;
 
-  IF vPaid = FALSE THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  IF vPaid=FALSE THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Order must be paid before shipment';
   END IF;
-  IF vOrderStatus = 'CANCELLED' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  IF vOrderStatus='CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Cancelled order cannot be shipped';
   END IF;
   IF NEW.shippedDate < vReceivedDate THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment address must be a physical address, not PO Box or Private Bag';
   END IF;
-  IF vIsCurrentAddress = 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be the customer current address';
+  IF vHasSnapshot=0 AND vIsCurrentAddress=0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Without a delivery snapshot, shipment must use a current customer physical address';
   END IF;
 END$$
 
@@ -124,37 +127,35 @@ BEGIN
   DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
+  DECLARE vHasSnapshot INT DEFAULT 0;
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
   SELECT paidFlag, customerId, receivedDate, orderStatus
-    INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
-  FROM customerorder
-  WHERE customerOrderId = NEW.customerOrderId;
+    INTO vPaid,vCustomer,vReceivedDate,vOrderStatus
+  FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
+  SELECT addressKind,postalType INTO vAddressKind,vPostalType
+  FROM address WHERE addressId=NEW.addressId;
+  SELECT COUNT(*) INTO vHasSnapshot FROM orderline
+  WHERE customerOrderId=NEW.customerOrderId AND productId=NEW.productId
+    AND deliveryRecipientName IS NOT NULL;
+  SELECT COUNT(*) INTO vIsCurrentAddress FROM customeraddress
+  WHERE customerId=vCustomer AND addressId=NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY') AND endDateTime IS NULL;
 
-  SELECT addressKind, postalType INTO vAddressKind, vPostalType
-  FROM address WHERE addressId = NEW.addressId;
-
-  SELECT COUNT(*) INTO vIsCurrentAddress
-  FROM customeraddress
-  WHERE customerId = vCustomer
-    AND addressId = NEW.addressId
-    AND addressPurpose IN ('PRIMARY','DELIVERY')
-    AND endDateTime IS NULL;
-
-  IF vPaid = FALSE THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  IF vPaid=FALSE THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Order must be paid before shipment';
   END IF;
-  IF vOrderStatus = 'CANCELLED' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  IF vOrderStatus='CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Cancelled order cannot be shipped';
   END IF;
   IF NEW.shippedDate < vReceivedDate THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment address must be a physical address, not PO Box or Private Bag';
   END IF;
-  IF vIsCurrentAddress = 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be the customer current address';
+  IF vHasSnapshot=0 AND vIsCurrentAddress=0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Without a delivery snapshot, shipment must use a current customer physical address';
   END IF;
 END$$
 
@@ -162,7 +163,17 @@ CREATE TRIGGER trg_shipment_mark_shipped
 AFTER INSERT ON shipment
 FOR EACH ROW
 BEGIN
-  UPDATE customerorder SET orderStatus = 'SHIPPED' WHERE customerOrderId = NEW.customerOrderId;
+  -- Do not mark a multi-destination order shipped until every product line
+  -- has a corresponding dispatch.
+  IF NOT EXISTS (
+    SELECT 1 FROM orderline ol
+    LEFT JOIN shipment sh ON sh.customerOrderId=ol.customerOrderId
+      AND sh.productId=ol.productId
+    WHERE ol.customerOrderId=NEW.customerOrderId AND sh.shipmentId IS NULL
+  ) THEN
+    UPDATE customerorder SET orderStatus='SHIPPED'
+    WHERE customerOrderId=NEW.customerOrderId;
+  END IF;
 END$$
 
 CREATE TRIGGER trg_wellbeingcheckin_notself
