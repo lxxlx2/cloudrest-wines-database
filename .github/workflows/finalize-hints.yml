@@ -65,6 +65,7 @@ jobs:
           git add verification/verification-report.json verification/verification-report.md || true
           if ! git diff --cached --quiet; then
             git commit -m "final: regenerate Hint 7-11 SQL, model, dictionary and Word reports"
+            git reset --hard HEAD
             git fetch origin revision/tutor-feedback-v4-20261007
             git rebase origin/revision/tutor-feedback-v4-20261007
             git push origin HEAD:revision/tutor-feedback-v4-20261007
