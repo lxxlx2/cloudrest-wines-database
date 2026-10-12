@@ -417,19 +417,40 @@ CREATE TABLE orderline (
   productId CHAR(7) NOT NULL,
   caseQuantity INT UNSIGNED NOT NULL,
   agreedCasePrice DECIMAL(10,2) NOT NULL,
+  -- Historic delivery destination is stored on the ordered product, not derived from
+  -- a customer's changeable current address. All fields are optional together for
+  -- supplied source rows that contain no delivery details.
+  deliveryRecipientName VARCHAR(120) NULL,
+  deliveryStreetAddress VARCHAR(220) NULL,
+  deliveryLocality VARCHAR(80) NULL,
+  deliveryStateCode CHAR(3) NULL,
+  deliveryPostcode CHAR(4) NULL,
   PRIMARY KEY (customerOrderId, productId),
   CONSTRAINT fk_orderline_order FOREIGN KEY (customerOrderId) REFERENCES customerorder(customerOrderId) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_orderline_product FOREIGN KEY (productId) REFERENCES wineproduct(productId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT chk_orderline_quantity CHECK (caseQuantity > 0),
-  CONSTRAINT chk_orderline_price CHECK (agreedCasePrice > 0)
+  CONSTRAINT chk_orderline_price CHECK (agreedCasePrice > 0),
+  CONSTRAINT chk_orderline_destination CHECK (
+    (deliveryRecipientName IS NULL AND deliveryStreetAddress IS NULL
+     AND deliveryLocality IS NULL AND deliveryStateCode IS NULL AND deliveryPostcode IS NULL)
+    OR
+    (deliveryRecipientName IS NOT NULL AND TRIM(deliveryRecipientName) <> ''
+     AND deliveryStreetAddress IS NOT NULL AND TRIM(deliveryStreetAddress) <> ''
+     AND deliveryLocality IS NOT NULL AND TRIM(deliveryLocality) <> ''
+     AND deliveryStateCode IN ('ACT','NSW','NT','QLD','SA','TAS','VIC','WA')
+     AND CHAR_LENGTH(deliveryPostcode)=4 AND deliveryPostcode NOT REGEXP '[^0-9]')
+  )
 );
 
 CREATE TABLE shipment (
   shipmentId CHAR(8) PRIMARY KEY,
-  customerOrderId CHAR(8) NOT NULL UNIQUE,
+  customerOrderId CHAR(8) NOT NULL,
+  productId CHAR(7) NOT NULL,
   addressId CHAR(8) NOT NULL,
   shippedDate DATE NOT NULL,
-  CONSTRAINT fk_shipment_order FOREIGN KEY (customerOrderId) REFERENCES customerorder(customerOrderId) ON UPDATE CASCADE ON DELETE RESTRICT,
+  UNIQUE (customerOrderId, productId),
+  CONSTRAINT fk_shipment_orderline FOREIGN KEY (customerOrderId, productId)
+    REFERENCES orderline(customerOrderId, productId) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT fk_shipment_address FOREIGN KEY (addressId) REFERENCES address(addressId) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
@@ -699,6 +720,9 @@ BEGIN
   END IF;
 END$$
 
+-- A shipped product can be addressed to the purchaser or any named recipient.
+-- The orderline's recipient/address snapshot protects delivery history against
+-- later updates to the customer's current contact address.
 CREATE TRIGGER trg_shipment_validate_insert
 BEFORE INSERT ON shipment
 FOR EACH ROW
@@ -709,37 +733,37 @@ BEGIN
   DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
+  DECLARE vHasSnapshot INT DEFAULT 0;
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
   SELECT paidFlag, customerId, receivedDate, orderStatus
     INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
-  FROM customerorder
-  WHERE customerOrderId = NEW.customerOrderId;
-
+  FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
   SELECT addressKind, postalType INTO vAddressKind, vPostalType
-  FROM address WHERE addressId = NEW.addressId;
-
+  FROM address WHERE addressId=NEW.addressId;
+  SELECT COUNT(*) INTO vHasSnapshot
+  FROM orderline
+  WHERE customerOrderId=NEW.customerOrderId AND productId=NEW.productId
+    AND deliveryRecipientName IS NOT NULL;
   SELECT COUNT(*) INTO vIsCurrentAddress
   FROM customeraddress
-  WHERE customerId = vCustomer
-    AND addressId = NEW.addressId
-    AND addressPurpose IN ('PRIMARY','DELIVERY')
-    AND endDateTime IS NULL;
+  WHERE customerId=vCustomer AND addressId=NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY') AND endDateTime IS NULL;
 
-  IF vPaid = FALSE THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  IF vPaid=FALSE THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Order must be paid before shipment';
   END IF;
-  IF vOrderStatus = 'CANCELLED' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  IF vOrderStatus='CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Cancelled order cannot be shipped';
   END IF;
   IF NEW.shippedDate < vReceivedDate THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment address must be a physical address, not PO Box or Private Bag';
   END IF;
-  IF vIsCurrentAddress = 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be the customer current address';
+  IF vHasSnapshot=0 AND vIsCurrentAddress=0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Without a delivery snapshot, shipment must use a current customer physical address';
   END IF;
 END$$
 
@@ -753,37 +777,35 @@ BEGIN
   DECLARE vOrderStatus VARCHAR(12);
   DECLARE vAddressKind VARCHAR(10);
   DECLARE vPostalType VARCHAR(12);
+  DECLARE vHasSnapshot INT DEFAULT 0;
   DECLARE vIsCurrentAddress INT DEFAULT 0;
 
   SELECT paidFlag, customerId, receivedDate, orderStatus
-    INTO vPaid, vCustomer, vReceivedDate, vOrderStatus
-  FROM customerorder
-  WHERE customerOrderId = NEW.customerOrderId;
+    INTO vPaid,vCustomer,vReceivedDate,vOrderStatus
+  FROM customerorder WHERE customerOrderId=NEW.customerOrderId;
+  SELECT addressKind,postalType INTO vAddressKind,vPostalType
+  FROM address WHERE addressId=NEW.addressId;
+  SELECT COUNT(*) INTO vHasSnapshot FROM orderline
+  WHERE customerOrderId=NEW.customerOrderId AND productId=NEW.productId
+    AND deliveryRecipientName IS NOT NULL;
+  SELECT COUNT(*) INTO vIsCurrentAddress FROM customeraddress
+  WHERE customerId=vCustomer AND addressId=NEW.addressId
+    AND addressPurpose IN ('PRIMARY','DELIVERY') AND endDateTime IS NULL;
 
-  SELECT addressKind, postalType INTO vAddressKind, vPostalType
-  FROM address WHERE addressId = NEW.addressId;
-
-  SELECT COUNT(*) INTO vIsCurrentAddress
-  FROM customeraddress
-  WHERE customerId = vCustomer
-    AND addressId = NEW.addressId
-    AND addressPurpose IN ('PRIMARY','DELIVERY')
-    AND endDateTime IS NULL;
-
-  IF vPaid = FALSE THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Order must be paid before shipment';
+  IF vPaid=FALSE THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Order must be paid before shipment';
   END IF;
-  IF vOrderStatus = 'CANCELLED' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cancelled order cannot be shipped';
+  IF vOrderStatus='CANCELLED' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Cancelled order cannot be shipped';
   END IF;
   IF NEW.shippedDate < vReceivedDate THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment date cannot precede order received date';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment date cannot precede order received date';
   END IF;
   IF vAddressKind <> 'PHYSICAL' OR vPostalType IN ('POBOX','PRIVATEBAG') THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be a physical address, not PO Box or Private Bag';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Shipment address must be a physical address, not PO Box or Private Bag';
   END IF;
-  IF vIsCurrentAddress = 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Shipment address must be the customer current address';
+  IF vHasSnapshot=0 AND vIsCurrentAddress=0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Without a delivery snapshot, shipment must use a current customer physical address';
   END IF;
 END$$
 
@@ -791,7 +813,17 @@ CREATE TRIGGER trg_shipment_mark_shipped
 AFTER INSERT ON shipment
 FOR EACH ROW
 BEGIN
-  UPDATE customerorder SET orderStatus = 'SHIPPED' WHERE customerOrderId = NEW.customerOrderId;
+  -- Do not mark a multi-destination order shipped until every product line
+  -- has a corresponding dispatch.
+  IF NOT EXISTS (
+    SELECT 1 FROM orderline ol
+    LEFT JOIN shipment sh ON sh.customerOrderId=ol.customerOrderId
+      AND sh.productId=ol.productId
+    WHERE ol.customerOrderId=NEW.customerOrderId AND sh.shipmentId IS NULL
+  ) THEN
+    UPDATE customerorder SET orderStatus='SHIPPED'
+    WHERE customerOrderId=NEW.customerOrderId;
+  END IF;
 END$$
 
 CREATE TRIGGER trg_wellbeingcheckin_notself
@@ -1395,6 +1427,7 @@ INSERT INTO bottletype VALUES
 ('BOTL001',750,'Burgundy','GLASS','Green',5000,1.20,TRUE,NULL),
 ('BOTL002',750,'Bordeaux','GLASS','Clear',200,1.10,FALSE,'Supplier quality inconsistency documented');
 INSERT INTO wineproduct VALUES ('PROD001','WINE001','BOTL001',12,TRUE);
+INSERT INTO wineproduct VALUES ('PROD002','WINE001','BOTL001',6,TRUE);
 CALL validateAllWineComposition();
 INSERT INTO productprice VALUES ('PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 180 DAY),NULL,360.00);
 INSERT INTO supplier VALUES ('SUPP001','Valley Glass Supply','Sam','Lee','sam@valleyglass.example');
@@ -1422,11 +1455,27 @@ INSERT INTO customeraddress
 INSERT INTO customerphone VALUES
 ('CUST001','PHON0003','2025-01-01 00:00:00',NULL,TRUE);
 INSERT INTO customerorder VALUES ('CORD0001','CUST001',DATE_SUB(CURRENT_DATE,INTERVAL 10 DAY),TRUE,'PENDING');
-INSERT INTO orderline VALUES ('CORD0001','PROD001',2,360.00);
-INSERT INTO shipment VALUES ('SHIP0001','CORD0001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY));
+INSERT INTO orderline (customerOrderId,productId,caseQuantity,agreedCasePrice)
+VALUES ('CORD0001','PROD001',2,360.00);
+INSERT INTO shipment (shipmentId,customerOrderId,productId,addressId,shippedDate)
+VALUES ('SHIP0001','CORD0001','PROD001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY));
 INSERT INTO refund
 (refundId,customerOrderId,productId,refundDate,refundReason,verifiedFlag,refundAmount)
 VALUES ('RFND0001','CORD0001','PROD001',DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY),'SHORTSUPPLY',FALSE,360.00);
+
+-- Gift-delivery regression: two products in the same paid order have distinct
+-- recipient/address snapshots and separate shipment destinations. Changing the
+-- customer's current address later cannot rewrite these recorded snapshots.
+INSERT INTO customerorder VALUES
+('CORD0002','CUST001',DATE_SUB(CURRENT_DATE,INTERVAL 5 DAY),TRUE,'PENDING');
+INSERT INTO orderline
+(customerOrderId,productId,caseQuantity,agreedCasePrice,deliveryRecipientName,
+ deliveryStreetAddress,deliveryLocality,deliveryStateCode,deliveryPostcode) VALUES
+('CORD0002','PROD001',1,360.00,'Alex Gift','10 Main Street','Richmond','VIC','3121'),
+('CORD0002','PROD002',1,280.00,'Jamie Recipient','12 Hill Road','Yarra Glen','VIC','3775');
+INSERT INTO shipment (shipmentId,customerOrderId,productId,addressId,shippedDate) VALUES
+('SHIP0002','CORD0002','PROD001','ADDR0003',DATE_SUB(CURRENT_DATE,INTERVAL 3 DAY)),
+('SHIP0003','CORD0002','PROD002','ADDR0002',DATE_SUB(CURRENT_DATE,INTERVAL 3 DAY));
 
 INSERT INTO qualification VALUES
 ('QUAL001','First Aid Certificate','Australian Red Cross',36,TRUE),

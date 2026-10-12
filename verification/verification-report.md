@@ -4,14 +4,14 @@
 - Mode: **DEVELOPMENT**
 - MySQL: `8.4.11`
 - Checks: 73/73 passed
-- Schema: `{'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3}`
+- Schema: `{'baseTables': 55, 'views': 1, 'columns': 292, 'foreignKeys': 72, 'checkConstraints': 51, 'triggers': 30, 'routines': 3}`
 
 ## Check results
 
 | Result | Check | Evidence |
 |:---:|---|---|
 | PASS | Portable SQL rebuilds from empty database | exitCode=0 |
-| PASS | Schema statistics collected dynamically | {'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3} |
+| PASS | Schema statistics collected dynamically | {'baseTables': 55, 'views': 1, 'columns': 292, 'foreignKeys': 72, 'checkConstraints': 51, 'triggers': 30, 'routines': 3} |
 | PASS | supplieraddress exists | ['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund' |
 | PASS | supplierphone exists | ['address', 'bottletype', 'businesscustomer', 'checkintopic', 'correctiveaction', 'customer', 'customeraddress', 'customerorder', 'customerphone', 'employee', 'employeeaddress', 'employeephone', 'employeequalification', 'employeerole', 'grapevariety', 'harvest', 'incident', 'incidentemployee', 'individualcustomer', 'medal', 'operationalarea', 'orderline', 'packmember', 'phone', 'pickerpack', 'productprice', 'purchaseorder', 'purchaseorderline', 'qualification', 'receipt', 'receiptline', 'refund' |
 | PASS | Supplier direct redundant contact columns removed | supplier.addressId/phoneNumber absent |
@@ -43,7 +43,7 @@
 | PASS | Assessed integrity test: t01_validtraining.sql | exit=0; expected=PASS; testResult PASS: valid completed training was accepted |
 | PASS | Assessed integrity test: t02_invalidroledate.sql | exit=1; expected=chk_employeerole_dates; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated. |
 | PASS | Assessed integrity test: t03_missingreordercomment.sql | exit=1; expected=chk_bottletype_reorder; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated. |
-| PASS | Assessed integrity test: t04_unpaidshipment.sql | exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 4: Order must be paid before shipment |
+| PASS | Assessed integrity test: t04_unpaidshipment.sql | exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 6: Order must be paid before shipment |
 | PASS | Assessed integrity test: t05_overlappingsupervision.sql | exit=1; expected=already has a supervisor; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period |
 | PASS | Assessed integrity test: t06_pack_rejoin.sql | exit=0; expected=PASS: picker can rejoin; testResult PASS: picker can rejoin the same pack after leaving |
 | PASS | Assessed integrity test: t07_employee_current_address_overlap.sql | exit=1; expected=Employee address period overlaps; ERROR 1644 (45000) at line 3: Employee address period overlaps an existing address of the same kind |
@@ -53,8 +53,8 @@
 | PASS | Assessed integrity test: t11_refund_requires_order_product.sql | exit=1; expected=foreign key constraint fails; ERROR 1452 (23000) at line 3: Cannot add or update a child row: a foreign key constraint fails (`cloudrestwines`.`refund`, CONSTRAINT `fk_refund_orderline` FOREIGN KEY (`customerOrderId`, `productId`) REFERENCES `orderline` (`customerOrderId`, `productId`) ON DELETE RESTRICT ON UPDATE |
 | PASS | Assessed business rule: Rule 1 role dates | t02_invalidroledate.sql; ERROR 3819 (HY000) at line 3: Check constraint 'chk_employeerole_dates' is violated. |
 | PASS | Assessed business rule: Rule 2 reorder comment | t03_missingreordercomment.sql; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated. |
-| PASS | Assessed business rule: Rule 3 current physical address | additional_postalshipment.sql; ERROR 1644 (45000) at line 3: Shipment address must be a physical address, not PO Box or Private Bag |
-| PASS | Assessed business rule: Rule 4 paid before shipment | t04_unpaidshipment.sql; ERROR 1644 (45000) at line 4: Order must be paid before shipment |
+| PASS | Assessed business rule: Rule 3 physical shipment destination | additional_postalshipment.sql; ERROR 1644 (45000) at line 3: Shipment address must be a physical address, not PO Box or Private Bag |
+| PASS | Assessed business rule: Rule 4 paid before shipment | t04_unpaidshipment.sql; ERROR 1644 (45000) at line 6: Order must be paid before shipment |
 | PASS | Assessed business rule: Rule 5 one supervisor | t05_overlappingsupervision.sql; ERROR 1644 (45000) at line 3: Employee already has a supervisor during this period |
 | PASS | Project Plan requires Actual Completion Date | plan columns |
 | PASS | Task 2 has four decisions and page citations | four decisions/citations |

@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-08T01:15:05",
+  "generatedAt": "2026-10-12T06:52:53",
   "mode": "DEVELOPMENT",
   "mysqlVersion": "8.4.11",
   "schemaMetrics": {
     "baseTables": 55,
     "views": 1,
-    "columns": 286,
+    "columns": 292,
     "foreignKeys": 72,
-    "checkConstraints": 50,
+    "checkConstraints": 51,
     "triggers": 30,
     "routines": 3
   },
@@ -26,7 +26,7 @@
       "check": "Schema statistics collected dynamically",
       "passed": true,
       "severity": "required",
-      "evidence": "{'baseTables': 55, 'views': 1, 'columns': 286, 'foreignKeys': 72, 'checkConstraints': 50, 'triggers': 30, 'routines': 3}"
+      "evidence": "{'baseTables': 55, 'views': 1, 'columns': 292, 'foreignKeys': 72, 'checkConstraints': 51, 'triggers': 30, 'routines': 3}"
     },
     {
       "check": "supplieraddress exists",
@@ -218,7 +218,7 @@
       "check": "Assessed integrity test: t04_unpaidshipment.sql",
       "passed": true,
       "severity": "required",
-      "evidence": "exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 4: Order must be paid before shipment"
+      "evidence": "exit=1; expected=Order must be paid before shipment; ERROR 1644 (45000) at line 6: Order must be paid before shipment"
     },
     {
       "check": "Assessed integrity test: t05_overlappingsupervision.sql",
@@ -275,7 +275,7 @@
       "evidence": "t03_missingreordercomment.sql; ERROR 3819 (HY000) at line 2: Check constraint 'chk_bottletype_reorder' is violated."
     },
     {
-      "check": "Assessed business rule: Rule 3 current physical address",
+      "check": "Assessed business rule: Rule 3 physical shipment destination",
       "passed": true,
       "severity": "required",
       "evidence": "additional_postalshipment.sql; ERROR 1644 (45000) at line 3: Shipment address must be a physical address, not PO Box or Private Bag"
@@ -284,7 +284,7 @@
       "check": "Assessed business rule: Rule 4 paid before shipment",
       "passed": true,
       "severity": "required",
-      "evidence": "t04_unpaidshipment.sql; ERROR 1644 (45000) at line 4: Order must be paid before shipment"
+      "evidence": "t04_unpaidshipment.sql; ERROR 1644 (45000) at line 6: Order must be paid before shipment"
     },
     {
       "check": "Assessed business rule: Rule 5 one supervisor",
