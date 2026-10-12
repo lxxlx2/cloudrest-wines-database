@@ -15,7 +15,17 @@ TECHNICAL / DOCUMENT DELIVERABLES READY — 2026-10-08.
 
 Open Cloudrest_Wines_Database.sql in the student's MySQL Workbench connection and execute the complete script. It drops and rebuilds cloudrestwines, so use a disposable coursework database. Refresh SCHEMAS, then open Cloudrest_Wines_Queries.sql and execute each numbered query separately. Demonstrate getExpiringQualifications with both 30 and 90 days.
 
-MySQL 8.4.11 empty-database build passes. Schema remains 55 base tables / 1 view / 286 columns / 72 foreign keys / 50 CHECKs / 30 triggers / 3 routines. Existing verifier passes 73/73. Model and dictionary remain consistent with this schema.
+MySQL 8.4.11 empty-database build passes. Schema remains 55 base tables / 1 view / 292 columns / 72 foreign keys / 51 CHECKs / 30 triggers / 3 routines. Existing verifier passes 73/73. Model and dictionary remain consistent with this schema.
+
+## Teacher hints 7–11 (final revision)
+
+Hint 8: OrderLine now carries five optional historic recipient/address snapshot attributes. Shipment references the specific (customerOrderId,productId) pair; one order can have several distinct recipients and physical destinations. CORD0002 is a synthetic two-recipient positive test. Supplied A2 v4 rows contain no genuine delivery recipients, so their snapshot fields remain NULL; no destination is invented.
+
+Hint 11: The 53 primary and 16 secondary phone observations in the supplied workbook are numeric nine-digit values with no original Excel formulas. A lost leading '+' cannot be reconstructed from this copy. The import's +61 country code is explicitly an assumption and shared values remain quarantined. See docs/evidence/hint-11-phone-source-audit.md.
+
+Hint 10: Run tools/backup_before_import.sh before destructive changes on a real database and retain its dump outside public Git. Do not state that this backup was performed unless the file exists.
+
+Data Dictionary tables use 10 pt editable text in the regenerated Word.
 
 ## Task 6 final import
 
