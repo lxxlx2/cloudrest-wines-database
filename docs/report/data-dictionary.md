@@ -251,6 +251,11 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 | productId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | wineproduct.productId | Identifies the related wineproduct record. |
 | caseQuantity | int unsigned | Positive numeric value. | NO | N | N | — | Quantity recorded for the orderline transaction or inventory fact. |
 | agreedCasePrice | decimal(10,2) | Numeric value within the implemented MySQL type. | NO | N | N | — | Monetary value recorded for the orderline fact in Australian dollars. |
+| deliveryRecipientName | varchar(120) | Text up to the implemented varchar(120) size. | YES | N | N | — | Recipient designated for this ordered product, not necessarily the purchasing customer. |
+| deliveryStreetAddress | varchar(220) | Text up to the implemented varchar(220) size. | YES | N | N | — | Historic product-specific recipient street address snapshot. |
+| deliveryLocality | varchar(80) | Text up to the implemented varchar(80) size. | YES | N | N | — | Locality of the recipient at the time of the order. |
+| deliveryStateCode | char(3) | Text up to the implemented char(3) size. | YES | N | N | — | Australian state or territory snapshot for this line's delivery. |
+| deliveryPostcode | char(4) | Text up to the implemented char(4) size. | YES | N | N | — | Four-digit postcode snapshot for this line's delivery. |
 
 ## `packmember`
 
@@ -391,7 +396,8 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 | Attribute | Type/size | Domain/default | Null | Unique | PK | FK reference | Definition/business purpose |
 |---|---|---|:---:|:---:|:---:|---|---|
 | shipmentId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | — | Stable identifier for a shipment record. |
-| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | Y | N | customerorder.customerOrderId | Identifies the related customerorder record. |
+| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | Y | N | orderline.customerOrderId | Identifies the related customerorder record. |
+| productId | char(7) | Text up to the implemented char(7) size. | NO | Y | N | orderline.productId | Identifies the ordered product being shipped. |
 | addressId | char(8) | Text up to the implemented char(8) size. | NO | N | N | address.addressId | Identifies the related address record. |
 | shippedDate | date | Valid MySQL date value. | NO | N | N | — | Date associated with the shipment record or validity period. |
 
