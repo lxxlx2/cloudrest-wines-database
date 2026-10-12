@@ -99,3 +99,12 @@ All 102 address IDs are retained separately, including the 19 repeated full-addr
 ### Source limitation
 
 Export-reset customer-history starts remain exactly as supplied. Lost original dates are not reconstructed. Student-only video, RiPPlE, Buddycheck and genuine contribution confirmation remain separate from report/code readiness. Task 8 awaits the Week 11 scenario supplied by the tutor.
+
+## Hint 10–11 supplementary cleaning and controls
+
+**Delivery provenance:** The official v4 order worksheet does not contain line-level recipient or delivery-address columns. Five nullable product-specific delivery snapshot fields are therefore left absent for all imported supplied lines, rather than filled with test addresses. A separate synthetic gift order demonstrates different recipients and physical destinations, with linked shipment rows. No historic delivery information is reconstructed.
+
+**Excel phone-formula issue (Hint 11):** The v4 history sheet has 53 populated `phone1` values and 16 populated `phone2` values, all as numeric nine-digit cells; the copy provided contains no active phone formulas. The original leading `+` formula expression is no longer available to replace. We preserve these numeric values as text at import, keep the `+61` country-code inference expressly labelled as an Australian data assumption rather than a source repair, and quarantine shared phone associations. Full audit: `docs/evidence/hint-11-phone-source-audit.md`.
+
+**Backup before major steps (Hint 10):** Use `tools/backup_before_import.sh` to obtain a dated SQL dump before any destructive import or source replay on a real MySQL instance. A successful portable empty-database rebuild is not a substitute for evidence of a pre-update backup. Any genuine backup should be stored outside the public repository.
+
