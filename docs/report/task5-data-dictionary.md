@@ -16,3 +16,7 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 ## Revised build verification
 
 The final tutor-feedback build was verified under MySQL 8.4.11 on 2026-10-07: **55 base tables, 1 view, 286 columns, 72 foreign keys, 50 CHECK constraints, 30 triggers and 3 routines**. The 286-row dictionary was regenerated from that live schema. The Workbench model contains 276 base-table attributes; the reporting view contributes the remaining 10 dictionary attributes. All modeled column names and primary keys match the regenerated dictionary.
+
+## Hint 7 formatting and schema addendum
+
+The five line-specific recipient/delivery snapshot attributes and the shipment `productId` composite foreign key are included in the revised dictionary. The Word Data Dictionary tables must use at least 10 pt text while remaining editable and selectable by Turnitin; layout can expand into additional landscape pages rather than squeezing entries into a 7.5 pt table.
