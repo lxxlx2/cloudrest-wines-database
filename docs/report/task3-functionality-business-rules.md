@@ -6,7 +6,7 @@ Cloudrest Wines needs a transactional database because spreadsheet and document 
 
 The design targets 3NF and OLTP use. Repeating phones and addresses are separate entities; temporal association tables preserve employee, customer and supplier contact history. Course definitions, delivered sessions and individual attendance are separated. Many-to-many facts use associative tables, including wine composition, incident involvement and training attendance. Role, supervisor, address, phone and price histories retain effective dates rather than overwriting facts.
 
-Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, non-cancelled, current, physical shipment addresses with shipment dates on or after order receipt. The submitted rule script uses transactions and rollback. Standalone screenshot tests were followed by a clean verifier rebuild before final query capture, removing all setup rows. Employee/customer contact histories are stored with effective dates; the test data follows sensible current-contact patterns, while the current schema does not claim an exactly-one-current rule for every employee/customer phone or address association.
+Controls combine types, `NOT NULL`, candidate keys, foreign keys, `CHECK` constraints and triggers. Row constraints reject invalid dates and domains. Triggers enforce rules needing other rows or tables, such as non-overlapping supervision and paid, non-cancelled, physical shipment addresses (current customer addresses for records without a product-specific delivery snapshot) with shipment dates on or after order receipt. The submitted rule script uses transactions and rollback. Standalone screenshot tests were followed by a clean verifier rebuild before final query capture, removing all setup rows. Employee/customer contact histories are stored with effective dates; the test data follows sensible current-contact patterns, while the current schema does not claim an exactly-one-current rule for every employee/customer phone or address association.
 
 Privacy is handled in the submitted build through data minimisation: routine decision-support output uses IDs or aggregates and excludes confidential wellbeing notes. The SQL submission does not define production MySQL users/roles or application authorisation policies, so the report does not claim database-level access control that is absent from the code. A production deployment would add least-privilege database roles and application-level access control for TFNs, dates of birth, contact data, incident participation and wellbeing details.
 
@@ -64,11 +64,11 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Expected result:** MySQL Error 3819 naming `chk_bottletype_reorder`.
 - **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
-### Rule 3 — Current physical shipment address
+### Rule 3 — Physical shipment address, including third-party recipients
 
-- **Rule:** Shipment must use the customer's current physical address, never a PO Box or Private Bag.
+- **Rule:** A shipment must have a physical (non-PO Box) destination; when the orderline has no separate recipient/delivery snapshot, the destination must be the customer's current physical address.
 - **Case source:** Orders are delivered to the current physical address and not postal addresses (Wine Company Case, p. 5).
-- **Mechanism:** shipment insert/update triggers inspect `address` and current `customeraddress` rows.
+- **Mechanism:** Each shipment references a particular orderline; insert/update triggers check the physical address and whether the relevant orderline stores a complete recipient/destination snapshot. Without the snapshot, the current customer address rule remains in force.
 - **Violation:** `database/tests/task3b_ruleviolations.sql` uses current PO Box `ADDR0004`.
 - **Expected result:** MySQL Error 1644 with the physical-address message.
 - **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
@@ -92,3 +92,7 @@ These controls are additional to the five assessed Task 3b rules below. They are
 - **Genuine Workbench evidence:** `Genuine local Workbench capture available in docs/evidence/final-workbench (2026-10-07); submitting students review before submission.`
 
 The submitted rule script rolls back its transactions; standalone screenshot setup rows were removed by the final clean rebuild. Readable assessed SQL is in `database/tests/task3b_ruleviolations.sql`. Legal-age, postal-address completeness, cancelled-shipment and shipment-date validation remain additional controls rather than assessed Task 3b rules.
+
+## New Hint 8 line-specific delivery integrity regression
+
+The accepted additional test data contains one paid order CORD0002 with two ordered products and independent recipient snapshots: Alex Gift, 10 Main Street Richmond; and Jamie Recipient, 12 Hill Road Yarra Glen. The two shipment rows reference distinct order lines and distinct physical address identifiers. Run `database/tests/t12_two_recipients_same_order.sql` to obtain a positive confirmation result. It illustrates why storing only one delivery address on the order header loses legitimate business information. The snapshot fields remain NULL on all source v4 rows because that spreadsheet did not supply their delivery facts.
