@@ -102,7 +102,7 @@ for filename,(code,needle) in expectations.items():
 business_rules={
  "Rule 1 role dates":("t02_invalidroledate.sql","chk_employeerole_dates"),
  "Rule 2 reorder comment":("t03_missingreordercomment.sql","chk_bottletype_reorder"),
- "Rule 3 current physical address":("additional_postalshipment.sql","Shipment address must be a physical address"),
+ "Rule 3 physical shipment destination":("additional_postalshipment.sql","Shipment address must be a physical address"),
  "Rule 4 paid before shipment":("t04_unpaidshipment.sql","Order must be paid before shipment"),
  "Rule 5 one supervisor":("t05_overlappingsupervision.sql","already has a supervisor"),
 }
