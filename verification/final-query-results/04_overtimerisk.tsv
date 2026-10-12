@@ -1,0 +1,14 @@
+employeeId	employeeName	areaName	roleName	regularHours	overtimeHours	recentIncidents	wellbeingConcernCount	recommendedAction
+EMP0011	Jack Moore	Cellar	Cellar Hand	16.00	7.00	1	1	SUPERVISOR REVIEW
+EMP0009	Leo Wilson	Vineyard	Seasonal Picker	16.00	7.00	1	1	SUPERVISOR REVIEW
+EMP0005	Liam Singh	Cellar	Winemaker	16.00	3.00	0	0	SUPERVISOR REVIEW
+EMP0008	Mia Taylor	Vineyard	Seasonal Picker	16.00	3.00	0	0	SUPERVISOR REVIEW
+EMP0013	Finn Walker	Vineyard	Seasonal Picker	16.00	1.00	0	0	SUPERVISOR REVIEW
+EMP0002	Amelia Hart	Vineyard	Vineyard Supervisor	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0006	Ava Martin	Administration	HR Manager	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0001	Christine Cloud	Administration	Owner	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0007	Ethan Brown	Administration	Safety Officer	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0004	Isla Chen	Cellar	Winemaker	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0003	Noah Reed	Vineyard	Grape Farmer	0.00	0.00	0	0	NO RECENT INDICATOR
+EMP0012	Ruby Thomas	Cellar	Cellar Hand	12.00	0.00	0	0	NO RECENT INDICATOR
+EMP0010	Zoe Davis	Vineyard	Seasonal Picker	13.00	0.00	0	0	NO RECENT INDICATOR

@@ -80,6 +80,7 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 |---|---|---|:---:|:---:|:---:|---|---|
 | customerId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | customer.customerId | Identifies the related customer record. |
 | addressId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | address.addressId | Identifies the related address record. |
+| addressPurpose | enum('PRIMARY','DELIVERY','BILLING','CORRESPONDENCE') | Permitted values: primary, delivery, billing, correspondence. | NO | N | N | — | Business purpose of the customer address history row: primary, delivery, billing or correspondence. |
 | startDateTime | datetime | Valid MySQL datetime value. | NO | Y | Y | — | Inclusive start date/time of the customeraddress history period. |
 | endDateTime | datetime | NULL for current, otherwise not earlier than startDateTime. | YES | N | N | — | Optional end date/time of the customeraddress history period; NULL identifies the current row. |
 
@@ -173,6 +174,7 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 | harvestId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | — | Stable identifier for a harvest record. |
 | vineyardId | char(7) | Text up to the implemented char(7) size. | NO | N | N | vineyardplanting.vineyardId | Identifies the related vineyardplanting record. |
 | vintageYear | year | Valid MySQL year value. | NO | N | N | vineyardplanting.vintageYear | Records the vintage year of the harvest. |
+| grapeVarietyId | char(7) | Text up to the implemented char(7) size. | NO | N | N | vineyardplanting.grapeVarietyId | Identifies the related vineyardplanting record. |
 | harvestedDate | date | Valid MySQL date value. | NO | N | N | — | Date associated with the harvest record or validity period. |
 | weightKg | decimal(12,2) | Positive numeric value. | NO | N | N | — | Records the weight kg of the harvest. |
 | ripenessSugarPercent | decimal(5,2) | Numeric percentage greater than 0 and no more than 100, except alcohol is capped at 25 as implemented. | NO | N | N | — | Harvest ripeness expressed as percentage sugar. |
@@ -249,6 +251,11 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 | productId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | wineproduct.productId | Identifies the related wineproduct record. |
 | caseQuantity | int unsigned | Positive numeric value. | NO | N | N | — | Quantity recorded for the orderline transaction or inventory fact. |
 | agreedCasePrice | decimal(10,2) | Numeric value within the implemented MySQL type. | NO | N | N | — | Monetary value recorded for the orderline fact in Australian dollars. |
+| deliveryRecipientName | varchar(120) | Text up to the implemented varchar(120) size. | YES | N | N | — | Recipient named by the buyer for the particular ordered product; may not be the customer. |
+| deliveryStreetAddress | varchar(220) | Text up to the implemented varchar(220) size. | YES | N | N | — | Snapshot of the recipient street address at order placement, independent of future customer address changes. |
+| deliveryLocality | varchar(80) | Text up to the implemented varchar(80) size. | YES | N | N | — | Snapshot suburb/locality for the product recipient. |
+| deliveryStateCode | char(3) | Text up to the implemented char(3) size. | YES | N | N | — | Snapshot Australian state/territory for product delivery. |
+| deliveryPostcode | char(4) | Text up to the implemented char(4) size. | YES | N | N | — | Snapshot postcode for product delivery. |
 
 ## `packmember`
 
@@ -256,7 +263,7 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 |---|---|---|:---:|:---:|:---:|---|---|
 | pickerPackId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | pickerpack.pickerPackId | Identifies the related pickerpack record. |
 | employeeId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | employee.employeeId | Identifies the related employee record. |
-| joinedDate | date | Valid MySQL date value. | NO | N | N | — | Date associated with the packmember record or validity period. |
+| joinedDate | date | Valid MySQL date value. | NO | Y | Y | — | Date associated with the packmember record or validity period. |
 | leftDate | date | Valid MySQL date value. | YES | N | N | — | Date associated with the packmember record or validity period. |
 
 ## `phone`
@@ -336,7 +343,8 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 | Attribute | Type/size | Domain/default | Null | Unique | PK | FK reference | Definition/business purpose |
 |---|---|---|:---:|:---:|:---:|---|---|
 | refundId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | — | Stable identifier for a refund record. |
-| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | N | N | customerorder.customerOrderId | Identifies the related customerorder record. |
+| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | N | N | orderline.customerOrderId | Identifies the related orderline record. |
+| productId | char(7) | Text up to the implemented char(7) size. | NO | N | N | orderline.productId | Identifies the related orderline record. |
 | refundDate | date | Valid MySQL date value. | NO | N | N | — | Date associated with the refund record or validity period. |
 | refundReason | enum('SHORTSUPPLY','TRANSITDAMAGE') | Permitted values: shortsupply, transitdamage. | NO | N | N | — | Records the refund reason of the refund. |
 | verifiedFlag | tinyint(1) | TRUE/FALSE. | NO | N | N | — | TRUE/FALSE indicator for verified flag on the refund record. |
@@ -379,15 +387,17 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 |---|---|---|:---:|:---:|:---:|---|---|
 | shiftId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | shift.shiftId | Identifies the related shift record. |
 | employeeId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | employee.employeeId | Identifies the related employee record. |
-| regularHours | decimal(4,2) | Non-negative numeric value. | NO | N | N | — | Regular labour hours worked on the assigned shift. |
-| overtimeHours | decimal(4,2) | Non-negative numeric value. | NO | N | N | — | Overtime hours used in workload and safety analysis. |
+| actualStartTime | time | Valid MySQL time value. | NO | N | N | — | Actual employee start time for this shift assignment. |
+| actualEndTime | time | Valid MySQL time value. | NO | N | N | — | Actual employee end time for this shift assignment. |
+| breakMinutes | smallint unsigned | Non-negative numeric value. | NO | N | N | — | Unpaid break minutes deducted when deriving labour hours. |
 
 ## `shipment`
 
 | Attribute | Type/size | Domain/default | Null | Unique | PK | FK reference | Definition/business purpose |
 |---|---|---|:---:|:---:|:---:|---|---|
 | shipmentId | char(8) | Text up to the implemented char(8) size. | NO | Y | Y | — | Stable identifier for a shipment record. |
-| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | Y | N | customerorder.customerOrderId | Identifies the related customerorder record. |
+| customerOrderId | char(8) | Text up to the implemented char(8) size. | NO | Y | N | orderline.customerOrderId | Identifies the related orderline record. |
+| productId | char(7) | Text up to the implemented char(7) size. | NO | Y | N | orderline.productId | Identifies the related orderline record. |
 | addressId | char(8) | Text up to the implemented char(8) size. | NO | N | N | address.addressId | Identifies the related address record. |
 | shippedDate | date | Valid MySQL date value. | NO | N | N | — | Date associated with the shipment record or validity period. |
 
@@ -496,7 +506,7 @@ The data dictionary was prepared as Word-ready tables and cross-checked against 
 |---|---|---|:---:|:---:|:---:|---|---|
 | vineyardId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | vineyard.vineyardId | Identifies the related vineyard record. |
 | vintageYear | year | Valid MySQL year value. | NO | Y | Y | — | Records the vintage year of the vineyardplanting. |
-| grapeVarietyId | char(7) | Text up to the implemented char(7) size. | NO | N | N | grapevariety.grapeVarietyId | Identifies the related grapevariety record. |
+| grapeVarietyId | char(7) | Text up to the implemented char(7) size. | NO | Y | Y | grapevariety.grapeVarietyId | Identifies the related grapevariety record. |
 | plantedDate | date | Valid MySQL date value. | YES | N | N | — | Date associated with the vineyardplanting record or validity period. |
 
 ## `wellbeingaction`

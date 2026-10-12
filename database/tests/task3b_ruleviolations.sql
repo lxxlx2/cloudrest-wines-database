@@ -40,15 +40,15 @@ VALUES
 ROLLBACK;
 
 -- =========================================================
--- Rule 3: shipment must use the customer's current physical address
+-- Rule 3: shipment destination must be physical, not a PO Box
 -- Expected: Error 1644 with the physical-address message
 -- =========================================================
 ROLLBACK;
 START TRANSACTION;
 INSERT INTO shipment
-(shipmentId, customerOrderId, addressId, shippedDate)
+(shipmentId, customerOrderId, productId, addressId, shippedDate)
 VALUES
-('SHIP0999', 'CORD0001', 'ADDR0004', CURRENT_DATE);
+('SHIP0999', 'CORD0001', 'PROD001', 'ADDR0004', CURRENT_DATE);
 -- After screenshot, run this line alone:
 ROLLBACK;
 
@@ -63,10 +63,12 @@ INSERT INTO customerorder
 VALUES
 ('CORD0998', 'CUST001', CURRENT_DATE, FALSE, 'PENDING');
 
+INSERT INTO orderline (customerOrderId,productId,caseQuantity,agreedCasePrice)
+VALUES ('CORD0998','PROD001',1,360.00);
 INSERT INTO shipment
-(shipmentId, customerOrderId, addressId, shippedDate)
+(shipmentId, customerOrderId, productId, addressId, shippedDate)
 VALUES
-('SHIP0998', 'CORD0998', 'ADDR0003', CURRENT_DATE);
+('SHIP0998', 'CORD0998', 'PROD001', 'ADDR0003', CURRENT_DATE);
 -- After screenshot, run this line alone:
 ROLLBACK;
 

@@ -2,7 +2,7 @@
 import grt
 from pathlib import Path
 
-ROOT = Path('/Users/jerson/Documents/教学接单/Cloudrest-Wines')
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'diagrams'
 OUT.mkdir(parents=True, exist_ok=True)
 log=[]
@@ -10,6 +10,7 @@ try:
     grt.modules.Workbench.newDocument()
     model = grt.root.wb.doc.physicalModels[0]
     model.name = 'Cloudrest Wines'
+    model.options['relationshipNotation'] = 'uml'
     catalog = model.catalog
     catalog.schemata.remove_all()
     sql = (ROOT / 'database/schema/01_tables.sql').read_text(encoding='utf-8')
@@ -30,6 +31,11 @@ try:
             log.append('autolayout='+repr(layout_result))
         except Exception as exc:
             log.append('autolayout error='+repr(exc))
+    # Landscape overview: a deterministic non-overlapping 11-column canvas.
+    # Domain diagrams retain Workbench autolayout for enlarged reading.
+    for index,figure in enumerate(sorted(diagram.figures,key=lambda f:f.table.name)):
+        figure.left=50+(index%11)*310
+        figure.top=50+(index//11)*500
     schema = next(s for s in catalog.schemata if s.name == 'cloudrestwines')
     by_name = {t.name:t for t in schema.tables}
     domains = {

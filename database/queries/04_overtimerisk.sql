@@ -1,5 +1,6 @@
 USE cloudrestwines;
 -- Workforce review query: surface recent workload/safety/wellbeing indicators without exposing confidential notes.
+-- Worked hours are calculated from actual assignment times. Overtime is the portion above 8 hours per assignment.
 WITH activeworkforce AS (
   SELECT e.employeeId,
          e.firstName,
@@ -13,14 +14,21 @@ WITH activeworkforce AS (
     AND (e.employmentEndDate IS NULL OR e.employmentEndDate >= CURRENT_DATE)
     AND er.startDateTime <= NOW()
     AND (er.endDateTime IS NULL OR er.endDateTime >= NOW())
-), workload AS (
+), assignmenthours AS (
   SELECT sa.employeeId,
-         SUM(sa.regularHours) AS regularHours,
-         SUM(sa.overtimeHours) AS overtimeHours
+         GREATEST(
+           TIMESTAMPDIFF(MINUTE, sa.actualStartTime, sa.actualEndTime) - sa.breakMinutes,
+           0
+         ) / 60.0 AS workedHours
   FROM shiftassignment sa
   JOIN shift s ON s.shiftId = sa.shiftId
   WHERE s.shiftDate >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
-  GROUP BY sa.employeeId
+), workload AS (
+  SELECT employeeId,
+         ROUND(SUM(LEAST(workedHours, 8.0)), 2) AS regularHours,
+         ROUND(SUM(GREATEST(workedHours - 8.0, 0)), 2) AS overtimeHours
+  FROM assignmenthours
+  GROUP BY employeeId
 ), recentincident AS (
   SELECT ie.employeeId, COUNT(DISTINCT ie.incidentId) AS incidentCount
   FROM incidentemployee ie
