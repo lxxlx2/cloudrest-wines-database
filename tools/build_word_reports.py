@@ -384,7 +384,7 @@ def build_main():
     for table,items in by_table.items():
         doc.add_heading(table,level=2)
         data=[(r['attributeName'],r['dataType'],r['domain'],r['nullable'],r['isUnique'],r['isPrimary'],r['foreignReference'] or '—',r['purpose']) for r in items]
-        add_table(doc,['Attribute','Type/size','Domain/default','Null','Unique','PK','FK reference','Definition / business purpose'],data,widths,7.5)
+        add_table(doc,['Attribute','Type/size','Domain/default','Null','Unique','PK','FK reference','Definition / business purpose'],data,widths,10)
 
     # Appendix C handoff
     new_portrait(doc); doc.add_heading('Appendix C — Submission and Handoff Checklist',level=1)
