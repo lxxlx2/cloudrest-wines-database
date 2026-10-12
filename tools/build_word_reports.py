@@ -282,7 +282,7 @@ def build_main():
     new_landscape(doc)
     doc.add_heading('Task 4 — ER Diagram with Annotated Alternatives',level=1)
     add_para(doc,'The editable MySQL Workbench model contains one complete diagram and six domain views. The full view demonstrates scope; the domain figures preserve readable attributes, keys and UML cardinalities. Assumptions are stated explicitly and do not contradict the case.')
-    add_image(doc,ROOT/'diagrams/Cloudrest_Wines_ER_Diagram.png','Figure — Complete UML Workbench model. Read individual attributes in the enlarged domain views and original PNG.',9.6,4.7)
+    add_para(doc,'[Insert a fresh complete UML ER screenshot exported from the updated Cloudrest_Wines_Model.mwb. The older PNG predates the product-specific delivery relationship and must not be used.]')
     doc.add_heading('Assumptions',level=2)
     assumptions=[]
     for line in (ROOT/'docs/requirements/assumptions.md').read_text(encoding='utf-8').splitlines():
@@ -372,7 +372,7 @@ def build_main():
     for index,f in enumerate(domain_files):
         if index: doc.add_page_break()
         doc.add_heading(f.replace('ER_','').replace('.png','').replace('_',' '),level=2)
-        add_image(doc,ROOT/'diagrams'/f,'UML domain view — authoritative revised schema, 2026-10-07',6.2,8.2)
+        add_para(doc,f'[Insert an updated UML Workbench screenshot of {f.replace("ER_", "").replace(".png", "").replace("_", " ")} from the latest model; do not reuse the pre-Hint-8 PNG.]')
 
     # Appendix B data dictionary landscape
     new_landscape(doc); doc.add_heading('Appendix B — Complete Data Dictionary',level=1)
