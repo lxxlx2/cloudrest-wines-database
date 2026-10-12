@@ -30,6 +30,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y default-mysql-client
 
+      - name: Shell syntax check for delivery and recording scripts
+        run: bash -n tools/prepare_student_handoff.sh tools/record_final_workbench_demo.sh
+
       - name: Build portable SQL
         run: python3 tools/build_submission_sql.py
 
