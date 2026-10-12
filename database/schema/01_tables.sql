@@ -429,7 +429,9 @@ CREATE TABLE orderline (
      AND deliveryStreetAddress IS NOT NULL AND TRIM(deliveryStreetAddress) <> ''
      AND deliveryLocality IS NOT NULL AND TRIM(deliveryLocality) <> ''
      AND deliveryStateCode IN ('ACT','NSW','NT','QLD','SA','TAS','VIC','WA')
-     AND deliveryPostcode REGEXP '^[0-9]{4}
+     AND CHAR_LENGTH(deliveryPostcode)=4 AND deliveryPostcode NOT REGEXP '[^0-9]')
+  )
+);
 
 CREATE TABLE shipment (
   shipmentId CHAR(8) PRIMARY KEY,
