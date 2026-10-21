@@ -4,10 +4,12 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Team
 
-- Mia
-- Zora
-- Rianna
-- Jason
+- Zixuan Shen
+- Feiyue Ma
+- Xinzhu Wang
+- Chengye Jiang
+
+The older report sources use working responsibility aliases Mia, Zora, Rianna and Jason. Their one-to-one mapping to the signed Team Charter members has not been confirmed and must not be guessed.
 
 ## Project direction
 
@@ -24,7 +26,7 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 - `docs/video/` — five-minute presentation plan and script
 - `docs/evidence/` — evidence index for screenshots; generated screenshots will be added here
 - `database/schema/` — database, tables, constraints, triggers, views and routines
-- `database/data/` — verified synthetic test data
+- `database/data/` — cleaned supplied data and verified additional test data
 - `database/cleaning/` — staging, profiling and cleaning scripts
 - `database/tests/` — integrity and business-rule tests
 - `database/queries/` — six decision-support queries and EXPLAIN evidence
@@ -34,9 +36,9 @@ This repository tracks the BISM2207 database consulting project for **Cloudrest 
 
 ## Current status
 
-The HR-focused schema, MySQL implementation, synthetic data, five assessed rule demonstrations, six management queries, Workbench model/ER exports, development report and reproducibility audit are complete. Review-driven fixes for Query 2 coverage, Query 4 workforce coverage, shipment edge cases, qualification procedure NULL validation, negative-test rollback isolation, privacy wording and lost-hours reconciliation have been validated under MySQL 8.4.11.
+The submitted iteration has been superseded by the tutor-feedback revision on `revision/tutor-feedback-v4-20261007`. The revised schema now covers multi-variety vineyard planting/harvest, product-level refunds, picker rejoin history, current contact-history controls, 100% wine-composition release validation, and derived labour/overtime from actual assignment times. The portable database, regression tests and all six decision-support queries have been rebuilt successfully under MySQL 8.4.11.
 
-Official spreadsheet cleaning, the Week 11 business scenario, RiPPlE peer reviews, final contribution records and the four-person video still require course inputs or genuine team activity. These are identified explicitly rather than represented as completed evidence.
+The official A2 v4 workbook is now cleaned and imported into the final portable build: 132 accepted order lines in 79 complete orders, 50 customers, 102 addresses and 53 address histories. Reconciliation is complete: 182 = 132 imported + 1 exact duplicate rejected + 15 ambiguous-pair rows quarantined + 34 other rows quarantined. Added HR test data remains. Task 6 states all supplemental attributes and assumptions. The current report, SQL and model package is ready; student-only video, RiPPlE, Buddycheck and contribution confirmation remain. Task 8 waits for the tutor-supplied Week 11 scenario.
 
 ## Ready-to-review package
 

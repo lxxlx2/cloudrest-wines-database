@@ -1,0 +1,34 @@
+name: Extract Task 3 onwards report
+on:
+  push:
+    branches:
+      - revision/tutor-feedback-v4-20261007
+    paths:
+      - .github/workflows/extract-task3-report.yml
+      - tools/extract_task3_report.py
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: revision/tutor-feedback-v4-20261007
+          persist-credentials: true
+      - name: Install Word dependency
+        run: python3 -m pip install python-docx
+      - name: Extract Task 3 to end of report
+        run: python3 tools/extract_task3_report.py
+      - name: Publish Word extract
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add deliverables/final-submission/Cloudrest_Wines_Report_Task3_Onwards.docx
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: publish Task 3 onward excerpt of current Word report"
+            git fetch origin revision/tutor-feedback-v4-20261007
+            git rebase origin/revision/tutor-feedback-v4-20261007
+            git push origin HEAD:revision/tutor-feedback-v4-20261007
+          fi

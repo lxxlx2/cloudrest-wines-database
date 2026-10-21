@@ -1,0 +1,73 @@
+name: Refresh Hint 7-11 final deliverables
+on:
+  push:
+    branches: [revision/tutor-feedback-v4-20261007]
+    paths:
+      - .github/workflows/finalize-hints.yml
+      - database/schema/01_tables.sql
+      - tools/build_word_reports.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: revision/tutor-feedback-v4-20261007
+          persist-credentials: true
+      - name: Install runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
+          python3 -m pip install --break-system-packages python-docx Pillow
+      - name: Build SQL and live MySQL
+        run: |
+          python3 tools/build_submission_sql.py
+          mysql -h127.0.0.1 -uroot -proot < deliverables/final-submission/Cloudrest_Wines_Database.sql
+          mysql -h127.0.0.1 -uroot -proot < database/tests/t12_two_recipients_same_order.sql
+      - name: Regenerate dictionary and native model
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: '3306'
+          MYSQL_USER: root
+          MYSQL_PWD: root
+        run: |
+          python3 tools/generate_data_dictionary.py
+          python3 tools/patch_mwb_product_delivery.py
+          python3 tools/verify_workbench_model.py
+          python3 tools/verify_project.py
+      - name: Rebuild final Word documents
+        run: |
+          python3 tools/build_word_reports.py
+      - name: Publish regenerated artifacts to revision branch
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/report/data-dictionary.csv docs/report/data-dictionary.md
+          git add diagrams/Cloudrest_Wines_Model.mwb deliverables/final-submission/Cloudrest_Wines_Model.mwb
+          git add deliverables/final-submission/Cloudrest_Wines_Report.docx
+          git add deliverables/final-submission/Cloudrest_Wines_Verification_Report.docx
+          git add deliverables/final-submission/Cloudrest_Wines_Database.sql
+          git add deliverables/final-submission/Cloudrest_Wines_Queries.sql
+          git add deliverables/final-submission/Cloudrest_Wines_Rule_Violations.sql
+          git add verification/verification-report.json verification/verification-report.md || true
+          if ! git diff --cached --quiet; then
+            git commit -m "final: regenerate Hint 7-11 SQL, model, dictionary and Word reports"
+            git reset --hard HEAD
+            git fetch origin revision/tutor-feedback-v4-20261007
+            git rebase origin/revision/tutor-feedback-v4-20261007
+            git push origin HEAD:revision/tutor-feedback-v4-20261007
+          fi
